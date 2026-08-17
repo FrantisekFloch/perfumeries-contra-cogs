@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-2026-23</invoiceNumber>
+    <type>final</type>
+    <distributor id="DIST-EU-02" name="Nordic Scents AB"/>
+    <contraCogsModel>A</contraCogsModel>
+    <poReference>PO-1023</poReference>
+    <invoiceDate>2026-09-04</invoiceDate>
+    <shipDate>2026-09-02</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="3000" pct="0.5"/>
+      <tier minQty="3001" maxQty="" pct="1"/>
+    </discount>
+    <totalValueStandard>4500.00</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>SKU-1002</stockId>
+      <description>Eau de Toilette 100ml</description>
+      <qtyInvoiced>3000</qtyInvoiced>
+      <unitPriceStandard>1.50</unitPriceStandard>
+      <unitPriceNet>1.4900</unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+  </lines>
+</invoice>

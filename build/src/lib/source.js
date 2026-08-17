@@ -26,8 +26,11 @@ export function createStubSource(id, label) {
 export const createDatabaseSource = () => createStubSource('database', 'Database');
 export const createApiSource = () => createStubSource('api', 'API');
 
-/** Default browser reader: fetch text from a URL. */
+/** Default reader: use an injected offline reader if present (single-file HTML), else fetch. */
 async function fetchText(url) {
+  if (typeof globalThis !== 'undefined' && typeof globalThis.__PERFUMERIES_READ_TEXT__ === 'function') {
+    return globalThis.__PERFUMERIES_READ_TEXT__(url);
+  }
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
   return res.text();

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<creditNote>
+  <creditNoteId>CN-INV-2026-17</creditNoteId>
+  <distributor id="DIST-EU-01"/>
+  <period>2026-07</period>
+  <invoiceRef>INV-2026-17</invoiceRef>
+  <basisQty>6600</basisQty>
+  <basisValueStandard>18175.00</basisValueStandard>
+  <tierApplied>1.5</tierApplied>
+  <amount>272.63</amount>
+  <status>Cleared</status>
+</creditNote>

@@ -1,0 +1,3 @@
+invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref
+INV-2026-11,SKU-1005,WH-CENTRAL,800,2026-05-10T09:00:00,RECADV-INV-2026-11-0
+INV-2026-11,SKU-1005,WH-BA,800,2026-05-19T09:00:00,RECADV-INV-2026-11-1

@@ -26,9 +26,10 @@ test('stub sources report no updates with no files', async () => {
 test('folder source reads manifest and all inbox files with categories', async () => {
   const res = await createFolderSource(folderOpts).scan();
   assert.equal(res.status, ScanStatus.FOUND);
-  assert.equal(res.files.length, 4);
+  assert.ok(res.files.length >= 4);
   const byCat = res.files.reduce((m, f) => ((m[f.category] = (m[f.category] || 0) + 1), m), {});
-  assert.deepEqual(byCat, { invoices: 1, delivery_notes: 1, storage_reports: 1, credit_notes: 1 });
+  assert.ok(byCat.invoices >= 1 && byCat.delivery_notes >= 1 && byCat.storage_reports >= 1 && byCat.credit_notes >= 1);
+  assert.ok(res.files.some((f) => f.name === 'INV-2026-0001.xml'));
 });
 
 test('scanner scans DB -> API -> Folder in order and emits statuses', async () => {
@@ -38,7 +39,7 @@ test('scanner scans DB -> API -> Folder in order and emits statuses', async () =
   });
   const { results, files } = await scanner.scanAll();
   assert.deepEqual(results.map((r) => r.id), ['database', 'api', 'folder']);
-  assert.equal(files.length, 4);
+  assert.ok(files.length >= 4);
   // each source emits Scanning then a terminal status
   assert.deepEqual(events.filter(([, s]) => s === ScanStatus.SCANNING).map(([id]) => id), ['database', 'api', 'folder']);
   assert.equal(events.at(-1)[1], ScanStatus.FOUND); // folder terminal
@@ -57,11 +58,11 @@ test('scanner reports error for a failing source and continues', async () => {
 test('ingestFiles routes files to the right parsers', async () => {
   const { files } = await new SourceScanner(defaultSources(folderOpts)).scanAll();
   const r = ingestFiles(files);
-  assert.equal(r.invoices.length, 1);
-  assert.equal(r.deliveryNotes.length, 1);
-  assert.equal(r.creditNotes.length, 1);
-  assert.equal(r.goodsReceipts.length, 5);
-  assert.equal(r.goodsReceipts.reduce((s, g) => s + g.qtyReceived, 0), 4900);
+  assert.ok(r.invoices.length >= 1);
+  assert.ok(r.invoices.some((i) => i.invoiceNumber === 'INV-2026-0001'));
+  const gr = r.goodsReceipts.filter((g) => g.invoiceNumber === 'INV-2026-0001');
+  assert.equal(gr.length, 5);
+  assert.equal(gr.reduce((s, g) => s + g.qtyReceived, 0), 4900);
   assert.equal(r.errors.length, 0);
   assert.equal(r.incomplete.length, 0);
 });
@@ -92,8 +93,8 @@ test('persistIngest stores ingested records into a StateStore', async () => {
   const { files } = await new SourceScanner(defaultSources(folderOpts)).scanAll();
   const store = new StateStore(createMemoryBackend(), 'test');
   persistIngest(store, ingestFiles(files));
-  assert.equal(store.all('invoices').length, 1);
-  assert.equal(store.all('goodsReceipts').length, 5);
-  assert.equal(store.all('creditNotes').length, 1);
-  assert.equal(store.all('deliveryNotes').length, 1);
+  assert.ok(store.all('invoices').length >= 1);
+  assert.equal(store.all('goodsReceipts').filter((g) => g.invoiceNumber === 'INV-2026-0001').length, 5);
+  assert.ok(store.all('creditNotes').length >= 1);
+  assert.ok(store.all('deliveryNotes').length >= 1);
 });

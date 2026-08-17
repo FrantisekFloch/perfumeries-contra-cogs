@@ -24,16 +24,16 @@ test('E2E: full pipeline over sample data yields the 100-unit gap and Partially 
   const store = newStore();
   const { ingest, portfolio } = await runPipeline(store, defaultSources(folderOpts), { asOf: '2026-02-06T00:00:00' });
 
-  // ingestion
-  assert.equal(ingest.invoices.length, 1);
-  assert.equal(ingest.goodsReceipts.length, 5);
+  // ingestion (dataset now has many invoices; assert the canonical one is present)
+  assert.ok(ingest.invoices.some((i) => i.invoiceNumber === 'INV-2026-0001'));
+  assert.equal(ingest.goodsReceipts.filter((g) => g.invoiceNumber === 'INV-2026-0001').length, 5);
   assert.equal(ingest.errors.length, 0);
 
   // lifecycle advanced from Received to Partially Received
   assert.equal(store.get('invoices', 'INV-2026-0001').status, InvoiceStatus.PARTIALLY_RECEIVED);
 
   // portfolio view of the scenario
-  const v = portfolio[0];
+  const v = portfolio.find((x) => x.invoiceNumber === 'INV-2026-0001');
   assert.equal(v.invoicedQty, 5000);
   assert.equal(v.receivedQty, 4900);
   assert.equal(v.missingQty, 100);
@@ -44,7 +44,7 @@ test('E2E: full pipeline over sample data yields the 100-unit gap and Partially 
 test('E2E: Jan/Feb straddle with split debits and a GINR accrual', async () => {
   const store = newStore();
   const { portfolio } = await runPipeline(store, defaultSources(folderOpts), { asOf: '2026-02-06T00:00:00' });
-  const t = portfolio[0].timing;
+  const t = portfolio.find((x) => x.invoiceNumber === 'INV-2026-0001').timing;
   assert.deepEqual(t.periods, ['2026-01', '2026-02']);
   assert.equal(t.straddles, true);
   const jan = t.splitDebits.find((d) => d.period === '2026-01');
@@ -58,8 +58,9 @@ test('E2E: Jan/Feb straddle with split debits and a GINR accrual', async () => {
 test('E2E: Model B contra held Pending until fully delivered, then clears', async () => {
   const store = newStore();
   const { portfolio } = await runPipeline(store, defaultSources(folderOpts));
-  assert.equal(portfolio[0].contra.creditStatus, CreditNoteStatus.PENDING);
-  assert.equal(portfolio[0].contra.pendingCredit, 98);
+  const v0 = portfolio.find((x) => x.invoiceNumber === 'INV-2026-0001');
+  assert.equal(v0.contra.creditStatus, CreditNoteStatus.PENDING);
+  assert.equal(v0.contra.pendingCredit, 98);
 
   // now deliver the rest -> credit clears
   const inv = parseInvoiceXml(read(inbox('invoices', 'INV-2026-0001.xml'))).invoice;

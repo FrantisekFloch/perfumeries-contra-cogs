@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-2026-04</invoiceNumber>
+    <type>proforma</type>
+    <distributor id="DIST-EU-01" name="Maison Aroma s.r.o."/>
+    <contraCogsModel>B</contraCogsModel>
+    <poReference>PO-1004</poReference>
+    <invoiceDate>2026-01-08</invoiceDate>
+    <shipDate>2026-01-02</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="5000" pct="1"/>
+      <tier minQty="5001" maxQty="10000" pct="1.5"/>
+      <tier minQty="10001" maxQty="" pct="2"/>
+    </discount>
+    <totalValueStandard>4620.00</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>SKU-1001</stockId>
+      <description>Eau de Parfum 50ml</description>
+      <qtyInvoiced>1100</qtyInvoiced>
+      <unitPriceStandard>2.00</unitPriceStandard>
+      <unitPriceNet></unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+    <line>
+      <stockId>SKU-1006</stockId>
+      <description>Travel Spray 15ml</description>
+      <qtyInvoiced>2200</qtyInvoiced>
+      <unitPriceStandard>1.10</unitPriceStandard>
+      <unitPriceNet></unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+  </lines>
+</invoice>

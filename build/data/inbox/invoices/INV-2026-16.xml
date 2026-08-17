@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-2026-16</invoiceNumber>
+    <type>proforma</type>
+    <distributor id="DIST-EU-01" name="Maison Aroma s.r.o."/>
+    <contraCogsModel>B</contraCogsModel>
+    <poReference>PO-1016</poReference>
+    <invoiceDate>2026-07-04</invoiceDate>
+    <shipDate>2026-07-02</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="5000" pct="1"/>
+      <tier minQty="5001" maxQty="10000" pct="1.5"/>
+      <tier minQty="10001" maxQty="" pct="2"/>
+    </discount>
+    <totalValueStandard>9225.00</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>SKU-1003</stockId>
+      <description>Perfume Oil 30ml</description>
+      <qtyInvoiced>2100</qtyInvoiced>
+      <unitPriceStandard>3.25</unitPriceStandard>
+      <unitPriceNet></unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+    <line>
+      <stockId>SKU-1002</stockId>
+      <description>Eau de Toilette 100ml</description>
+      <qtyInvoiced>1600</qtyInvoiced>
+      <unitPriceStandard>1.50</unitPriceStandard>
+      <unitPriceNet></unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+  </lines>
+</invoice>

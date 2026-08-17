@@ -6,9 +6,8 @@ import { VERSION } from './lib/version.js';
 import { defaultSources } from './lib/source.js';
 import { StateStore, getLocalStorageBackend, createMemoryBackend } from './lib/store.js';
 import { Session, getSessionBackend, createMemoryKV, ROLES } from './lib/session.js';
-import { ScanStatus, ContraCogsModel } from './lib/enums.js';
+import { ScanStatus, ContraCogsModel, InvoiceStatus } from './lib/enums.js';
 import { transition } from './lib/lifecycle.js';
-import { InvoiceStatus as Status } from './lib/enums.js';
 import { buildPortfolio } from './lib/analytics.js';
 import { runPipeline } from './lib/pipeline.js';
 import { exportInventory } from './lib/inventory.js';
@@ -114,7 +113,7 @@ function renderCurrentDashboard() {
     storageId: storageFilter,
     onFilter: (sid) => { storageFilter = sid; renderCurrentDashboard(); },
     onDrill: (sid) => { storageFilter = sid; selectRole('storage'); },
-    onMarkPaid: (inv) => { transition(store, inv, Status.PAID, { actor: 'accounting' }); rebuildPortfolio(); renderCurrentDashboard(); },
+    onMarkPaid: (inv) => { transition(store, inv, InvoiceStatus.PAID, { actor: 'accounting' }); rebuildPortfolio(); renderCurrentDashboard(); },
     onArchive: (inv) => {
       const record = archiveInvoice(store, inv, { actor: 'accounting' });
       downloadText(`archive_${inv}.json`, exportArchive(record));

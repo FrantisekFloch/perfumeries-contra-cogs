@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Perfumeries — Contra COGS Reconciliation</title>
+  <style>
+:root {
+  --bg: #f5f5f5;
+  --panel: #ffffff;
+  --ink: #1a1a1a;
+  --muted: #6b6b6b;
+  --border: #e5e5e5;
+  --accent: #2d6cdf;
+  --ok: #1c9c6b;
+  --warn: #e0a400;
+  --err: #e74c3c;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.app-header {
+  background: var(--ink);
+  color: #fff;
+  padding: 14px 22px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.app-header h1 { font-size: 1.15rem; margin: 0; letter-spacing: 0.02em; }
+.app-header .subtitle { color: #b9b9b9; font-size: 0.85rem; }
+
+main { max-width: 1100px; margin: 22px auto; padding: 0 18px; display: grid; gap: 18px; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.panel h2 { margin: 0 0 12px; font-size: 0.95rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.scan-status { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.scan-status li { display: flex; align-items: center; gap: 10px; font-size: 0.92rem; }
+.scan-status .src { font-weight: 600; min-width: 120px; }
+.scan-status .state { color: var(--muted); }
+.scan-status .state.found { color: var(--ok); }
+.scan-status .state.error { color: var(--err); }
+
+.app-footer {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 14px;
+}
+
+.summary { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.summary li { font-size: 0.95rem; }
+.summary li strong { font-size: 1.05rem; color: var(--accent); }
+.summary li.warn { color: var(--warn); }
+.summary li.err { color: var(--err); }
+.hint { color: var(--muted); font-size: 0.85rem; margin-top: 14px; }
+
+.model-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px; }
+@media (max-width: 640px) { .model-choices { grid-template-columns: 1fr; } }
+.model-btn {
+  text-align: left; background: #fff; border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; cursor: pointer; display: grid; gap: 6px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.model-btn:hover { border-color: var(--accent); }
+.model-btn.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(45,108,223,0.15); }
+.model-btn .model-name { font-weight: 700; font-size: 1rem; }
+.model-btn .model-desc { color: var(--muted); font-size: 0.85rem; }
+.badge {
+  display: inline-block; font-size: 0.72rem; font-weight: 700; color: #fff;
+  background: var(--accent); border-radius: 999px; padding: 2px 10px; vertical-align: middle; margin-left: 8px;
+}
+
+.summary-line { font-size: 0.9rem; color: var(--ink); margin: 12px 0 0; }
+.summary-line .warn { color: var(--warn); }
+.summary-line .err { color: var(--err); }
+
+.role-bar { max-width: 1100px; margin: 0 auto; padding: 0 18px; display: flex; gap: 8px; }
+.role-tab {
+  background: #fff; border: 1px solid var(--border); border-bottom: none;
+  border-radius: 8px 8px 0 0; padding: 10px 18px; cursor: pointer; font-weight: 600; color: var(--muted);
+}
+.role-tab.active { color: var(--ink); border-color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+
+.dash-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dash-head h3 { margin: 0; }
+.filter select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; }
+
+h3 { margin: 4px 0 12px; }
+h4 { margin: 18px 0 8px; font-size: 0.9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+
+table.grid { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table.grid th, table.grid td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+table.grid th { color: var(--muted); font-weight: 600; }
+table.grid tbody tr:hover { background: #fafafa; }
+
+.muted { color: var(--muted); font-size: 0.9rem; }
+
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 8px 0 4px; }
+@media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+.card { border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: grid; gap: 4px; }
+.card .k { color: var(--muted); font-size: 0.8rem; }
+.card .v { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+
+button.link { background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font: inherit; text-decoration: underline; }
+
+.inv-controls { display: flex; align-items: center; gap: 10px; }
+.btn { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 7px 12px; cursor: pointer; font: inherit; }
+.btn:hover { filter: brightness(1.05); }
+.inv-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 14px; }
+.inv-card-head { font-size: 1rem; margin-bottom: 4px; }
+.tag { display: inline-block; font-size: 0.72rem; font-weight: 700; background: #eef2fb; color: var(--accent); border-radius: 999px; padding: 2px 10px; }
+
+.kv { list-style: none; margin: 6px 0 4px; padding: 0; display: grid; gap: 4px; }
+.kv li { display: flex; gap: 10px; font-size: 0.92rem; }
+.kv li span { color: var(--muted); min-width: 90px; }
+
+</style>
+</head>
+<body>
+  <header class="app-header">
+    <h1>Perfumeries</h1>
+    <span class="subtitle">Contra COGS Reconciliation</span>
+  </header>
+
+  <main id="app">
+    <section id="model-panel" class="panel"></section>
+    <section id="scan-panel" class="panel" hidden>
+      <h2>Source scan</h2>
+      <ul id="scan-status" class="scan-status" aria-live="polite"></ul>
+      <div id="ingest-summary"></div>
+    </section>
+    <nav id="role-bar" class="role-bar" hidden></nav>
+    <section id="view-root" class="panel" hidden></section>
+  </main>
+
+  <footer class="app-footer">
+    <span id="build-status">offline build</span>
+  </footer>
+
+  <script type="module">
+const DATA = {"./data/manifest.json":"{\n  \"description\": \"File manifest for the FolderSource. Static hosts (GitHub Pages) have no directory listing, so the folder scan enumerates inbox files from here.\",\n  \"generatedFor\": \"demo\",\n  \"inbox\": {\n    \"invoices\": [\n      \"INV-2026-0001.xml\",\n      \"INV-2026-02.xml\",\n      \"INV-2026-03.xml\",\n      \"INV-2026-04.xml\",\n      \"INV-2026-05.xml\",\n      \"INV-2026-06.xml\",\n      \"INV-2026-07.xml\",\n      \"INV-2026-08.xml\",\n      \"INV-2026-09.xml\",\n      \"INV-2026-10.xml\",\n      \"INV-2026-11.xml\",\n      \"INV-2026-12.xml\",\n      \"INV-2026-13.xml\",\n      \"INV-2026-14.xml\",\n      \"INV-2026-15.xml\",\n      \"INV-2026-16.xml\",\n      \"INV-2026-17.xml\",\n      \"INV-2026-18.xml\",\n      \"INV-2026-19.xml\",\n      \"INV-2026-20.xml\",\n      \"INV-2026-21.xml\",\n      \"INV-2026-22.xml\",\n      \"INV-2026-23.xml\",\n      \"INV-2026-24.xml\",\n      \"INV-2026-25.xml\",\n      \"INV-2026-26.xml\",\n      \"INV-2026-27.xml\",\n      \"INV-2026-28.xml\",\n      \"INV-2026-29.xml\",\n      \"INV-2026-30.xml\",\n      \"INV-2026-31.xml\"\n    ],\n    \"delivery_notes\": [\n      \"DN-2026-0001-01.xml\",\n      \"DN-INV-2026-02.xml\",\n      \"DN-INV-2026-03.xml\",\n      \"DN-INV-2026-04.xml\",\n      \"DN-INV-2026-05.xml\",\n      \"DN-INV-2026-06.xml\",\n      \"DN-INV-2026-07.xml\",\n      \"DN-INV-2026-08.xml\",\n      \"DN-INV-2026-09.xml\",\n      \"DN-INV-2026-10.xml\",\n      \"DN-INV-2026-11.xml\",\n      \"DN-INV-2026-12.xml\",\n      \"DN-INV-2026-13.xml\",\n      \"DN-INV-2026-14.xml\",\n      \"DN-INV-2026-15.xml\",\n      \"DN-INV-2026-16.xml\",\n      \"DN-INV-2026-17.xml\",\n      \"DN-INV-2026-18.xml\",\n      \"DN-INV-2026-19.xml\",\n      \"DN-INV-2026-20.xml\",\n      \"DN-INV-2026-21.xml\",\n      \"DN-INV-2026-22.xml\",\n      \"DN-INV-2026-23.xml\",\n      \"DN-INV-2026-24.xml\",\n      \"DN-INV-2026-25.xml\",\n      \"DN-INV-2026-26.xml\",\n      \"DN-INV-2026-27.xml\",\n      \"DN-INV-2026-28.xml\",\n      \"DN-INV-2026-29.xml\",\n      \"DN-INV-2026-30.xml\",\n      \"DN-INV-2026-31.xml\"\n    ],\n    \"storage_reports\": [\n      \"recadv_2026-01_02.csv\",\n      \"recadv_INV-2026-03.csv\",\n      \"recadv_INV-2026-05.csv\",\n      \"recadv_INV-2026-06.csv\",\n      \"recadv_INV-2026-07.csv\",\n      \"recadv_INV-2026-08.csv\",\n      \"recadv_INV-2026-09.csv\",\n      \"recadv_INV-2026-10.csv\",\n      \"recadv_INV-2026-11.csv\",\n      \"recadv_INV-2026-12.csv\",\n      \"recadv_INV-2026-13.csv\",\n      \"recadv_INV-2026-14.csv\",\n      \"recadv_INV-2026-15.csv\",\n      \"recadv_INV-2026-16.csv\",\n      \"recadv_INV-2026-17.csv\",\n      \"recadv_INV-2026-19.csv\",\n      \"recadv_INV-2026-20.csv\",\n      \"recadv_INV-2026-22.csv\",\n      \"recadv_INV-2026-23.csv\",\n      \"recadv_INV-2026-24.csv\",\n      \"recadv_INV-2026-25.csv\",\n      \"recadv_INV-2026-26.csv\",\n      \"recadv_INV-2026-27.csv\",\n      \"recadv_INV-2026-28.csv\",\n      \"recadv_INV-2026-29.csv\",\n      \"recadv_INV-2026-30.csv\",\n      \"recadv_INV-2026-31.csv\"\n    ],\n    \"credit_notes\": [\n      \"CN-2026-01-DIST-EU-01.xml\",\n      \"CN-INV-2026-03.xml\",\n      \"CN-INV-2026-05.xml\",\n      \"CN-INV-2026-10.xml\",\n      \"CN-INV-2026-12.xml\",\n      \"CN-INV-2026-13.xml\",\n      \"CN-INV-2026-14.xml\",\n      \"CN-INV-2026-15.xml\",\n      \"CN-INV-2026-16.xml\",\n      \"CN-INV-2026-17.xml\",\n      \"CN-INV-2026-25.xml\",\n      \"CN-INV-2026-26.xml\",\n      \"CN-INV-2026-28.xml\",\n      \"CN-INV-2026-29.xml\",\n      \"CN-INV-2026-31.xml\"\n    ]\n  },\n  \"archive\": []\n}\n","./data/inbox/invoices/INV-2026-0001.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<invoice>\r\n  <header>\r\n    <invoiceNumber>INV-2026-0001</invoiceNumber>\r\n    <type>proforma</type>\r\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\r\n    <contraCogsModel>B</contraCogsModel>\r\n    <poReference>PO-7788</poReference>\r\n    <invoiceDate>2026-01-28</invoiceDate>\r\n    <shipDate>2026-01-27</shipDate>\r\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\r\n    <currency>EUR</currency>\r\n    <discount basis=\"total_volume\">\r\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1.0\"/>\r\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\r\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2.0\"/>\r\n    </discount>\r\n    <totalValueStandard>10000.00</totalValueStandard>\r\n  </header>\r\n  <lines>\r\n    <line>\r\n      <stockId>SKU-1001</stockId>\r\n      <description>Eau de Parfum 50ml</description>\r\n      <qtyInvoiced>5000</qtyInvoiced>\r\n      <unitPriceStandard>2.00</unitPriceStandard>\r\n      <unitPriceNet></unitPriceNet>\r\n      <targetStorage>MULTI</targetStorage>\r\n    </line>\r\n  </lines>\r\n</invoice>\r\n","./data/inbox/invoices/INV-2026-02.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-02</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1002</poReference>\n    <invoiceDate>2026-01-09</invoiceDate>\n    <shipDate>2026-01-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>10915.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>2300</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1004</stockId>\n      <description>Body Mist 200ml</description>\n      <qtyInvoiced>3600</qtyInvoiced>\n      <unitPriceStandard>0.90</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>1300</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-03.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-03</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1003</poReference>\n    <invoiceDate>2026-01-08</invoiceDate>\n    <shipDate>2026-01-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>17200.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>2600</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>2100</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-04.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-04</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1004</poReference>\n    <invoiceDate>2026-01-08</invoiceDate>\n    <shipDate>2026-01-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>4620.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>1100</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1006</stockId>\n      <description>Travel Spray 15ml</description>\n      <qtyInvoiced>2200</qtyInvoiced>\n      <unitPriceStandard>1.10</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-05.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-05</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1005</poReference>\n    <invoiceDate>2026-02-08</invoiceDate>\n    <shipDate>2026-02-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>3420.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1004</stockId>\n      <description>Body Mist 200ml</description>\n      <qtyInvoiced>1300</qtyInvoiced>\n      <unitPriceStandard>0.90</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>1500</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-06.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-06</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1006</poReference>\n    <invoiceDate>2026-02-03</invoiceDate>\n    <shipDate>2026-02-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>17280.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>3800</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet>3.2200</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>800</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet>1.9800</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1004</stockId>\n      <description>Body Mist 200ml</description>\n      <qtyInvoiced>3700</qtyInvoiced>\n      <unitPriceStandard>0.90</unitPriceStandard>\n      <unitPriceNet>0.8900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-07.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-07</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1007</poReference>\n    <invoiceDate>2026-03-05</invoiceDate>\n    <shipDate>2026-03-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>14250.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>2100</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet>1.4900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1006</stockId>\n      <description>Travel Spray 15ml</description>\n      <qtyInvoiced>3000</qtyInvoiced>\n      <unitPriceStandard>1.10</unitPriceStandard>\n      <unitPriceNet>1.0900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>2400</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet>3.2200</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-08.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-08</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1008</poReference>\n    <invoiceDate>2026-03-07</invoiceDate>\n    <shipDate>2026-03-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>14250.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>3000</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet>1.4900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>1300</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet>4.9500</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>1000</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet>3.2200</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-09.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-09</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1009</poReference>\n    <invoiceDate>2026-04-07</invoiceDate>\n    <shipDate>2026-04-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>4200.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1006</stockId>\n      <description>Travel Spray 15ml</description>\n      <qtyInvoiced>1200</qtyInvoiced>\n      <unitPriceStandard>1.10</unitPriceStandard>\n      <unitPriceNet>1.0900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1004</stockId>\n      <description>Body Mist 200ml</description>\n      <qtyInvoiced>2200</qtyInvoiced>\n      <unitPriceStandard>0.90</unitPriceStandard>\n      <unitPriceNet>0.8900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>600</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet>1.4900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-10.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-10</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1010</poReference>\n    <invoiceDate>2026-04-05</invoiceDate>\n    <shipDate>2026-04-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>21525.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>1900</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>3700</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-11.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-11</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1011</poReference>\n    <invoiceDate>2026-05-03</invoiceDate>\n    <shipDate>2026-05-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>8000.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>1600</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet>4.9700</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-12.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-12</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1012</poReference>\n    <invoiceDate>2026-05-09</invoiceDate>\n    <shipDate>2026-05-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>21750.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>3700</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>1000</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-13.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-13</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1013</poReference>\n    <invoiceDate>2026-06-04</invoiceDate>\n    <shipDate>2026-06-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>16185.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>3500</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1006</stockId>\n      <description>Travel Spray 15ml</description>\n      <qtyInvoiced>3100</qtyInvoiced>\n      <unitPriceStandard>1.10</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>700</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-14.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-14</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1014</poReference>\n    <invoiceDate>2026-06-05</invoiceDate>\n    <shipDate>2026-06-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>14890.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>3800</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1004</stockId>\n      <description>Body Mist 200ml</description>\n      <qtyInvoiced>1600</qtyInvoiced>\n      <unitPriceStandard>0.90</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1006</stockId>\n      <description>Travel Spray 15ml</description>\n      <qtyInvoiced>1000</qtyInvoiced>\n      <unitPriceStandard>1.10</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-15.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-15</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1015</poReference>\n    <invoiceDate>2026-07-06</invoiceDate>\n    <shipDate>2026-07-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>3000.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>1500</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-16.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-16</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1016</poReference>\n    <invoiceDate>2026-07-04</invoiceDate>\n    <shipDate>2026-07-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>9225.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>2100</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>1600</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-17.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-17</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1017</poReference>\n    <invoiceDate>2026-07-05</invoiceDate>\n    <shipDate>2026-07-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>18175.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>3600</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>2300</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>700</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-18.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-18</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1018</poReference>\n    <invoiceDate>2026-08-04</invoiceDate>\n    <shipDate>2026-08-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>2450.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>700</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet>1.4900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>700</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet>1.9900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-19.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-19</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1019</poReference>\n    <invoiceDate>2026-08-04</invoiceDate>\n    <shipDate>2026-08-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>20675.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>1900</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet>1.9800</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>1500</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet>3.2200</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>2400</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet>4.9500</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-20.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-20</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1020</poReference>\n    <invoiceDate>2026-08-07</invoiceDate>\n    <shipDate>2026-08-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>12400.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1006</stockId>\n      <description>Travel Spray 15ml</description>\n      <qtyInvoiced>4000</qtyInvoiced>\n      <unitPriceStandard>1.10</unitPriceStandard>\n      <unitPriceNet>1.0900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>1600</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet>4.9500</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-21.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-21</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1021</poReference>\n    <invoiceDate>2026-09-08</invoiceDate>\n    <shipDate>2026-09-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>9470.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>1500</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet>1.9800</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1006</stockId>\n      <description>Travel Spray 15ml</description>\n      <qtyInvoiced>2200</qtyInvoiced>\n      <unitPriceStandard>1.10</unitPriceStandard>\n      <unitPriceNet>1.0900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>2700</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet>1.4900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-22.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-22</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1022</poReference>\n    <invoiceDate>2026-09-06</invoiceDate>\n    <shipDate>2026-09-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>14915.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1006</stockId>\n      <description>Travel Spray 15ml</description>\n      <qtyInvoiced>2400</qtyInvoiced>\n      <unitPriceStandard>1.10</unitPriceStandard>\n      <unitPriceNet>1.0900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>700</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet>3.2200</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>2000</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet>4.9500</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-23.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-23</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1023</poReference>\n    <invoiceDate>2026-09-04</invoiceDate>\n    <shipDate>2026-09-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>4500.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>3000</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet>1.4900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-24.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-24</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1024</poReference>\n    <invoiceDate>2026-10-06</invoiceDate>\n    <shipDate>2026-10-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>13600.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>1400</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet>1.4900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>2300</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet>4.9500</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-25.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-25</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1025</poReference>\n    <invoiceDate>2026-10-07</invoiceDate>\n    <shipDate>2026-10-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>6000.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>4000</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-26.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-26</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1026</poReference>\n    <invoiceDate>2026-11-08</invoiceDate>\n    <shipDate>2026-11-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>18910.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1004</stockId>\n      <description>Body Mist 200ml</description>\n      <qtyInvoiced>900</qtyInvoiced>\n      <unitPriceStandard>0.90</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>3200</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>3600</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-27.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-27</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1027</poReference>\n    <invoiceDate>2026-11-03</invoiceDate>\n    <shipDate>2026-11-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>8490.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1002</stockId>\n      <description>Eau de Toilette 100ml</description>\n      <qtyInvoiced>3800</qtyInvoiced>\n      <unitPriceStandard>1.50</unitPriceStandard>\n      <unitPriceNet>1.4900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1004</stockId>\n      <description>Body Mist 200ml</description>\n      <qtyInvoiced>3100</qtyInvoiced>\n      <unitPriceStandard>0.90</unitPriceStandard>\n      <unitPriceNet>0.8900</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-28.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-28</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1028</poReference>\n    <invoiceDate>2026-11-03</invoiceDate>\n    <shipDate>2026-11-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>1870.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1004</stockId>\n      <description>Body Mist 200ml</description>\n      <qtyInvoiced>1100</qtyInvoiced>\n      <unitPriceStandard>0.90</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1006</stockId>\n      <description>Travel Spray 15ml</description>\n      <qtyInvoiced>800</qtyInvoiced>\n      <unitPriceStandard>1.10</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-29.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-29</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1029</poReference>\n    <invoiceDate>2026-12-06</invoiceDate>\n    <shipDate>2026-12-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>15050.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>2100</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1003</stockId>\n      <description>Perfume Oil 30ml</description>\n      <qtyInvoiced>1400</qtyInvoiced>\n      <unitPriceStandard>3.25</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-30.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-30</invoiceNumber>\n    <type>final</type>\n    <distributor id=\"DIST-EU-02\" name=\"Nordic Scents AB\"/>\n    <contraCogsModel>A</contraCogsModel>\n    <poReference>PO-1030</poReference>\n    <invoiceDate>2026-12-08</invoiceDate>\n    <shipDate>2026-12-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"3000\" pct=\"0.5\"/>\n      <tier minQty=\"3001\" maxQty=\"\" pct=\"1\"/>\n    </discount>\n    <totalValueStandard>21400.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>3700</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet>1.9800</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>2800</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet>4.9500</unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/invoices/INV-2026-31.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<invoice>\n  <header>\n    <invoiceNumber>INV-2026-31</invoiceNumber>\n    <type>proforma</type>\n    <distributor id=\"DIST-EU-01\" name=\"Maison Aroma s.r.o.\"/>\n    <contraCogsModel>B</contraCogsModel>\n    <poReference>PO-1031</poReference>\n    <invoiceDate>2026-12-05</invoiceDate>\n    <shipDate>2026-12-02</shipDate>\n    <incoterms>FOB_SHIPPING_POINT</incoterms>\n    <currency>EUR</currency>\n    <discount basis=\"total_volume\">\n      <tier minQty=\"1\" maxQty=\"5000\" pct=\"1\"/>\n      <tier minQty=\"5001\" maxQty=\"10000\" pct=\"1.5\"/>\n      <tier minQty=\"10001\" maxQty=\"\" pct=\"2\"/>\n    </discount>\n    <totalValueStandard>11500.00</totalValueStandard>\n  </header>\n  <lines>\n    <line>\n      <stockId>SKU-1001</stockId>\n      <description>Eau de Parfum 50ml</description>\n      <qtyInvoiced>3000</qtyInvoiced>\n      <unitPriceStandard>2.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n    <line>\n      <stockId>SKU-1005</stockId>\n      <description>Gift Set</description>\n      <qtyInvoiced>1100</qtyInvoiced>\n      <unitPriceStandard>5.00</unitPriceStandard>\n      <unitPriceNet></unitPriceNet>\n      <targetStorage>MULTI</targetStorage>\n    </line>\n  </lines>\n</invoice>\n","./data/inbox/delivery_notes/DN-2026-0001-01.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<deliveryNote>\r\n  <deliveryNoteId>DN-2026-0001-01</deliveryNoteId>\r\n  <invoiceNumber>INV-2026-0001</invoiceNumber>\r\n  <targetStorageId>WH-CENTRAL</targetStorageId>\r\n  <shipDate>2026-01-27</shipDate>\r\n  <lines>\r\n    <line><stockId>SKU-1001</stockId><qtyShipped>1000</qtyShipped></line>\r\n  </lines>\r\n</deliveryNote>\r\n","./data/inbox/delivery_notes/DN-INV-2026-02.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-02</deliveryNoteId>\n  <invoiceNumber>INV-2026-02</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-01-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1002</stockId><qtyShipped>2300</qtyShipped></line>\n    <line><stockId>SKU-1004</stockId><qtyShipped>3600</qtyShipped></line>\n    <line><stockId>SKU-1003</stockId><qtyShipped>1300</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-03.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-03</deliveryNoteId>\n  <invoiceNumber>INV-2026-03</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-01-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1005</stockId><qtyShipped>2600</qtyShipped></line>\n    <line><stockId>SKU-1001</stockId><qtyShipped>2100</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-04.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-04</deliveryNoteId>\n  <invoiceNumber>INV-2026-04</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-01-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1001</stockId><qtyShipped>1100</qtyShipped></line>\n    <line><stockId>SKU-1006</stockId><qtyShipped>2200</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-05.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-05</deliveryNoteId>\n  <invoiceNumber>INV-2026-05</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-02-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1004</stockId><qtyShipped>1300</qtyShipped></line>\n    <line><stockId>SKU-1002</stockId><qtyShipped>1500</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-06.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-06</deliveryNoteId>\n  <invoiceNumber>INV-2026-06</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-02-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1003</stockId><qtyShipped>3800</qtyShipped></line>\n    <line><stockId>SKU-1001</stockId><qtyShipped>800</qtyShipped></line>\n    <line><stockId>SKU-1004</stockId><qtyShipped>3700</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-07.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-07</deliveryNoteId>\n  <invoiceNumber>INV-2026-07</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-03-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1002</stockId><qtyShipped>2100</qtyShipped></line>\n    <line><stockId>SKU-1006</stockId><qtyShipped>3000</qtyShipped></line>\n    <line><stockId>SKU-1003</stockId><qtyShipped>2400</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-08.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-08</deliveryNoteId>\n  <invoiceNumber>INV-2026-08</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-03-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1002</stockId><qtyShipped>3000</qtyShipped></line>\n    <line><stockId>SKU-1005</stockId><qtyShipped>1300</qtyShipped></line>\n    <line><stockId>SKU-1003</stockId><qtyShipped>1000</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-09.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-09</deliveryNoteId>\n  <invoiceNumber>INV-2026-09</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-04-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1006</stockId><qtyShipped>1200</qtyShipped></line>\n    <line><stockId>SKU-1004</stockId><qtyShipped>2200</qtyShipped></line>\n    <line><stockId>SKU-1002</stockId><qtyShipped>600</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-10.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-10</deliveryNoteId>\n  <invoiceNumber>INV-2026-10</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-04-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1005</stockId><qtyShipped>1900</qtyShipped></line>\n    <line><stockId>SKU-1003</stockId><qtyShipped>3700</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-11.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-11</deliveryNoteId>\n  <invoiceNumber>INV-2026-11</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-05-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1005</stockId><qtyShipped>1600</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-12.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-12</deliveryNoteId>\n  <invoiceNumber>INV-2026-12</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-05-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1005</stockId><qtyShipped>3700</qtyShipped></line>\n    <line><stockId>SKU-1003</stockId><qtyShipped>1000</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-13.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-13</deliveryNoteId>\n  <invoiceNumber>INV-2026-13</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-06-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1003</stockId><qtyShipped>3500</qtyShipped></line>\n    <line><stockId>SKU-1006</stockId><qtyShipped>3100</qtyShipped></line>\n    <line><stockId>SKU-1001</stockId><qtyShipped>700</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-14.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-14</deliveryNoteId>\n  <invoiceNumber>INV-2026-14</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-06-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1003</stockId><qtyShipped>3800</qtyShipped></line>\n    <line><stockId>SKU-1004</stockId><qtyShipped>1600</qtyShipped></line>\n    <line><stockId>SKU-1006</stockId><qtyShipped>1000</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-15.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-15</deliveryNoteId>\n  <invoiceNumber>INV-2026-15</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-07-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1001</stockId><qtyShipped>1500</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-16.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-16</deliveryNoteId>\n  <invoiceNumber>INV-2026-16</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-07-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1003</stockId><qtyShipped>2100</qtyShipped></line>\n    <line><stockId>SKU-1002</stockId><qtyShipped>1600</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-17.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-17</deliveryNoteId>\n  <invoiceNumber>INV-2026-17</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-07-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1001</stockId><qtyShipped>3600</qtyShipped></line>\n    <line><stockId>SKU-1003</stockId><qtyShipped>2300</qtyShipped></line>\n    <line><stockId>SKU-1005</stockId><qtyShipped>700</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-18.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-18</deliveryNoteId>\n  <invoiceNumber>INV-2026-18</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-08-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1002</stockId><qtyShipped>700</qtyShipped></line>\n    <line><stockId>SKU-1001</stockId><qtyShipped>700</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-19.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-19</deliveryNoteId>\n  <invoiceNumber>INV-2026-19</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-08-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1001</stockId><qtyShipped>1900</qtyShipped></line>\n    <line><stockId>SKU-1003</stockId><qtyShipped>1500</qtyShipped></line>\n    <line><stockId>SKU-1005</stockId><qtyShipped>2400</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-20.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-20</deliveryNoteId>\n  <invoiceNumber>INV-2026-20</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-08-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1006</stockId><qtyShipped>4000</qtyShipped></line>\n    <line><stockId>SKU-1005</stockId><qtyShipped>1600</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-21.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-21</deliveryNoteId>\n  <invoiceNumber>INV-2026-21</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-09-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1001</stockId><qtyShipped>1500</qtyShipped></line>\n    <line><stockId>SKU-1006</stockId><qtyShipped>2200</qtyShipped></line>\n    <line><stockId>SKU-1002</stockId><qtyShipped>2700</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-22.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-22</deliveryNoteId>\n  <invoiceNumber>INV-2026-22</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-09-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1006</stockId><qtyShipped>2400</qtyShipped></line>\n    <line><stockId>SKU-1003</stockId><qtyShipped>700</qtyShipped></line>\n    <line><stockId>SKU-1005</stockId><qtyShipped>2000</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-23.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-23</deliveryNoteId>\n  <invoiceNumber>INV-2026-23</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-09-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1002</stockId><qtyShipped>3000</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-24.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-24</deliveryNoteId>\n  <invoiceNumber>INV-2026-24</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-10-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1002</stockId><qtyShipped>1400</qtyShipped></line>\n    <line><stockId>SKU-1005</stockId><qtyShipped>2300</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-25.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-25</deliveryNoteId>\n  <invoiceNumber>INV-2026-25</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-10-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1002</stockId><qtyShipped>4000</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-26.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-26</deliveryNoteId>\n  <invoiceNumber>INV-2026-26</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-11-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1004</stockId><qtyShipped>900</qtyShipped></line>\n    <line><stockId>SKU-1001</stockId><qtyShipped>3200</qtyShipped></line>\n    <line><stockId>SKU-1003</stockId><qtyShipped>3600</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-27.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-27</deliveryNoteId>\n  <invoiceNumber>INV-2026-27</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-11-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1002</stockId><qtyShipped>3800</qtyShipped></line>\n    <line><stockId>SKU-1004</stockId><qtyShipped>3100</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-28.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-28</deliveryNoteId>\n  <invoiceNumber>INV-2026-28</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-11-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1004</stockId><qtyShipped>1100</qtyShipped></line>\n    <line><stockId>SKU-1006</stockId><qtyShipped>800</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-29.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-29</deliveryNoteId>\n  <invoiceNumber>INV-2026-29</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-12-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1005</stockId><qtyShipped>2100</qtyShipped></line>\n    <line><stockId>SKU-1003</stockId><qtyShipped>1400</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-30.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-30</deliveryNoteId>\n  <invoiceNumber>INV-2026-30</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-12-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1001</stockId><qtyShipped>3700</qtyShipped></line>\n    <line><stockId>SKU-1005</stockId><qtyShipped>2800</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/delivery_notes/DN-INV-2026-31.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<deliveryNote>\n  <deliveryNoteId>DN-INV-2026-31</deliveryNoteId>\n  <invoiceNumber>INV-2026-31</invoiceNumber>\n  <targetStorageId>WH-CENTRAL</targetStorageId>\n  <shipDate>2026-12-02</shipDate>\n  <lines>\n    <line><stockId>SKU-1001</stockId><qtyShipped>3000</qtyShipped></line>\n    <line><stockId>SKU-1005</stockId><qtyShipped>1100</qtyShipped></line>\n  </lines>\n</deliveryNote>\n","./data/inbox/storage_reports/recadv_2026-01_02.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\r\nINV-2026-0001,SKU-1001,WH-CENTRAL,1000,2026-01-30T09:15:00,RECADV-0001\r\nINV-2026-0001,SKU-1001,WH-BA,500,2026-01-31T14:40:00,RECADV-0002\r\nINV-2026-0001,SKU-1001,WH-KE,1500,2026-02-02T10:05:00,RECADV-0003\r\nINV-2026-0001,SKU-1001,WH-ZA,1000,2026-02-04T11:20:00,RECADV-0004\r\nINV-2026-0001,SKU-1001,WH-PO,900,2026-02-05T08:50:00,RECADV-0005\r\n","./data/inbox/storage_reports/recadv_INV-2026-03.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-03,SKU-1005,WH-CENTRAL,1300,2026-01-20T09:00:00,RECADV-INV-2026-03-0\nINV-2026-03,SKU-1005,WH-BA,1300,2026-01-10T09:00:00,RECADV-INV-2026-03-1\nINV-2026-03,SKU-1001,WH-CENTRAL,1050,2026-01-14T09:00:00,RECADV-INV-2026-03-0\nINV-2026-03,SKU-1001,WH-BA,1050,2026-01-11T09:00:00,RECADV-INV-2026-03-1\n","./data/inbox/storage_reports/recadv_INV-2026-05.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-05,SKU-1004,WH-CENTRAL,325,2026-02-18T09:00:00,RECADV-INV-2026-05-0\nINV-2026-05,SKU-1004,WH-BA,325,2026-02-13T09:00:00,RECADV-INV-2026-05-1\nINV-2026-05,SKU-1004,WH-KE,325,2026-02-14T09:00:00,RECADV-INV-2026-05-2\nINV-2026-05,SKU-1004,WH-ZA,325,2026-02-14T09:00:00,RECADV-INV-2026-05-3\nINV-2026-05,SKU-1002,WH-CENTRAL,375,2026-02-11T09:00:00,RECADV-INV-2026-05-0\nINV-2026-05,SKU-1002,WH-BA,375,2026-02-21T09:00:00,RECADV-INV-2026-05-1\nINV-2026-05,SKU-1002,WH-KE,375,2026-02-21T09:00:00,RECADV-INV-2026-05-2\nINV-2026-05,SKU-1002,WH-ZA,375,2026-02-21T09:00:00,RECADV-INV-2026-05-3\n","./data/inbox/storage_reports/recadv_INV-2026-06.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-06,SKU-1003,WH-CENTRAL,950,2026-02-25T09:00:00,RECADV-INV-2026-06-0\nINV-2026-06,SKU-1003,WH-BA,950,2026-02-14T09:00:00,RECADV-INV-2026-06-1\nINV-2026-06,SKU-1003,WH-KE,950,2026-02-22T09:00:00,RECADV-INV-2026-06-2\nINV-2026-06,SKU-1003,WH-ZA,950,2026-02-13T09:00:00,RECADV-INV-2026-06-3\nINV-2026-06,SKU-1001,WH-CENTRAL,200,2026-02-18T09:00:00,RECADV-INV-2026-06-0\nINV-2026-06,SKU-1001,WH-BA,200,2026-02-23T09:00:00,RECADV-INV-2026-06-1\nINV-2026-06,SKU-1001,WH-KE,200,2026-02-12T09:00:00,RECADV-INV-2026-06-2\nINV-2026-06,SKU-1001,WH-ZA,200,2026-02-26T09:00:00,RECADV-INV-2026-06-3\nINV-2026-06,SKU-1004,WH-CENTRAL,925,2026-02-19T09:00:00,RECADV-INV-2026-06-0\nINV-2026-06,SKU-1004,WH-BA,925,2026-02-25T09:00:00,RECADV-INV-2026-06-1\nINV-2026-06,SKU-1004,WH-KE,925,2026-02-17T09:00:00,RECADV-INV-2026-06-2\nINV-2026-06,SKU-1004,WH-ZA,925,2026-02-19T09:00:00,RECADV-INV-2026-06-3\n","./data/inbox/storage_reports/recadv_INV-2026-07.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-07,SKU-1002,WH-CENTRAL,1050,2026-03-21T09:00:00,RECADV-INV-2026-07-0\nINV-2026-07,SKU-1002,WH-BA,1050,2026-03-15T09:00:00,RECADV-INV-2026-07-1\nINV-2026-07,SKU-1006,WH-CENTRAL,1500,2026-03-23T09:00:00,RECADV-INV-2026-07-0\nINV-2026-07,SKU-1006,WH-BA,1500,2026-03-25T09:00:00,RECADV-INV-2026-07-1\nINV-2026-07,SKU-1003,WH-CENTRAL,1200,2026-03-11T09:00:00,RECADV-INV-2026-07-0\nINV-2026-07,SKU-1003,WH-BA,1200,2026-03-18T09:00:00,RECADV-INV-2026-07-1\n","./data/inbox/storage_reports/recadv_INV-2026-08.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-08,SKU-1002,WH-CENTRAL,1000,2026-03-13T09:00:00,RECADV-INV-2026-08-0\nINV-2026-08,SKU-1002,WH-BA,1000,2026-03-20T09:00:00,RECADV-INV-2026-08-1\nINV-2026-08,SKU-1002,WH-KE,1000,2026-03-25T09:00:00,RECADV-INV-2026-08-2\nINV-2026-08,SKU-1005,WH-CENTRAL,434,2026-03-15T09:00:00,RECADV-INV-2026-08-0\nINV-2026-08,SKU-1005,WH-BA,433,2026-03-23T09:00:00,RECADV-INV-2026-08-1\nINV-2026-08,SKU-1005,WH-KE,433,2026-03-16T09:00:00,RECADV-INV-2026-08-2\nINV-2026-08,SKU-1003,WH-CENTRAL,334,2026-03-12T09:00:00,RECADV-INV-2026-08-0\nINV-2026-08,SKU-1003,WH-BA,333,2026-03-24T09:00:00,RECADV-INV-2026-08-1\nINV-2026-08,SKU-1003,WH-KE,333,2026-03-16T09:00:00,RECADV-INV-2026-08-2\n","./data/inbox/storage_reports/recadv_INV-2026-09.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-09,SKU-1006,WH-CENTRAL,315,2026-04-14T09:00:00,RECADV-INV-2026-09-0\nINV-2026-09,SKU-1006,WH-BA,315,2026-04-14T09:00:00,RECADV-INV-2026-09-1\nINV-2026-09,SKU-1006,WH-KE,315,2026-04-15T09:00:00,RECADV-INV-2026-09-2\nINV-2026-09,SKU-1006,WH-ZA,315,2026-04-10T09:00:00,RECADV-INV-2026-09-3\nINV-2026-09,SKU-1004,WH-CENTRAL,578,2026-04-13T09:00:00,RECADV-INV-2026-09-0\nINV-2026-09,SKU-1004,WH-BA,578,2026-04-26T09:00:00,RECADV-INV-2026-09-1\nINV-2026-09,SKU-1004,WH-KE,577,2026-04-19T09:00:00,RECADV-INV-2026-09-2\nINV-2026-09,SKU-1004,WH-ZA,577,2026-04-26T09:00:00,RECADV-INV-2026-09-3\nINV-2026-09,SKU-1002,WH-CENTRAL,158,2026-04-12T09:00:00,RECADV-INV-2026-09-0\nINV-2026-09,SKU-1002,WH-BA,158,2026-04-12T09:00:00,RECADV-INV-2026-09-1\nINV-2026-09,SKU-1002,WH-KE,157,2026-04-19T09:00:00,RECADV-INV-2026-09-2\nINV-2026-09,SKU-1002,WH-ZA,157,2026-04-14T09:00:00,RECADV-INV-2026-09-3\n","./data/inbox/storage_reports/recadv_INV-2026-10.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-10,SKU-1005,WH-CENTRAL,570,2026-04-20T09:00:00,RECADV-INV-2026-10-0\nINV-2026-10,SKU-1005,WH-BA,570,2026-04-19T09:00:00,RECADV-INV-2026-10-1\nINV-2026-10,SKU-1005,WH-KE,570,2026-04-20T09:00:00,RECADV-INV-2026-10-2\nINV-2026-10,SKU-1003,WH-CENTRAL,1110,2026-04-14T09:00:00,RECADV-INV-2026-10-0\nINV-2026-10,SKU-1003,WH-BA,1110,2026-04-15T09:00:00,RECADV-INV-2026-10-1\nINV-2026-10,SKU-1003,WH-KE,1110,2026-04-15T09:00:00,RECADV-INV-2026-10-2\n","./data/inbox/storage_reports/recadv_INV-2026-11.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-11,SKU-1005,WH-CENTRAL,800,2026-05-10T09:00:00,RECADV-INV-2026-11-0\nINV-2026-11,SKU-1005,WH-BA,800,2026-05-19T09:00:00,RECADV-INV-2026-11-1\n","./data/inbox/storage_reports/recadv_INV-2026-12.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-12,SKU-1005,WH-CENTRAL,1110,2026-05-24T09:00:00,RECADV-INV-2026-12-0\nINV-2026-12,SKU-1005,WH-BA,1110,2026-05-25T09:00:00,RECADV-INV-2026-12-1\nINV-2026-12,SKU-1005,WH-KE,1110,2026-05-17T09:00:00,RECADV-INV-2026-12-2\nINV-2026-12,SKU-1003,WH-CENTRAL,300,2026-05-12T09:00:00,RECADV-INV-2026-12-0\nINV-2026-12,SKU-1003,WH-BA,300,2026-05-20T09:00:00,RECADV-INV-2026-12-1\nINV-2026-12,SKU-1003,WH-KE,300,2026-05-23T09:00:00,RECADV-INV-2026-12-2\n","./data/inbox/storage_reports/recadv_INV-2026-13.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-13,SKU-1003,WH-CENTRAL,1050,2026-06-21T09:00:00,RECADV-INV-2026-13-0\nINV-2026-13,SKU-1003,WH-BA,1050,2026-06-22T09:00:00,RECADV-INV-2026-13-1\nINV-2026-13,SKU-1003,WH-KE,1050,2026-06-26T09:00:00,RECADV-INV-2026-13-2\nINV-2026-13,SKU-1006,WH-CENTRAL,930,2026-06-23T09:00:00,RECADV-INV-2026-13-0\nINV-2026-13,SKU-1006,WH-BA,930,2026-06-20T09:00:00,RECADV-INV-2026-13-1\nINV-2026-13,SKU-1006,WH-KE,930,2026-06-24T09:00:00,RECADV-INV-2026-13-2\nINV-2026-13,SKU-1001,WH-CENTRAL,210,2026-06-24T09:00:00,RECADV-INV-2026-13-0\nINV-2026-13,SKU-1001,WH-BA,210,2026-06-20T09:00:00,RECADV-INV-2026-13-1\nINV-2026-13,SKU-1001,WH-KE,210,2026-06-15T09:00:00,RECADV-INV-2026-13-2\n","./data/inbox/storage_reports/recadv_INV-2026-14.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-14,SKU-1003,WH-CENTRAL,1900,2026-06-11T09:00:00,RECADV-INV-2026-14-0\nINV-2026-14,SKU-1003,WH-BA,1900,2026-07-21T09:00:00,RECADV-INV-2026-14-1\nINV-2026-14,SKU-1004,WH-CENTRAL,800,2026-06-22T09:00:00,RECADV-INV-2026-14-0\nINV-2026-14,SKU-1004,WH-BA,800,2026-07-26T09:00:00,RECADV-INV-2026-14-1\nINV-2026-14,SKU-1006,WH-CENTRAL,500,2026-06-24T09:00:00,RECADV-INV-2026-14-0\nINV-2026-14,SKU-1006,WH-BA,500,2026-07-17T09:00:00,RECADV-INV-2026-14-1\n","./data/inbox/storage_reports/recadv_INV-2026-15.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-15,SKU-1001,WH-CENTRAL,500,2026-07-22T09:00:00,RECADV-INV-2026-15-0\nINV-2026-15,SKU-1001,WH-BA,500,2026-07-23T09:00:00,RECADV-INV-2026-15-1\nINV-2026-15,SKU-1001,WH-KE,500,2026-07-23T09:00:00,RECADV-INV-2026-15-2\n","./data/inbox/storage_reports/recadv_INV-2026-16.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-16,SKU-1003,WH-CENTRAL,735,2026-07-14T09:00:00,RECADV-INV-2026-16-0\nINV-2026-16,SKU-1003,WH-BA,735,2026-07-19T09:00:00,RECADV-INV-2026-16-1\nINV-2026-16,SKU-1003,WH-KE,735,2026-07-19T09:00:00,RECADV-INV-2026-16-2\nINV-2026-16,SKU-1002,WH-CENTRAL,560,2026-07-21T09:00:00,RECADV-INV-2026-16-0\nINV-2026-16,SKU-1002,WH-BA,560,2026-07-17T09:00:00,RECADV-INV-2026-16-1\nINV-2026-16,SKU-1002,WH-KE,560,2026-07-12T09:00:00,RECADV-INV-2026-16-2\n","./data/inbox/storage_reports/recadv_INV-2026-17.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-17,SKU-1001,WH-CENTRAL,1800,2026-07-21T09:00:00,RECADV-INV-2026-17-0\nINV-2026-17,SKU-1001,WH-BA,1800,2026-07-19T09:00:00,RECADV-INV-2026-17-1\nINV-2026-17,SKU-1003,WH-CENTRAL,1150,2026-07-11T09:00:00,RECADV-INV-2026-17-0\nINV-2026-17,SKU-1003,WH-BA,1150,2026-07-26T09:00:00,RECADV-INV-2026-17-1\nINV-2026-17,SKU-1005,WH-CENTRAL,350,2026-07-22T09:00:00,RECADV-INV-2026-17-0\nINV-2026-17,SKU-1005,WH-BA,350,2026-07-21T09:00:00,RECADV-INV-2026-17-1\n","./data/inbox/storage_reports/recadv_INV-2026-19.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-19,SKU-1001,WH-CENTRAL,428,2026-08-26T09:00:00,RECADV-INV-2026-19-0\nINV-2026-19,SKU-1001,WH-BA,428,2026-08-14T09:00:00,RECADV-INV-2026-19-1\nINV-2026-19,SKU-1001,WH-KE,427,2026-08-18T09:00:00,RECADV-INV-2026-19-2\nINV-2026-19,SKU-1001,WH-ZA,427,2026-08-24T09:00:00,RECADV-INV-2026-19-3\nINV-2026-19,SKU-1003,WH-CENTRAL,338,2026-08-25T09:00:00,RECADV-INV-2026-19-0\nINV-2026-19,SKU-1003,WH-BA,338,2026-08-21T09:00:00,RECADV-INV-2026-19-1\nINV-2026-19,SKU-1003,WH-KE,337,2026-08-19T09:00:00,RECADV-INV-2026-19-2\nINV-2026-19,SKU-1003,WH-ZA,337,2026-08-23T09:00:00,RECADV-INV-2026-19-3\nINV-2026-19,SKU-1005,WH-CENTRAL,540,2026-08-15T09:00:00,RECADV-INV-2026-19-0\nINV-2026-19,SKU-1005,WH-BA,540,2026-08-18T09:00:00,RECADV-INV-2026-19-1\nINV-2026-19,SKU-1005,WH-KE,540,2026-08-22T09:00:00,RECADV-INV-2026-19-2\nINV-2026-19,SKU-1005,WH-ZA,540,2026-08-19T09:00:00,RECADV-INV-2026-19-3\n","./data/inbox/storage_reports/recadv_INV-2026-20.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-20,SKU-1006,WH-CENTRAL,900,2026-08-24T09:00:00,RECADV-INV-2026-20-0\nINV-2026-20,SKU-1006,WH-BA,900,2026-08-16T09:00:00,RECADV-INV-2026-20-1\nINV-2026-20,SKU-1006,WH-KE,900,2026-08-24T09:00:00,RECADV-INV-2026-20-2\nINV-2026-20,SKU-1006,WH-ZA,900,2026-08-15T09:00:00,RECADV-INV-2026-20-3\nINV-2026-20,SKU-1005,WH-CENTRAL,360,2026-08-24T09:00:00,RECADV-INV-2026-20-0\nINV-2026-20,SKU-1005,WH-BA,360,2026-08-17T09:00:00,RECADV-INV-2026-20-1\nINV-2026-20,SKU-1005,WH-KE,360,2026-08-15T09:00:00,RECADV-INV-2026-20-2\nINV-2026-20,SKU-1005,WH-ZA,360,2026-08-19T09:00:00,RECADV-INV-2026-20-3\n","./data/inbox/storage_reports/recadv_INV-2026-22.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-22,SKU-1006,WH-CENTRAL,800,2026-09-22T09:00:00,RECADV-INV-2026-22-0\nINV-2026-22,SKU-1006,WH-BA,800,2026-09-18T09:00:00,RECADV-INV-2026-22-1\nINV-2026-22,SKU-1006,WH-KE,800,2026-09-10T09:00:00,RECADV-INV-2026-22-2\nINV-2026-22,SKU-1003,WH-CENTRAL,234,2026-09-12T09:00:00,RECADV-INV-2026-22-0\nINV-2026-22,SKU-1003,WH-BA,233,2026-09-11T09:00:00,RECADV-INV-2026-22-1\nINV-2026-22,SKU-1003,WH-KE,233,2026-09-12T09:00:00,RECADV-INV-2026-22-2\nINV-2026-22,SKU-1005,WH-CENTRAL,667,2026-09-16T09:00:00,RECADV-INV-2026-22-0\nINV-2026-22,SKU-1005,WH-BA,667,2026-09-24T09:00:00,RECADV-INV-2026-22-1\nINV-2026-22,SKU-1005,WH-KE,666,2026-09-24T09:00:00,RECADV-INV-2026-22-2\n","./data/inbox/storage_reports/recadv_INV-2026-23.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-23,SKU-1002,WH-CENTRAL,750,2026-09-20T09:00:00,RECADV-INV-2026-23-0\nINV-2026-23,SKU-1002,WH-BA,750,2026-09-25T09:00:00,RECADV-INV-2026-23-1\nINV-2026-23,SKU-1002,WH-KE,750,2026-09-25T09:00:00,RECADV-INV-2026-23-2\nINV-2026-23,SKU-1002,WH-ZA,750,2026-09-15T09:00:00,RECADV-INV-2026-23-3\n","./data/inbox/storage_reports/recadv_INV-2026-24.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-24,SKU-1002,WH-CENTRAL,467,2026-10-11T09:00:00,RECADV-INV-2026-24-0\nINV-2026-24,SKU-1002,WH-BA,467,2026-10-23T09:00:00,RECADV-INV-2026-24-1\nINV-2026-24,SKU-1002,WH-KE,466,2026-10-21T09:00:00,RECADV-INV-2026-24-2\nINV-2026-24,SKU-1005,WH-CENTRAL,767,2026-10-25T09:00:00,RECADV-INV-2026-24-0\nINV-2026-24,SKU-1005,WH-BA,767,2026-10-11T09:00:00,RECADV-INV-2026-24-1\nINV-2026-24,SKU-1005,WH-KE,766,2026-10-10T09:00:00,RECADV-INV-2026-24-2\n","./data/inbox/storage_reports/recadv_INV-2026-25.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-25,SKU-1002,WH-CENTRAL,1000,2026-10-15T09:00:00,RECADV-INV-2026-25-0\nINV-2026-25,SKU-1002,WH-BA,1000,2026-10-21T09:00:00,RECADV-INV-2026-25-1\nINV-2026-25,SKU-1002,WH-KE,1000,2026-10-10T09:00:00,RECADV-INV-2026-25-2\nINV-2026-25,SKU-1002,WH-ZA,1000,2026-10-22T09:00:00,RECADV-INV-2026-25-3\n","./data/inbox/storage_reports/recadv_INV-2026-26.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-26,SKU-1004,WH-CENTRAL,300,2026-11-26T09:00:00,RECADV-INV-2026-26-0\nINV-2026-26,SKU-1004,WH-BA,300,2026-11-12T09:00:00,RECADV-INV-2026-26-1\nINV-2026-26,SKU-1004,WH-KE,300,2026-11-12T09:00:00,RECADV-INV-2026-26-2\nINV-2026-26,SKU-1001,WH-CENTRAL,1067,2026-11-19T09:00:00,RECADV-INV-2026-26-0\nINV-2026-26,SKU-1001,WH-BA,1067,2026-11-21T09:00:00,RECADV-INV-2026-26-1\nINV-2026-26,SKU-1001,WH-KE,1066,2026-11-13T09:00:00,RECADV-INV-2026-26-2\nINV-2026-26,SKU-1003,WH-CENTRAL,1200,2026-11-23T09:00:00,RECADV-INV-2026-26-0\nINV-2026-26,SKU-1003,WH-BA,1200,2026-11-14T09:00:00,RECADV-INV-2026-26-1\nINV-2026-26,SKU-1003,WH-KE,1200,2026-11-12T09:00:00,RECADV-INV-2026-26-2\n","./data/inbox/storage_reports/recadv_INV-2026-27.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-27,SKU-1002,WH-CENTRAL,855,2026-11-19T09:00:00,RECADV-INV-2026-27-0\nINV-2026-27,SKU-1002,WH-BA,855,2026-11-14T09:00:00,RECADV-INV-2026-27-1\nINV-2026-27,SKU-1002,WH-KE,855,2026-11-10T09:00:00,RECADV-INV-2026-27-2\nINV-2026-27,SKU-1002,WH-ZA,855,2026-11-15T09:00:00,RECADV-INV-2026-27-3\nINV-2026-27,SKU-1004,WH-CENTRAL,698,2026-11-22T09:00:00,RECADV-INV-2026-27-0\nINV-2026-27,SKU-1004,WH-BA,698,2026-11-22T09:00:00,RECADV-INV-2026-27-1\nINV-2026-27,SKU-1004,WH-KE,697,2026-11-14T09:00:00,RECADV-INV-2026-27-2\nINV-2026-27,SKU-1004,WH-ZA,697,2026-11-24T09:00:00,RECADV-INV-2026-27-3\n","./data/inbox/storage_reports/recadv_INV-2026-28.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-28,SKU-1004,WH-CENTRAL,275,2026-11-13T09:00:00,RECADV-INV-2026-28-0\nINV-2026-28,SKU-1004,WH-BA,275,2026-11-18T09:00:00,RECADV-INV-2026-28-1\nINV-2026-28,SKU-1004,WH-KE,275,2026-11-18T09:00:00,RECADV-INV-2026-28-2\nINV-2026-28,SKU-1004,WH-ZA,275,2026-11-20T09:00:00,RECADV-INV-2026-28-3\nINV-2026-28,SKU-1006,WH-CENTRAL,200,2026-11-18T09:00:00,RECADV-INV-2026-28-0\nINV-2026-28,SKU-1006,WH-BA,200,2026-11-21T09:00:00,RECADV-INV-2026-28-1\nINV-2026-28,SKU-1006,WH-KE,200,2026-11-12T09:00:00,RECADV-INV-2026-28-2\nINV-2026-28,SKU-1006,WH-ZA,200,2026-11-26T09:00:00,RECADV-INV-2026-28-3\n","./data/inbox/storage_reports/recadv_INV-2026-29.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-29,SKU-1005,WH-CENTRAL,1050,2026-12-24T09:00:00,RECADV-INV-2026-29-0\nINV-2026-29,SKU-1005,WH-BA,1050,2026-12-16T09:00:00,RECADV-INV-2026-29-1\nINV-2026-29,SKU-1003,WH-CENTRAL,700,2026-12-17T09:00:00,RECADV-INV-2026-29-0\nINV-2026-29,SKU-1003,WH-BA,700,2026-12-14T09:00:00,RECADV-INV-2026-29-1\n","./data/inbox/storage_reports/recadv_INV-2026-30.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-30,SKU-1001,WH-CENTRAL,1850,2026-12-19T09:00:00,RECADV-INV-2026-30-0\nINV-2026-30,SKU-1001,WH-BA,1850,2026-12-19T09:00:00,RECADV-INV-2026-30-1\nINV-2026-30,SKU-1005,WH-CENTRAL,1400,2026-12-18T09:00:00,RECADV-INV-2026-30-0\nINV-2026-30,SKU-1005,WH-BA,1400,2026-12-18T09:00:00,RECADV-INV-2026-30-1\n","./data/inbox/storage_reports/recadv_INV-2026-31.csv":"invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref\nINV-2026-31,SKU-1001,WH-CENTRAL,675,2026-12-25T09:00:00,RECADV-INV-2026-31-0\nINV-2026-31,SKU-1001,WH-BA,675,2026-12-14T09:00:00,RECADV-INV-2026-31-1\nINV-2026-31,SKU-1001,WH-KE,675,2026-12-20T09:00:00,RECADV-INV-2026-31-2\nINV-2026-31,SKU-1001,WH-ZA,675,2026-12-25T09:00:00,RECADV-INV-2026-31-3\nINV-2026-31,SKU-1005,WH-CENTRAL,248,2026-12-17T09:00:00,RECADV-INV-2026-31-0\nINV-2026-31,SKU-1005,WH-BA,248,2026-12-10T09:00:00,RECADV-INV-2026-31-1\nINV-2026-31,SKU-1005,WH-KE,247,2026-12-19T09:00:00,RECADV-INV-2026-31-2\nINV-2026-31,SKU-1005,WH-ZA,247,2026-12-18T09:00:00,RECADV-INV-2026-31-3\n","./data/inbox/credit_notes/CN-2026-01-DIST-EU-01.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<creditNote>\r\n  <creditNoteId>CN-2026-01-DIST-EU-01</creditNoteId>\r\n  <distributor id=\"DIST-EU-01\"/>\r\n  <period>2026-01</period>\r\n  <invoiceRef>INV-2026-0001</invoiceRef>\r\n  <basisQty>1500</basisQty>\r\n  <basisValueStandard>3000.00</basisValueStandard>\r\n  <tierApplied>1.0</tierApplied>\r\n  <amount>30.00</amount>\r\n  <status>Pending</status>\r\n</creditNote>\r\n","./data/inbox/credit_notes/CN-INV-2026-03.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-03</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-01</period>\n  <invoiceRef>INV-2026-03</invoiceRef>\n  <basisQty>4700</basisQty>\n  <basisValueStandard>17200.00</basisValueStandard>\n  <tierApplied>1</tierApplied>\n  <amount>172.00</amount>\n  <status>Cleared</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-05.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-05</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-02</period>\n  <invoiceRef>INV-2026-05</invoiceRef>\n  <basisQty>2800</basisQty>\n  <basisValueStandard>3420.00</basisValueStandard>\n  <tierApplied>1</tierApplied>\n  <amount>34.20</amount>\n  <status>Cleared</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-10.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-10</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-04</period>\n  <invoiceRef>INV-2026-10</invoiceRef>\n  <basisQty>5040</basisQty>\n  <basisValueStandard>19372.50</basisValueStandard>\n  <tierApplied>1.5</tierApplied>\n  <amount>290.59</amount>\n  <status>Pending</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-12.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-12</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-05</period>\n  <invoiceRef>INV-2026-12</invoiceRef>\n  <basisQty>4230</basisQty>\n  <basisValueStandard>19575.00</basisValueStandard>\n  <tierApplied>1</tierApplied>\n  <amount>195.75</amount>\n  <status>Pending</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-13.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-13</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-06</period>\n  <invoiceRef>INV-2026-13</invoiceRef>\n  <basisQty>6570</basisQty>\n  <basisValueStandard>14566.50</basisValueStandard>\n  <tierApplied>1.5</tierApplied>\n  <amount>218.50</amount>\n  <status>Pending</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-14.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-14</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-06</period>\n  <invoiceRef>INV-2026-14</invoiceRef>\n  <basisQty>6400</basisQty>\n  <basisValueStandard>14890.00</basisValueStandard>\n  <tierApplied>1.5</tierApplied>\n  <amount>223.35</amount>\n  <status>Cleared</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-15.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-15</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-07</period>\n  <invoiceRef>INV-2026-15</invoiceRef>\n  <basisQty>1500</basisQty>\n  <basisValueStandard>3000.00</basisValueStandard>\n  <tierApplied>1</tierApplied>\n  <amount>30.00</amount>\n  <status>Cleared</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-16.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-16</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-07</period>\n  <invoiceRef>INV-2026-16</invoiceRef>\n  <basisQty>3885</basisQty>\n  <basisValueStandard>9686.25</basisValueStandard>\n  <tierApplied>1</tierApplied>\n  <amount>96.86</amount>\n  <status>Cleared</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-17.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-17</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-07</period>\n  <invoiceRef>INV-2026-17</invoiceRef>\n  <basisQty>6600</basisQty>\n  <basisValueStandard>18175.00</basisValueStandard>\n  <tierApplied>1.5</tierApplied>\n  <amount>272.63</amount>\n  <status>Cleared</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-25.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-25</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-10</period>\n  <invoiceRef>INV-2026-25</invoiceRef>\n  <basisQty>4000</basisQty>\n  <basisValueStandard>6000.00</basisValueStandard>\n  <tierApplied>1</tierApplied>\n  <amount>60.00</amount>\n  <status>Cleared</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-26.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-26</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-11</period>\n  <invoiceRef>INV-2026-26</invoiceRef>\n  <basisQty>7700</basisQty>\n  <basisValueStandard>18910.00</basisValueStandard>\n  <tierApplied>1.5</tierApplied>\n  <amount>283.65</amount>\n  <status>Cleared</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-28.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-28</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-11</period>\n  <invoiceRef>INV-2026-28</invoiceRef>\n  <basisQty>1900</basisQty>\n  <basisValueStandard>1870.00</basisValueStandard>\n  <tierApplied>1</tierApplied>\n  <amount>18.70</amount>\n  <status>Cleared</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-29.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-29</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-12</period>\n  <invoiceRef>INV-2026-29</invoiceRef>\n  <basisQty>3500</basisQty>\n  <basisValueStandard>15050.00</basisValueStandard>\n  <tierApplied>1</tierApplied>\n  <amount>150.50</amount>\n  <status>Cleared</status>\n</creditNote>\n","./data/inbox/credit_notes/CN-INV-2026-31.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<creditNote>\n  <creditNoteId>CN-INV-2026-31</creditNoteId>\n  <distributor id=\"DIST-EU-01\"/>\n  <period>2026-12</period>\n  <invoiceRef>INV-2026-31</invoiceRef>\n  <basisQty>3690</basisQty>\n  <basisValueStandard>10350.00</basisValueStandard>\n  <tierApplied>1</tierApplied>\n  <amount>103.50</amount>\n  <status>Pending</status>\n</creditNote>\n"};
+globalThis.__PERFUMERIES_READ_TEXT__ = (url) => {
+  if (!(url in DATA)) return Promise.reject(new Error('offline: missing ' + url));
+  return Promise.resolve(DATA[url]);
+};
+
+// ===== src/lib/version.js =====
+// Single source of truth for the app version. Bump as the build progresses.const VERSION = '0.1.0';
+
+
+// ===== src/lib/enums.js =====
+// Canonical enumerations for the reconciliation domain.
+// Frozen objects; use the exported *_VALUES arrays for membership checks.const ContraCogsModel = Object.freeze({ A: 'A', B: 'B' });const CONTRA_COGS_MODEL_VALUES = Object.freeze(Object.values(ContraCogsModel));const FulfilmentStatus = Object.freeze({
+  FULLY_DELIVERED: 'FullyDelivered',
+  SHORT: 'Short',
+  OVER: 'Over',
+});const FULFILMENT_STATUS_VALUES = Object.freeze(Object.values(FulfilmentStatus));const InvoiceStatus = Object.freeze({
+  RECEIVED: 'Received',
+  IN_TRANSIT_PENDING: 'InTransitPending',
+  PARTIALLY_RECEIVED: 'PartiallyReceived',
+  FULLY_MATCHED: 'FullyMatched',
+  PAID: 'Paid',
+  ARCHIVED: 'Archived',
+  UNDER_INVESTIGATION: 'UnderInvestigation',
+  RESOLVED: 'Resolved',
+  UNRESOLVABLE: 'Unresolvable',
+});const INVOICE_STATUS_VALUES = Object.freeze(Object.values(InvoiceStatus));const ResolutionOption = Object.freeze({
+  STOCK_TRANSFER: 'StockTransfer',
+  DEBIT_NOTE: 'DebitNote',
+  WRITE_OFF: 'WriteOff',
+  SHRINKAGE: 'Shrinkage',
+  ACCRUE_TRUE_UP: 'AccrueTrueUp',
+  CONTRA_COGS_CORRECTION: 'ContraCogsCorrection',
+});const RESOLUTION_OPTION_VALUES = Object.freeze(Object.values(ResolutionOption));const ScanStatus = Object.freeze({
+  SCANNING: 'Scanning',
+  NO_UPDATES: 'NoUpdates',
+  FOUND: 'Found',
+  ERROR: 'Error',
+});const SCAN_STATUS_VALUES = Object.freeze(Object.values(ScanStatus));const CreditNoteStatus = Object.freeze({ PENDING: 'Pending', CLEARED: 'Cleared' });const CREDIT_NOTE_STATUS_VALUES = Object.freeze(Object.values(CreditNoteStatus));
+
+/** True if `value` is a member of the given *_VALUES array. */function isEnumValue(values, value) {
+  return values.includes(value);
+}
+
+
+// ===== src/lib/models.js =====
+// Domain model factories with validation.
+// Each factory normalizes input, validates required fields, and returns a frozen object.
+// Throws a descriptive Error on invalid input so ingestion can capture the reason.
+
+
+
+// ---- validation helpers ---------------------------------------------------
+
+function req(obj, field, ctx) {
+  const v = obj[field];
+  if (v === undefined || v === null || v === '') {
+    throw new Error(`${ctx}: missing required field "${field}"`);
+  }
+  return v;
+}
+
+function num(obj, field, ctx, { min = -Infinity } = {}) {
+  const v = obj[field];
+  if (typeof v !== 'number' || Number.isNaN(v)) {
+    throw new Error(`${ctx}: field "${field}" must be a number (got ${JSON.stringify(v)})`);
+  }
+  if (v < min) throw new Error(`${ctx}: field "${field}" must be >= ${min} (got ${v})`);
+  return v;
+}
+
+function optNum(obj, field, ctx, opts) {
+  return obj[field] === undefined || obj[field] === null || obj[field] === ''
+    ? null
+    : num(obj, field, ctx, opts);
+}
+
+function oneOf(obj, field, values, ctx) {
+  const v = req(obj, field, ctx);
+  if (!isEnumValue(values, v)) {
+    throw new Error(`${ctx}: field "${field}" must be one of ${values.join('|')} (got "${v}")`);
+  }
+  return v;
+}
+
+// ---- source documents -----------------------------------------------------function createInvoiceLine(input, ctx = 'InvoiceLine') {
+  return Object.freeze({
+    stockId: req(input, 'stockId', ctx),
+    description: input.description ?? '',
+    qtyInvoiced: num(input, 'qtyInvoiced', ctx, { min: 0 }),
+    unitPriceStandard: num(input, 'unitPriceStandard', ctx, { min: 0 }),
+    unitPriceNet: optNum(input, 'unitPriceNet', ctx, { min: 0 }), // Model A only
+    targetStorage: input.targetStorage ?? null,
+  });
+}function createInvoice(input) {
+  const ctx = `Invoice(${input?.invoiceNumber ?? '?'})`;
+  const lines = Array.isArray(input.lines) ? input.lines.map((l) => createInvoiceLine(l, ctx)) : [];
+  if (lines.length === 0) throw new Error(`${ctx}: must have at least one line`);
+  return Object.freeze({
+    invoiceNumber: req(input, 'invoiceNumber', ctx),
+    type: input.type ?? 'final', // proforma | final
+    distributorId: req(input, 'distributorId', ctx),
+    contraCogsModel: oneOf(input, 'contraCogsModel', CONTRA_COGS_MODEL_VALUES, ctx),
+    poReference: input.poReference ?? null,
+    invoiceDate: input.invoiceDate ?? null,
+    shipDate: input.shipDate ?? null,
+    incoterms: input.incoterms ?? null,
+    currency: input.currency ?? null,
+    discountTiers: Array.isArray(input.discountTiers) ? Object.freeze([...input.discountTiers]) : [],
+    totalValueStandard: num(input, 'totalValueStandard', ctx, { min: 0 }),
+    status: input.status ? oneOf(input, 'status', INVOICE_STATUS_VALUES, ctx) : InvoiceStatus.RECEIVED,
+    sourceFile: input.sourceFile ?? null,
+    lines,
+  });
+}function createDeliveryNote(input) {
+  const ctx = `DeliveryNote(${input?.deliveryNoteId ?? '?'})`;
+  const lines = Array.isArray(input.lines)
+    ? input.lines.map((l, i) => Object.freeze({
+        stockId: req(l, 'stockId', `${ctx}.line[${i}]`),
+        qtyShipped: num(l, 'qtyShipped', `${ctx}.line[${i}]`, { min: 0 }),
+      }))
+    : [];
+  return Object.freeze({
+    deliveryNoteId: req(input, 'deliveryNoteId', ctx),
+    invoiceNumber: input.invoiceNumber ?? null,
+    targetStorageId: req(input, 'targetStorageId', ctx),
+    shipDate: input.shipDate ?? null,
+    sourceFile: input.sourceFile ?? null,
+    lines,
+  });
+}function createGoodsReceipt(input) {
+  const ctx = 'GoodsReceipt';
+  return Object.freeze({
+    invoiceNumber: req(input, 'invoiceNumber', ctx),
+    stockId: req(input, 'stockId', ctx),
+    storageId: req(input, 'storageId', ctx),
+    qtyReceived: num(input, 'qtyReceived', ctx, { min: 0 }),
+    receiptDatetime: req(input, 'receiptDatetime', ctx),
+    recadvRef: input.recadvRef ?? null,
+    sourceFile: input.sourceFile ?? null,
+  });
+}function createCreditNote(input) {
+  const ctx = `CreditNote(${input?.creditNoteId ?? '?'})`;
+  return Object.freeze({
+    creditNoteId: req(input, 'creditNoteId', ctx),
+    distributorId: req(input, 'distributorId', ctx),
+    period: req(input, 'period', ctx),
+    invoiceRef: input.invoiceRef ?? null,
+    basisQty: num(input, 'basisQty', ctx, { min: 0 }),
+    basisValue: num(input, 'basisValue', ctx, { min: 0 }),
+    tierApplied: optNum(input, 'tierApplied', ctx, { min: 0 }),
+    amount: num(input, 'amount', ctx, { min: 0 }),
+    status: input.status ? oneOf(input, 'status', CREDIT_NOTE_STATUS_VALUES, ctx) : CreditNoteStatus.PENDING,
+    sourceFile: input.sourceFile ?? null,
+  });
+}
+
+// ---- derived / operational models -----------------------------------------function createGap(input) {
+  const ctx = `Gap(${input?.gapId ?? '?'})`;
+  return Object.freeze({
+    gapId: req(input, 'gapId', ctx),
+    invoiceNumber: req(input, 'invoiceNumber', ctx),
+    stockId: req(input, 'stockId', ctx),
+    missingQty: num(input, 'missingQty', ctx, { min: 0 }),
+    valueAtRisk: num(input, 'valueAtRisk', ctx, { min: 0 }),
+    cause: input.cause ?? null,
+    status: input.status ?? 'open',
+    owner: input.owner ?? null,
+  });
+}function createGinrAccrual(input) {
+  const ctx = 'GinrAccrual';
+  return Object.freeze({
+    invoiceNumber: req(input, 'invoiceNumber', ctx),
+    period: req(input, 'period', ctx),
+    value: num(input, 'value', ctx, { min: 0 }),
+    ageDays: optNum(input, 'ageDays', ctx, { min: 0 }) ?? 0,
+    owner: input.owner ?? null,
+    flag: 'value missing — locate',
+  });
+}function createResolution(input) {
+  const ctx = 'Resolution';
+  return Object.freeze({
+    gapId: req(input, 'gapId', ctx),
+    option: oneOf(input, 'option', RESOLUTION_OPTION_VALUES, ctx),
+    evidenceDocRef: input.evidenceDocRef ?? null,
+    approver: input.approver ?? null,
+    timestamp: input.timestamp ?? new Date().toISOString(),
+  });
+}function createAuditEntry(input) {
+  const ctx = 'AuditEntry';
+  return Object.freeze({
+    entityId: req(input, 'entityId', ctx),
+    actor: req(input, 'actor', ctx),
+    timestamp: input.timestamp ?? new Date().toISOString(),
+    change: req(input, 'change', ctx),
+    evidenceRef: input.evidenceRef ?? null,
+  });
+}function createSplitDebit(input) {
+  const ctx = 'SplitDebit';
+  return Object.freeze({
+    invoiceNumber: req(input, 'invoiceNumber', ctx),
+    period: req(input, 'period', ctx),
+    amount: num(input, 'amount', ctx, { min: 0 }),
+    date: input.date ?? null,
+  });
+}
+
+
+// ===== src/lib/xml.js =====
+// Minimal, dependency-free XML parser + helpers.
+// Sufficient for the tool's controlled, simple schema (elements, attributes, text,
+// nesting, self-closing tags). No namespaces/CDATA/entities beyond the basics.
+// Works in both Node (tests) and the browser.
+
+const ENTITIES = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&apos;': "'" };
+function decode(s) { return s.replace(/&(amp|lt|gt|quot|apos);/g, (m) => ENTITIES[m]); }function encodeXml(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+/**
+ * Parse an XML string into a node tree:
+ *   { tag, attrs: {}, children: [node...], text: '' }
+ * Returns the root element node. Throws on malformed input.
+ */function parseXml(input) {
+  if (typeof input !== 'string' || input.trim() === '') throw new Error('XML parse error: empty input');
+  const xml = input
+    .replace(/<\?xml[\s\S]*?\?>/g, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .trim();
+
+  let i = 0;
+  const len = xml.length;
+
+  function parseTag(raw) {
+    const m = raw.match(/^([\w:-]+)/);
+    if (!m) throw new Error(`XML parse error: bad tag "${raw}"`);
+    const tag = m[1];
+    const attrs = {};
+    const attrRe = /([\w:-]+)\s*=\s*"([^"]*)"/g;
+    let a;
+    while ((a = attrRe.exec(raw))) attrs[a[1]] = decode(a[2]);
+    return { tag, attrs };
+  }
+
+  function parseNodes() {
+    const nodes = [];
+    let text = '';
+    while (i < len) {
+      if (xml[i] === '<') {
+        if (xml.startsWith('</', i)) {
+          const end = xml.indexOf('>', i);
+          if (end === -1) throw new Error('XML parse error: unterminated closing tag');
+          const tag = xml.slice(i + 2, end).trim();
+          i = end + 1;
+          if (text.trim()) nodes.push({ text: decode(text.trim()) });
+          return { nodes, closed: tag };
+        }
+        if (text.trim()) nodes.push({ text: decode(text.trim()) });
+        text = '';
+        const end = xml.indexOf('>', i);
+        if (end === -1) throw new Error('XML parse error: unterminated tag');
+        let raw = xml.slice(i + 1, end).trim();
+        i = end + 1;
+        let selfClose = false;
+        if (raw.endsWith('/')) { selfClose = true; raw = raw.slice(0, -1).trim(); }
+        const { tag, attrs } = parseTag(raw);
+        const node = { tag, attrs, children: [], text: '' };
+        if (!selfClose) {
+          const res = parseNodes();
+          if (res.closed !== tag) throw new Error(`XML parse error: mismatched tag </${res.closed}> for <${tag}>`);
+          node.children = res.nodes.filter((n) => n.tag);
+          node.text = res.nodes.filter((n) => n.text !== undefined && !n.tag).map((n) => n.text).join('');
+        }
+        nodes.push(node);
+      } else {
+        text += xml[i++];
+      }
+    }
+    return { nodes };
+  }
+
+  const root = parseNodes().nodes.find((n) => n.tag);
+  if (!root) throw new Error('XML parse error: no root element');
+  return root;
+}
+
+// ---- accessors ----function child(node, tag) { return node.children.find((c) => c.tag === tag) || null; }function children(node, tag) { return node.children.filter((c) => c.tag === tag); }function childText(node, tag) { const c = child(node, tag); return c ? c.text : ''; }function attr(node, name) { return node && node.attrs ? (node.attrs[name] ?? null) : null; }
+
+
+// ===== src/lib/csv.js =====
+// Dependency-free CSV parser/serializer with quoted-field support (RFC-4180-ish).
+// Handles quoted fields, escaped quotes (""), commas and newlines inside quotes.function parseCsv(input) {
+  if (typeof input !== 'string') throw new Error('CSV parse error: input is not a string');
+  const rows = [];
+  let field = '';
+  let row = [];
+  let inQuotes = false;
+  let i = 0;
+  const s = input.replace(/\r\n?/g, '\n');
+  const n = s.length;
+
+  const pushField = () => { row.push(field); field = ''; };
+  const pushRow = () => { rows.push(row); row = []; };
+
+  while (i < n) {
+    const c = s[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (s[i + 1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+    if (c === '"') { inQuotes = true; i++; continue; }
+    if (c === ',') { pushField(); i++; continue; }
+    if (c === '\n') { pushField(); pushRow(); i++; continue; }
+    field += c; i++;
+  }
+  // flush last field/row (ignore trailing empty line)
+  if (field !== '' || row.length > 0) { pushField(); pushRow(); }
+
+  if (rows.length === 0) return { headers: [], rows: [] };
+  const headers = rows[0];
+  const dataRows = rows.slice(1)
+    .filter((r) => !(r.length === 1 && r[0] === '')) // skip blank lines
+    .map((r) => {
+      const obj = {};
+      headers.forEach((h, idx) => { obj[h] = r[idx] ?? ''; });
+      return obj;
+    });
+  return { headers, rows: dataRows };
+}
+
+function encodeField(v) {
+  const s = v === undefined || v === null ? '' : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}function serializeCsv(headers, rows) {
+  const lines = [headers.join(',')];
+  for (const r of rows) lines.push(headers.map((h) => encodeField(r[h])).join(','));
+  return lines.join('\n') + '\n';
+}
+
+
+// ===== src/lib/parsers.js =====
+// Document parsers + serializers for the four ingested types.
+// Parse: source string -> domain model (with provenance). Serialize: model -> source string.
+// The parse/serialize pair upholds the round-trip property (see tests).
+
+
+
+
+
+const toNum = (s) => {
+  if (s === undefined || s === null || String(s).trim() === '') return null;
+  const n = Number(s);
+  return Number.isNaN(n) ? null : n;
+};
+
+// ---- Invoice (XML) --------------------------------------------------------
+// Returns { invoice, incomplete, missing, sourceFile }.
+// Missing required data-driven config (model / tiers) is FLAGGED, not thrown (Req 2.6).function parseInvoiceXml(xmlStr, sourceFile = null) {
+  const root = parseXml(xmlStr);
+  if (root.tag !== 'invoice') throw new Error(`Invoice parse error: root <${root.tag}> is not <invoice>`);
+  const header = child(root, 'header');
+  if (!header) throw new Error('Invoice parse error: missing <header>');
+
+  const distributor = child(header, 'distributor');
+  const discount = child(header, 'discount');
+  const discountTiers = discount
+    ? children(discount, 'tier').map((t) => ({
+        minQty: toNum(attr(t, 'minQty')),
+        maxQty: toNum(attr(t, 'maxQty')), // '' -> null (open-ended top tier)
+        pct: toNum(attr(t, 'pct')),
+      }))
+    : [];
+
+  const model = childText(header, 'contraCogsModel') || null;
+
+  const linesNode = child(root, 'lines');
+  const lines = (linesNode ? children(linesNode, 'line') : []).map((l) => {
+    const net = childText(l, 'unitPriceNet');
+    const target = childText(l, 'targetStorage');
+    return {
+      stockId: childText(l, 'stockId'),
+      description: childText(l, 'description'),
+      qtyInvoiced: toNum(childText(l, 'qtyInvoiced')),
+      unitPriceStandard: toNum(childText(l, 'unitPriceStandard')),
+      unitPriceNet: net === '' ? undefined : toNum(net),
+      targetStorage: target === '' ? null : target,
+    };
+  });
+
+  const missing = [];
+  if (!model) missing.push('contraCogsModel');
+  if (discountTiers.length === 0) missing.push('discountTiers');
+
+  const draft = {
+    invoiceNumber: childText(header, 'invoiceNumber'),
+    type: childText(header, 'type') || 'final',
+    distributorId: attr(distributor, 'id'),
+    contraCogsModel: model,
+    poReference: childText(header, 'poReference') || null,
+    invoiceDate: childText(header, 'invoiceDate') || null,
+    shipDate: childText(header, 'shipDate') || null,
+    incoterms: childText(header, 'incoterms') || null,
+    currency: childText(header, 'currency') || null,
+    discountTiers,
+    totalValueStandard: toNum(childText(header, 'totalValueStandard')),
+    sourceFile,
+    lines,
+  };
+
+  // Build the model only when the required model field is present; otherwise flag incomplete.
+  let invoice = null;
+  if (model) invoice = createInvoice(draft);
+  return { invoice, incomplete: missing.length > 0, missing, sourceFile, raw: draft };
+}function serializeInvoiceXml(inv) {
+  const tiers = inv.discountTiers
+    .map((t) => `      <tier minQty="${t.minQty ?? ''}" maxQty="${t.maxQty ?? ''}" pct="${t.pct ?? ''}"/>`)
+    .join('\n');
+  const lines = inv.lines
+    .map((l) => `    <line>
+      <stockId>${encodeXml(l.stockId)}</stockId>
+      <description>${encodeXml(l.description ?? '')}</description>
+      <qtyInvoiced>${l.qtyInvoiced}</qtyInvoiced>
+      <unitPriceStandard>${l.unitPriceStandard}</unitPriceStandard>
+      <unitPriceNet>${l.unitPriceNet ?? ''}</unitPriceNet>
+      <targetStorage>${encodeXml(l.targetStorage ?? '')}</targetStorage>
+    </line>`)
+    .join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>${encodeXml(inv.invoiceNumber)}</invoiceNumber>
+    <type>${encodeXml(inv.type)}</type>
+    <distributor id="${encodeXml(inv.distributorId)}"/>
+    <contraCogsModel>${encodeXml(inv.contraCogsModel)}</contraCogsModel>
+    <poReference>${encodeXml(inv.poReference ?? '')}</poReference>
+    <invoiceDate>${encodeXml(inv.invoiceDate ?? '')}</invoiceDate>
+    <shipDate>${encodeXml(inv.shipDate ?? '')}</shipDate>
+    <incoterms>${encodeXml(inv.incoterms ?? '')}</incoterms>
+    <currency>${encodeXml(inv.currency ?? '')}</currency>
+    <discount basis="total_volume">
+${tiers}
+    </discount>
+    <totalValueStandard>${inv.totalValueStandard}</totalValueStandard>
+  </header>
+  <lines>
+${lines}
+  </lines>
+</invoice>
+`;
+}
+
+// ---- Delivery Note (XML) --------------------------------------------------function parseDeliveryNoteXml(xmlStr, sourceFile = null) {
+  const root = parseXml(xmlStr);
+  if (root.tag !== 'deliveryNote') throw new Error(`DeliveryNote parse error: root <${root.tag}> is not <deliveryNote>`);
+  const linesNode = child(root, 'lines');
+  const lines = (linesNode ? children(linesNode, 'line') : []).map((l) => ({
+    stockId: childText(l, 'stockId'),
+    qtyShipped: toNum(childText(l, 'qtyShipped')),
+  }));
+  return createDeliveryNote({
+    deliveryNoteId: childText(root, 'deliveryNoteId'),
+    invoiceNumber: childText(root, 'invoiceNumber') || null,
+    targetStorageId: childText(root, 'targetStorageId'),
+    shipDate: childText(root, 'shipDate') || null,
+    sourceFile,
+    lines,
+  });
+}function serializeDeliveryNoteXml(dn) {
+  const lines = dn.lines
+    .map((l) => `    <line><stockId>${encodeXml(l.stockId)}</stockId><qtyShipped>${l.qtyShipped}</qtyShipped></line>`)
+    .join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<deliveryNote>
+  <deliveryNoteId>${encodeXml(dn.deliveryNoteId)}</deliveryNoteId>
+  <invoiceNumber>${encodeXml(dn.invoiceNumber ?? '')}</invoiceNumber>
+  <targetStorageId>${encodeXml(dn.targetStorageId)}</targetStorageId>
+  <shipDate>${encodeXml(dn.shipDate ?? '')}</shipDate>
+  <lines>
+${lines}
+  </lines>
+</deliveryNote>
+`;
+}
+
+// ---- Credit Note (XML, Model B) -------------------------------------------function parseCreditNoteXml(xmlStr, sourceFile = null) {
+  const root = parseXml(xmlStr);
+  if (root.tag !== 'creditNote') throw new Error(`CreditNote parse error: root <${root.tag}> is not <creditNote>`);
+  const distributor = child(root, 'distributor');
+  return createCreditNote({
+    creditNoteId: childText(root, 'creditNoteId'),
+    distributorId: attr(distributor, 'id'),
+    period: childText(root, 'period'),
+    invoiceRef: childText(root, 'invoiceRef') || null,
+    basisQty: toNum(childText(root, 'basisQty')),
+    basisValue: toNum(childText(root, 'basisValueStandard')),
+    tierApplied: toNum(childText(root, 'tierApplied')),
+    amount: toNum(childText(root, 'amount')),
+    status: childText(root, 'status') || undefined,
+    sourceFile,
+  });
+}function serializeCreditNoteXml(cn) {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<creditNote>
+  <creditNoteId>${encodeXml(cn.creditNoteId)}</creditNoteId>
+  <distributor id="${encodeXml(cn.distributorId)}"/>
+  <period>${encodeXml(cn.period)}</period>
+  <invoiceRef>${encodeXml(cn.invoiceRef ?? '')}</invoiceRef>
+  <basisQty>${cn.basisQty}</basisQty>
+  <basisValueStandard>${cn.basisValue}</basisValueStandard>
+  <tierApplied>${cn.tierApplied ?? ''}</tierApplied>
+  <amount>${cn.amount}</amount>
+  <status>${encodeXml(cn.status)}</status>
+</creditNote>
+`;
+}
+
+// ---- Goods Receipt / RECADV (CSV, row-level) ------------------------------
+const RECADV_HEADERS = ['invoice_number', 'stock_id', 'storage_id', 'qty_received', 'receipt_datetime', 'recadv_ref'];function parseRecadvCsv(csvStr, sourceFile = null) {
+  const { rows } = parseCsv(csvStr);
+  return rows.map((r) => createGoodsReceipt({
+    invoiceNumber: r.invoice_number,
+    stockId: r.stock_id,
+    storageId: r.storage_id,
+    qtyReceived: toNum(r.qty_received),
+    receiptDatetime: r.receipt_datetime,
+    recadvRef: r.recadv_ref || null,
+    sourceFile,
+  }));
+}function serializeRecadvCsv(receipts) {
+  const rows = receipts.map((g) => ({
+    invoice_number: g.invoiceNumber,
+    stock_id: g.stockId,
+    storage_id: g.storageId,
+    qty_received: g.qtyReceived,
+    receipt_datetime: g.receiptDatetime,
+    recadv_ref: g.recadvRef ?? '',
+  }));
+  return serializeCsv(RECADV_HEADERS, rows);
+}
+
+
+// ===== src/lib/store.js =====
+// Persistence layer. StateStore sits over a minimal key-value backend so the
+// demo (localStorage) and a future cloud version share the same API and only
+// swap the backend. Collections are either "keyed" (map by an id field) or
+// "list" (append-only array).
+
+// ---- backends -------------------------------------------------------------
+
+/** In-memory backend for tests / non-browser use. */function createMemoryBackend() {
+  const m = new Map();
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => { m.set(k, String(v)); },
+    removeItem: (k) => { m.delete(k); },
+  };
+}
+
+/** Browser localStorage backend, or null if unavailable. */function getLocalStorageBackend() {
+  try {
+    if (typeof localStorage !== 'undefined') return localStorage;
+  } catch { /* access can throw in sandboxed contexts */ }
+  return null;
+}
+
+// ---- collection configuration --------------------------------------------
+
+const COLLECTIONS = {
+  invoices: { type: 'keyed', key: (o) => o.invoiceNumber },
+  deliveryNotes: { type: 'keyed', key: (o) => o.deliveryNoteId },
+  creditNotes: { type: 'keyed', key: (o) => o.creditNoteId },
+  gaps: { type: 'keyed', key: (o) => o.gapId },
+  accruals: { type: 'keyed', key: (o) => `${o.invoiceNumber}|${o.period}` },
+  archive: { type: 'keyed', key: (o) => o.invoiceNumber },
+  goodsReceipts: { type: 'list' },
+  resolutions: { type: 'list' },
+  audit: { type: 'list' },
+};
+
+// ---- store ----------------------------------------------------------------class StateStore {
+  constructor(backend = createMemoryBackend(), namespace = 'perfumeries') {
+    this.backend = backend;
+    this.ns = namespace;
+  }
+
+  _key(collection) { return `${this.ns}:${collection}`; }
+
+  _readRaw(collection, fallback) {
+    const raw = this.backend.getItem(this._key(collection));
+    if (raw == null) return fallback;
+    try { return JSON.parse(raw); } catch { return fallback; }
+  }
+
+  _write(collection, value) {
+    this.backend.setItem(this._key(collection), JSON.stringify(value));
+  }
+
+  _config(collection) {
+    const cfg = COLLECTIONS[collection];
+    if (!cfg) throw new Error(`StateStore: unknown collection "${collection}"`);
+    return cfg;
+  }
+
+  /** Insert (list) or upsert (keyed) an object. Returns the object. */
+  put(collection, obj) {
+    const cfg = this._config(collection);
+    if (cfg.type === 'keyed') {
+      const map = this._readRaw(collection, {});
+      const id = cfg.key(obj);
+      if (id === undefined || id === null || id === '') {
+        throw new Error(`StateStore: cannot store in "${collection}" without a key`);
+      }
+      map[id] = obj;
+      this._write(collection, map);
+    } else {
+      const arr = this._readRaw(collection, []);
+      arr.push(obj);
+      this._write(collection, arr);
+    }
+    return obj;
+  }
+
+  /** Bulk put. */
+  putAll(collection, objs) { for (const o of objs) this.put(collection, o); return objs; }
+
+  /** Get one from a keyed collection by id. */
+  get(collection, id) {
+    const cfg = this._config(collection);
+    if (cfg.type !== 'keyed') throw new Error(`StateStore: get() needs a keyed collection, "${collection}" is a list`);
+    return this._readRaw(collection, {})[id] ?? null;
+  }
+
+  /** All items as an array (keyed → values, list → the array). */
+  all(collection) {
+    const cfg = this._config(collection);
+    const data = this._readRaw(collection, cfg.type === 'keyed' ? {} : []);
+    return cfg.type === 'keyed' ? Object.values(data) : data;
+  }
+
+  /** Remove one from a keyed collection by id. Returns true if it existed. */
+  remove(collection, id) {
+    const cfg = this._config(collection);
+    if (cfg.type !== 'keyed') throw new Error(`StateStore: remove() needs a keyed collection, "${collection}" is a list`);
+    const map = this._readRaw(collection, {});
+    if (!(id in map)) return false;
+    delete map[id];
+    this._write(collection, map);
+    return true;
+  }
+
+  /** Append-only audit convenience. */
+  appendAudit(entry) { return this.put('audit', entry); }
+  auditLog() { return this.all('audit'); }
+
+  /** Update an invoice's status in place (keyed helper). */
+  setInvoiceStatus(invoiceNumber, status) {
+    const inv = this.get('invoices', invoiceNumber);
+    if (!inv) throw new Error(`StateStore: invoice "${invoiceNumber}" not found`);
+    const updated = { ...inv, status };
+    this.put('invoices', updated);
+    return updated;
+  }
+
+  clear(collection) {
+    const cfg = this._config(collection);
+    this._write(collection, cfg.type === 'keyed' ? {} : []);
+  }
+
+  clearAll() { for (const c of Object.keys(COLLECTIONS)) this.clear(c); }
+}const COLLECTION_NAMES = Object.freeze(Object.keys(COLLECTIONS));
+
+
+// ===== src/lib/source.js =====
+// Data-source abstraction + ordered startup scanner.
+// Three adapters (Database, API, Folder). In the demo, Database/API return
+// "no updates"; Folder reads the manifest and ingests bundled files. The whole
+// app depends only on the DataSource interface, so real DB/API adapters can be
+// added later without touching the rest of the app.
+
+
+
+// A DataSource is: { id, scan(): Promise<ScanResult> }
+// ScanResult: { id, status: ScanStatus, message, files: FileRecord[] }
+// FileRecord: { name, category, path, content }
+
+const NO_UPDATES_MSG = 'No new updates found';
+
+/** Demo stub source that always reports no updates. */function createStubSource(id, label) {
+  return {
+    id,
+    label,
+    async scan() {
+      return { id, status: ScanStatus.NO_UPDATES, message: NO_UPDATES_MSG, files: [] };
+    },
+  };
+}const createDatabaseSource = () => createStubSource('database', 'Database');const createApiSource = () => createStubSource('api', 'API');
+
+/** Default reader: use an injected offline reader if present (single-file HTML), else fetch. */
+async function fetchText(url) {
+  if (typeof globalThis !== 'undefined' && typeof globalThis.__PERFUMERIES_READ_TEXT__ === 'function') {
+    return globalThis.__PERFUMERIES_READ_TEXT__(url);
+  }
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+  return res.text();
+}
+
+/**
+ * Folder source. Reads `${baseUrl}manifest.json`, then each listed inbox file.
+ * `readText(path)` is injectable so tests can read from disk and the browser can fetch.
+ */function createFolderSource({ baseUrl = './data/', readText = fetchText } = {}) {
+  return {
+    id: 'folder',
+    label: 'Folder',
+    async scan() {
+      const manifestRaw = await readText(`${baseUrl}manifest.json`);
+      const manifest = JSON.parse(manifestRaw);
+      const inbox = manifest.inbox || {};
+      const files = [];
+      for (const category of Object.keys(inbox)) {
+        for (const name of inbox[category]) {
+          const path = `${baseUrl}inbox/${category}/${name}`;
+          const content = await readText(path);
+          files.push({ name, category, path, content });
+        }
+      }
+      return {
+        id: 'folder',
+        status: files.length > 0 ? ScanStatus.FOUND : ScanStatus.NO_UPDATES,
+        message: files.length > 0 ? `${files.length} file(s) found` : NO_UPDATES_MSG,
+        files,
+      };
+    },
+  };
+}
+
+/**
+ * Scans sources in a fixed order, emitting status via onStatus(id, status, message).
+ * On an adapter failure, reports Error for that source and continues (Req 1.7).
+ * Returns { results, files } aggregated across sources.
+ */class SourceScanner {
+  constructor(sources, { onStatus = () => {} } = {}) {
+    this.sources = sources;
+    this.onStatus = onStatus;
+  }
+
+  async scanAll() {
+    const results = [];
+    const files = [];
+    for (const source of this.sources) {
+      this.onStatus(source.id, ScanStatus.SCANNING, `Scanning ${source.label ?? source.id}…`);
+      try {
+        const result = await source.scan();
+        this.onStatus(source.id, result.status, result.message);
+        results.push(result);
+        if (result.files && result.files.length) files.push(...result.files);
+      } catch (err) {
+        const message = `Scan failed: ${err.message}`;
+        this.onStatus(source.id, ScanStatus.ERROR, message);
+        results.push({ id: source.id, status: ScanStatus.ERROR, message, files: [] });
+      }
+    }
+    return { results, files };
+  }
+}
+
+/** Default demo source order: Database → API → Folder. */function defaultSources(folderOptions) {
+  return [createDatabaseSource(), createApiSource(), createFolderSource(folderOptions)];
+}
+
+
+// ===== src/lib/ingest.js =====
+// Ingestion router: takes scanned FileRecords and routes each to the correct
+// parser by category. Per-file try/catch so one bad file never stops the batch
+// (Req 3.7). Returns parsed records plus incomplete-config flags and errors.function ingestFiles(files) {
+  const out = {
+    invoices: [],
+    deliveryNotes: [],
+    goodsReceipts: [],
+    creditNotes: [],
+    incomplete: [], // { file, missing }
+    errors: [],     // { file, category, error }
+  };
+
+  for (const f of files) {
+    try {
+      switch (f.category) {
+        case 'invoices': {
+          const res = parseInvoiceXml(f.content, f.name);
+          if (res.invoice) out.invoices.push(res.invoice);
+          if (res.incomplete) out.incomplete.push({ file: f.name, missing: res.missing });
+          break;
+        }
+        case 'delivery_notes':
+          out.deliveryNotes.push(parseDeliveryNoteXml(f.content, f.name));
+          break;
+        case 'credit_notes':
+          out.creditNotes.push(parseCreditNoteXml(f.content, f.name));
+          break;
+        case 'storage_reports':
+          out.goodsReceipts.push(...parseRecadvCsv(f.content, f.name));
+          break;
+        default:
+          out.errors.push({ file: f.name, category: f.category, error: `Unknown category "${f.category}"` });
+      }
+    } catch (err) {
+      out.errors.push({ file: f.name, category: f.category, error: err.message });
+    }
+  }
+
+  return out;
+}
+
+/** Persist an ingest result into a StateStore. */function persistIngest(store, result) {
+  store.putAll('invoices', result.invoices);
+  store.putAll('deliveryNotes', result.deliveryNotes);
+  store.putAll('creditNotes', result.creditNotes);
+  for (const gr of result.goodsReceipts) store.put('goodsReceipts', gr);
+  return result;
+}
+
+
+// ===== src/lib/matching.js =====
+// Matching engine. Joins invoice lines to goods receipts on (invoiceNumber, stockId),
+// aggregates received quantity across all storages/dates (no double counting), and
+// computes per-line and per-invoice fulfilment. Delivery notes (target storage codes)
+// are used to note the storages a line was expected at.function receiptKey(invoiceNumber, stockId) { return `${invoiceNumber}|${stockId}`; }
+
+/**
+ * Aggregate goods receipts per (invoiceNumber, stockId).
+ * Returns Map<key, { invoiceNumber, stockId, totalReceived, byStorage, count }>.
+ */function aggregateReceipts(goodsReceipts) {
+  const map = new Map();
+  for (const g of goodsReceipts) {
+    const k = receiptKey(g.invoiceNumber, g.stockId);
+    if (!map.has(k)) map.set(k, { invoiceNumber: g.invoiceNumber, stockId: g.stockId, totalReceived: 0, byStorage: {}, count: 0 });
+    const agg = map.get(k);
+    agg.totalReceived += g.qtyReceived;
+    agg.byStorage[g.storageId] = (agg.byStorage[g.storageId] || 0) + g.qtyReceived;
+    agg.count += 1;
+  }
+  return map;
+}function lineFulfilment(qtyInvoiced, received) {
+  if (received === qtyInvoiced) return FulfilmentStatus.FULLY_DELIVERED;
+  return received < qtyInvoiced ? FulfilmentStatus.SHORT : FulfilmentStatus.OVER;
+}
+
+/** Expected storages for a line, from delivery notes referencing this invoice + stock. */
+function expectedStorages(deliveryNotes, invoiceNumber, stockId) {
+  const set = new Set();
+  for (const dn of deliveryNotes) {
+    if (dn.invoiceNumber && dn.invoiceNumber !== invoiceNumber) continue;
+    if (dn.lines.some((l) => l.stockId === stockId)) set.add(dn.targetStorageId);
+  }
+  return [...set];
+}
+
+/**
+ * Match a single invoice against receipts (Map from aggregateReceipts, or raw array).
+ * Optional deliveryNotes add per-line expectedStorages.
+ */function matchInvoice(invoice, aggOrReceipts, deliveryNotes = []) {
+  const agg = aggOrReceipts instanceof Map ? aggOrReceipts : aggregateReceipts(aggOrReceipts);
+  const lines = invoice.lines.map((l) => {
+    const a = agg.get(receiptKey(invoice.invoiceNumber, l.stockId));
+    const received = a ? a.totalReceived : 0;
+    return {
+      stockId: l.stockId,
+      qtyInvoiced: l.qtyInvoiced,
+      received,
+      missingQty: Math.max(0, l.qtyInvoiced - received),
+      overQty: Math.max(0, received - l.qtyInvoiced),
+      status: lineFulfilment(l.qtyInvoiced, received),
+      byStorage: a ? { ...a.byStorage } : {},
+      expectedStorages: expectedStorages(deliveryNotes, invoice.invoiceNumber, l.stockId),
+    };
+  });
+  const fullyMatched = lines.length > 0 && lines.every((l) => l.status === FulfilmentStatus.FULLY_DELIVERED);
+  const anyShort = lines.some((l) => l.status === FulfilmentStatus.SHORT);
+  return { invoiceNumber: invoice.invoiceNumber, lines, fullyMatched, anyShort };
+}
+
+/** Match many invoices; aggregates receipts once. */function matchAll(invoices, goodsReceipts, deliveryNotes = []) {
+  const agg = aggregateReceipts(goodsReceipts);
+  return invoices.map((inv) => matchInvoice(inv, agg, deliveryNotes));
+}
+
+
+// ===== src/lib/gap.js =====
+// Gap engine. Detects contra COGS gaps on missing units, allocates the header
+// discount proportionally by line value, and values gaps under Model A vs Model B.
+// Invariants: tier is derived from INVOICED qty; contra amount from RECEIVED qty
+// (kept separate); allocated discount sums to the header total; Model B credit
+// stays Pending until the full volume/period condition clears.
+
+
+
+
+
+/** Resolve the tier percentage for a quantity. maxQty null = open-ended top tier. */function resolveTier(discountTiers, qty) {
+  for (const t of discountTiers) {
+    const min = t.minQty ?? 0;
+    const max = t.maxQty; // null = no upper bound
+    if (qty >= min && (max === null || max === undefined || qty <= max)) return t.pct ?? 0;
+  }
+  return null;
+}const totalInvoicedQty = (invoice) => invoice.lines.reduce((s, l) => s + l.qtyInvoiced, 0);const lineValue = (l) => l.unitPriceStandard * l.qtyInvoiced;const totalInvoicedValue = (invoice) => invoice.lines.reduce((s, l) => s + lineValue(l), 0);
+
+/** Header discount total = totalValueStandard * tier%(from invoiced qty). */function headerDiscountTotal(invoice) {
+  const pct = resolveTier(invoice.discountTiers, totalInvoicedQty(invoice));
+  return pct == null ? 0 : (invoice.totalValueStandard * pct) / 100;
+}
+
+/**
+ * Allocate the header discount to each line proportionally by line value.
+ * Property 5: the sum of allocations equals the header discount total.
+ */function allocateDiscount(invoice) {
+  const total = headerDiscountTotal(invoice);
+  const totVal = totalInvoicedValue(invoice) || 1;
+  return invoice.lines.map((l) => {
+    const lv = lineValue(l);
+    return { stockId: l.stockId, lineValue: lv, allocated: total * (lv / totVal), perUnit: (total * (lv / totVal)) / (l.qtyInvoiced || 1) };
+  });
+}
+
+/** Per-unit net price for a line under the active model. */
+function netUnitPrice(invoice, line, alloc) {
+  if (invoice.contraCogsModel === ContraCogsModel.A && line.unitPriceNet != null) return line.unitPriceNet;
+  return line.unitPriceStandard - alloc.perUnit; // Model B (or A without explicit net): standard minus allocated discount
+}
+
+/**
+ * Build gaps for an invoice given its match result. One gap per short line,
+ * valued at the net value of the missing units.
+ */function gapsForInvoice(invoice, matchResult) {
+  const allocs = allocateDiscount(invoice);
+  const gaps = [];
+  matchResult.lines.forEach((ml, i) => {
+    if (ml.missingQty > 0) {
+      const line = invoice.lines[i];
+      const alloc = allocs[i];
+      const netUnit = netUnitPrice(invoice, line, alloc);
+      gaps.push(createGap({
+        gapId: `${invoice.invoiceNumber}:${ml.stockId}`,
+        invoiceNumber: invoice.invoiceNumber,
+        stockId: ml.stockId,
+        missingQty: ml.missingQty,
+        valueAtRisk: Number((netUnit * ml.missingQty).toFixed(2)),
+      }));
+    }
+  });
+  return gaps;
+}
+
+/**
+ * Contra COGS recognition summary for an invoice.
+ * - tierPct: from INVOICED qty (Property 4)
+ * - headerDiscountTotal: full contra if fully delivered
+ * - recognizedContra: on DELIVERED value (received capped at invoiced)
+ * - Model B: creditStatus stays Pending until fully delivered (Property 10)
+ */function computeContra(invoice, matchResult) {
+  const invoicedQty = totalInvoicedQty(invoice);
+  const tierPct = resolveTier(invoice.discountTiers, invoicedQty);
+  const discountTotal = headerDiscountTotal(invoice);
+
+  const deliveredValue = matchResult.lines.reduce((s, ml, i) => {
+    const line = invoice.lines[i];
+    const delivered = Math.min(ml.received, line.qtyInvoiced); // don't let over-delivery inflate
+    return s + line.unitPriceStandard * delivered;
+  }, 0);
+
+  const recognizedContra = tierPct == null ? 0 : Number(((deliveredValue * tierPct) / 100).toFixed(2));
+
+  const isModelB = invoice.contraCogsModel === ContraCogsModel.B;
+  const creditStatus = isModelB
+    ? (matchResult.fullyMatched ? CreditNoteStatus.CLEARED : CreditNoteStatus.PENDING)
+    : null;
+  const pendingCredit = isModelB && !matchResult.fullyMatched ? recognizedContra : 0;
+
+  return {
+    invoiceNumber: invoice.invoiceNumber,
+    model: invoice.contraCogsModel,
+    tierPct,
+    headerDiscountTotal: Number(discountTotal.toFixed(2)),
+    deliveredValue: Number(deliveredValue.toFixed(2)),
+    recognizedContra,
+    creditStatus,
+    pendingCredit,
+    fullyMatched: matchResult.fullyMatched,
+  };
+}
+
+/** Map of stockId -> net unit price under the active model (used by the timing engine). */function netUnitPrices(invoice) {
+  const allocs = allocateDiscount(invoice);
+  const map = {};
+  invoice.lines.forEach((l, i) => { map[l.stockId] = netUnitPrice(invoice, l, allocs[i]); });
+  return map;
+}
+
+/** Net payable retained for the invoice (never reduced by unreceived goods). */function netPayable(invoice) {
+  return Number((invoice.totalValueStandard - headerDiscountTotal(invoice)).toFixed(2));
+}
+
+/** Convenience: match + gaps + contra for one invoice. */function analyzeInvoice(invoice, goodsReceipts, deliveryNotes = []) {
+  const match = matchInvoice(invoice, goodsReceipts, deliveryNotes);
+  return { match, gaps: gapsForInvoice(invoice, match), contra: computeContra(invoice, match) };
+}
+
+
+// ===== src/lib/timing.js =====
+// Timing engine. Assigns receipts to calendar-month periods, detects invoices whose
+// receipts straddle a period boundary, produces split debits per period, and carries
+// unreceived value as a GINR accrual flagged "value missing — locate". The full
+// liability is always retained (never netted down). FOB shipping point puts
+// in-transit loss risk on the receiver.
+
+
+
+
+
+/** Calendar-month period 'YYYY-MM' from a datetime string. */function periodOf(datetime) {
+  const m = String(datetime).match(/^(\d{4})-(\d{2})/);
+  return m ? `${m[1]}-${m[2]}` : null;
+}
+
+/** Distinct periods present in a set of receipts (sorted). */function periodsOf(goodsReceipts) {
+  return [...new Set(goodsReceipts.map((g) => periodOf(g.receiptDatetime)).filter(Boolean))].sort();
+}
+
+/** True if the receipts span more than one calendar month. */function straddles(goodsReceipts) {
+  return periodsOf(goodsReceipts).length > 1;
+}
+
+/**
+ * One split debit per period: net value of units received in that period.
+ * Uses net unit prices (contra COGS already applied) per the invoice's model.
+ */function splitDebits(invoice, goodsReceipts) {
+  const net = netUnitPrices(invoice);
+  const byPeriod = new Map();
+  for (const g of goodsReceipts) {
+    if (g.invoiceNumber !== invoice.invoiceNumber) continue;
+    const p = periodOf(g.receiptDatetime);
+    if (!byPeriod.has(p)) byPeriod.set(p, { amount: 0, date: g.receiptDatetime });
+    const bucket = byPeriod.get(p);
+    bucket.amount += (net[g.stockId] ?? g.qtyReceived * 0) * g.qtyReceived;
+    if (g.receiptDatetime > bucket.date) bucket.date = g.receiptDatetime;
+  }
+  return [...byPeriod.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([period, b]) => createSplitDebit({
+      invoiceNumber: invoice.invoiceNumber,
+      period,
+      amount: Number(b.amount.toFixed(2)),
+      date: b.date,
+    }));
+}
+
+/** Days between two dates (whole days, >= 0). */
+function daysBetween(fromDate, toDate) {
+  const a = new Date(fromDate).getTime();
+  const b = new Date(toDate).getTime();
+  if (Number.isNaN(a) || Number.isNaN(b)) return 0;
+  return Math.max(0, Math.round((b - a) / 86400000));
+}
+
+/**
+ * GINR accrual for unreceived value at period close. Returns null if fully matched.
+ * Value = net value of missing units. Flagged "value missing — locate" with age + owner.
+ */function ginrAccrual(invoice, matchResult, { period, owner = null, asOf = new Date().toISOString() } = {}) {
+  if (matchResult.fullyMatched) return null;
+  const net = netUnitPrices(invoice);
+  let value = 0;
+  matchResult.lines.forEach((ml) => { value += (net[ml.stockId] ?? 0) * ml.missingQty; });
+  if (value <= 0) return null;
+  const closePeriod = period || periodOf(asOf) || periodOf(invoice.invoiceDate) || '';
+  return createGinrAccrual({
+    invoiceNumber: invoice.invoiceNumber,
+    period: closePeriod,
+    value: Number(value.toFixed(2)),
+    ageDays: daysBetween(invoice.invoiceDate || invoice.shipDate || asOf, asOf),
+    owner,
+  });
+}
+
+/** Who bears in-transit loss for unreceived value. */function inTransitRisk(invoice) {
+  const terms = String(invoice.incoterms || '').toUpperCase();
+  return terms.includes('SHIPPING_POINT') || terms.includes('EX_WORKS') ? 'receiver' : 'supplier';
+}
+
+/** Bundle the timing view for one invoice. */function analyzeTiming(invoice, goodsReceipts, matchResult, opts = {}) {
+  const mine = goodsReceipts.filter((g) => g.invoiceNumber === invoice.invoiceNumber);
+  const match = matchResult || matchInvoice(invoice, mine);
+  return {
+    invoiceNumber: invoice.invoiceNumber,
+    periods: periodsOf(mine),
+    straddles: straddles(mine),
+    splitDebits: splitDebits(invoice, mine),
+    ginr: ginrAccrual(invoice, match, opts),
+    inTransitRisk: inTransitRisk(invoice),
+    netPayableRetained: netPayable(invoice), // full liability retained regardless of receipts
+  };
+}
+
+
+// ===== src/lib/governance.js =====
+// Governance engine + audit trail. Manages gap ownership, resolution options,
+// the closure document, the lost-forever "backdoor" (1-manager approval), and an
+// append-only audit trail. All six resolution options stay available regardless
+// of cause. A gap cannot close without a recorded resolution; Unresolvable
+// requires a recorded manager approval (Property 9). Audit is append-only (Property 8).const GapStatus = Object.freeze({ OPEN: 'open', RESOLVED: 'resolved', UNRESOLVABLE: 'unresolvable' });
+
+/** All resolution options, always available regardless of the gap's cause (Req 7.1, 7.2). */function availableResolutionOptions() {
+  return [...RESOLUTION_OPTION_VALUES];
+}
+
+/** Persist a gap as open + owned, and audit it. */function registerGap(store, gap, { actor = 'system', owner = null } = {}) {
+  const g = { ...gap, status: GapStatus.OPEN, owner: owner ?? gap.owner ?? null };
+  store.put('gaps', g);
+  store.appendAudit(createAuditEntry({ entityId: gap.gapId, actor, change: `gap opened (missing ${gap.missingQty})` }));
+  return g;
+}
+
+/** Gaps still open (flagged/owned until resolved) — Req 8.1. */function openGaps(store) {
+  return store.all('gaps').filter((g) => g.status === GapStatus.OPEN);
+}
+
+/**
+ * Resolve a gap with a chosen option (records a Resolution first, then closes it).
+ * Misroute handling is manual: pass option StockTransfer with a note; we record the
+ * decision without injecting phantom receipts, so nothing is double counted (Req 7.4).
+ */function resolveGap(store, gapId, { option, evidenceDocRef = null, actor = 'system', approver = null, note = null } = {}) {
+  if (!isEnumValue(RESOLUTION_OPTION_VALUES, option)) {
+    throw new Error(`Governance: unknown resolution option "${option}"`);
+  }
+  const gap = store.get('gaps', gapId);
+  if (!gap) throw new Error(`Governance: gap "${gapId}" not found`);
+
+  const resolution = createResolution({ gapId, option, evidenceDocRef, approver });
+  store.put('resolutions', resolution);
+  store.put('gaps', { ...gap, status: GapStatus.RESOLVED });
+  store.appendAudit(createAuditEntry({
+    entityId: gapId, actor,
+    change: `resolved via ${option}${note ? `: ${note}` : ''}`,
+    evidenceRef: evidenceDocRef,
+  }));
+  return resolution;
+}
+
+/**
+ * Backdoor: mark a lost-forever item Unresolvable. REQUIRES a manager approver
+ * before the terminal state (Req 8.4 / Property 9). Records a resolution + audit.
+ */function applyBackdoor(store, gapId, { actor = 'system', approver = null, option = 'WriteOff', note = null } = {}) {
+  if (!approver) throw new Error('Governance: backdoor requires 1-manager approval (approver required)');
+  if (!isEnumValue(RESOLUTION_OPTION_VALUES, option)) {
+    throw new Error(`Governance: unknown resolution option "${option}"`);
+  }
+  const gap = store.get('gaps', gapId);
+  if (!gap) throw new Error(`Governance: gap "${gapId}" not found`);
+
+  const resolution = createResolution({ gapId, option, approver, evidenceDocRef: note });
+  store.put('resolutions', resolution);
+  store.put('gaps', { ...gap, status: GapStatus.UNRESOLVABLE });
+  store.appendAudit(createAuditEntry({
+    entityId: gapId, actor,
+    change: `backdoor: marked Unresolvable via ${option} (approved by ${approver})`,
+  }));
+  return resolution;
+}
+
+/** Record a decision + next steps for an open item (Req 8.3). */function recordDecision(store, entityId, { decision, nextSteps = null, actor = 'system' } = {}) {
+  store.appendAudit(createAuditEntry({
+    entityId, actor,
+    change: `decision: ${decision}${nextSteps ? `; next: ${nextSteps}` : ''}`,
+  }));
+  return store.auditLog().at(-1);
+}
+
+/**
+ * Generate a closure document — only when the invoice is fully matched AND paid.
+ * (Lifecycle sets status Paid only after Fully Matched, so Paid implies matched.) Req 8.2.
+ */function generateClosureDocument(store, invoiceNumber, { actor = 'system' } = {}) {
+  const inv = store.get('invoices', invoiceNumber);
+  if (!inv) throw new Error(`Governance: invoice "${invoiceNumber}" not found`);
+  if (inv.status !== InvoiceStatus.PAID) {
+    throw new Error('Governance: closure document only for fully matched & Paid invoices');
+  }
+  const doc = {
+    type: 'closure',
+    invoiceNumber,
+    distributorId: inv.distributorId,
+    totalValueStandard: inv.totalValueStandard,
+    generatedAt: new Date().toISOString(),
+  };
+  store.appendAudit(createAuditEntry({ entityId: invoiceNumber, actor, change: 'closure document generated' }));
+  return doc;
+}
+
+/** Align recognized contra COGS to verified received quantity (Req 7.5). */function alignRecognizedContra(invoice, goodsReceipts) {
+  return computeContra(invoice, matchInvoice(invoice, goodsReceipts));
+}
+
+
+// ===== src/lib/lifecycle.js =====
+// Invoice lifecycle state machine. Enforces valid status transitions and audits
+// each change. Also derives the natural status from a match result so ingestion
+// can auto-advance an invoice (Received -> In Transit / Partially Received / Fully Matched).
+
+
+
+
+// Allowed transitions per the design state diagram.const TRANSITIONS = Object.freeze({
+  [InvoiceStatus.RECEIVED]: [
+    InvoiceStatus.IN_TRANSIT_PENDING, InvoiceStatus.PARTIALLY_RECEIVED,
+    InvoiceStatus.FULLY_MATCHED, InvoiceStatus.UNDER_INVESTIGATION,
+  ],
+  [InvoiceStatus.IN_TRANSIT_PENDING]: [
+    InvoiceStatus.PARTIALLY_RECEIVED, InvoiceStatus.FULLY_MATCHED, InvoiceStatus.UNDER_INVESTIGATION,
+  ],
+  [InvoiceStatus.PARTIALLY_RECEIVED]: [
+    InvoiceStatus.FULLY_MATCHED, InvoiceStatus.UNDER_INVESTIGATION,
+  ],
+  [InvoiceStatus.FULLY_MATCHED]: [InvoiceStatus.PAID],
+  [InvoiceStatus.PAID]: [InvoiceStatus.ARCHIVED],
+  [InvoiceStatus.ARCHIVED]: [],
+  [InvoiceStatus.UNDER_INVESTIGATION]: [InvoiceStatus.RESOLVED, InvoiceStatus.UNRESOLVABLE],
+  [InvoiceStatus.RESOLVED]: [InvoiceStatus.FULLY_MATCHED, InvoiceStatus.PARTIALLY_RECEIVED],
+  [InvoiceStatus.UNRESOLVABLE]: [],
+});function canTransition(from, to) {
+  return (TRANSITIONS[from] || []).includes(to);
+}
+
+/** Transition an invoice's status, validating and auditing. Throws on invalid transition. */function transition(store, invoiceNumber, to, { actor = 'system' } = {}) {
+  const inv = store.get('invoices', invoiceNumber);
+  if (!inv) throw new Error(`Lifecycle: invoice "${invoiceNumber}" not found`);
+  const from = inv.status;
+  if (from === to) return inv; // no-op
+  if (!canTransition(from, to)) {
+    throw new Error(`Lifecycle: invalid transition ${from} -> ${to} for ${invoiceNumber}`);
+  }
+  const updated = store.setInvoiceStatus(invoiceNumber, to);
+  store.appendAudit(createAuditEntry({ entityId: invoiceNumber, actor, change: `status ${from} -> ${to}` }));
+  return updated;
+}
+
+/** Natural status implied by a match result. */function deriveStatus(matchResult) {
+  if (matchResult.fullyMatched) return InvoiceStatus.FULLY_MATCHED;
+  const anyReceived = matchResult.lines.some((l) => l.received > 0);
+  return anyReceived ? InvoiceStatus.PARTIALLY_RECEIVED : InvoiceStatus.IN_TRANSIT_PENDING;
+}
+
+/**
+ * Advance an invoice to the status implied by its match result, if that transition
+ * is valid from the current status. Returns the (possibly unchanged) status.
+ */function applyMatchStatus(store, invoiceNumber, matchResult, { actor = 'system' } = {}) {
+  const inv = store.get('invoices', invoiceNumber);
+  if (!inv) throw new Error(`Lifecycle: invoice "${invoiceNumber}" not found`);
+  const target = deriveStatus(matchResult);
+  if (inv.status === target) return inv.status;
+  if (canTransition(inv.status, target)) {
+    transition(store, invoiceNumber, target, { actor });
+    return target;
+  }
+  return inv.status; // leave as-is if not a valid auto-advance
+}
+
+
+// ===== src/lib/analytics.js =====
+// Analytics / view-model layer. Turns stored documents into per-invoice views and
+// role-specific selections for the Storage, Accounting, and Finance dashboards.
+// Pure functions (no DOM) so they can be unit-tested.
+
+
+
+
+
+const CLOSED = new Set([InvoiceStatus.FULLY_MATCHED, InvoiceStatus.PAID, InvoiceStatus.ARCHIVED]);
+
+/** Build an enriched view for one invoice. */function buildInvoiceView(invoice, goodsReceipts, deliveryNotes = [], opts = {}) {
+  const receipts = goodsReceipts.filter((g) => g.invoiceNumber === invoice.invoiceNumber);
+  const { match, gaps, contra } = analyzeInvoice(invoice, receipts, deliveryNotes);
+  const timing = analyzeTiming(invoice, receipts, match, opts);
+
+  const storages = new Set();
+  match.lines.forEach((l) => {
+    Object.keys(l.byStorage).forEach((s) => storages.add(s));
+    (l.expectedStorages || []).forEach((s) => storages.add(s));
+  });
+
+  return {
+    invoiceNumber: invoice.invoiceNumber,
+    distributorId: invoice.distributorId,
+    model: invoice.contraCogsModel,
+    status: invoice.status,
+    invoicedQty: invoice.lines.reduce((s, l) => s + l.qtyInvoiced, 0),
+    receivedQty: match.lines.reduce((s, l) => s + l.received, 0),
+    missingQty: match.lines.reduce((s, l) => s + l.missingQty, 0),
+    valueAtRisk: Number(gaps.reduce((s, g) => s + g.valueAtRisk, 0).toFixed(2)),
+    storages: [...storages],
+    contra,
+    timing,
+    gaps,
+    match,
+  };
+}function buildPortfolio(invoices, goodsReceipts, deliveryNotes = [], opts = {}) {
+  return invoices.map((inv) => buildInvoiceView(inv, goodsReceipts, deliveryNotes, opts));
+}
+
+// ---- role selectors -------------------------------------------------------
+
+function touchesStorage(view, storageId) {
+  return !storageId || view.storages.includes(storageId);
+}
+
+/** Storage view: on-way, pending delivery, aged pending, and a period trend. */function storageView(portfolio, { storageId = null } = {}) {
+  const scoped = portfolio.filter((v) => touchesStorage(v, storageId));
+  const onWay = scoped.filter((v) => v.status === InvoiceStatus.IN_TRANSIT_PENDING);
+  const pendingDelivery = scoped.filter((v) => v.status === InvoiceStatus.PARTIALLY_RECEIVED);
+  const agedPending = scoped
+    .filter((v) => v.timing.ginr)
+    .map((v) => ({ invoiceNumber: v.invoiceNumber, value: v.timing.ginr.value, ageDays: v.timing.ginr.ageDays }))
+    .sort((a, b) => b.ageDays - a.ageDays);
+
+  const trend = {};
+  scoped.forEach((v) => v.timing.splitDebits.forEach((d) => { trend[d.period] = (trend[d.period] || 0) + d.amount; }));
+  const trendByPeriod = Object.entries(trend).sort(([a], [b]) => a.localeCompare(b)).map(([period, amount]) => ({ period, amount: Number(amount.toFixed(2)) }));
+
+  return { storageId, onWay, pendingDelivery, agedPending, trendByPeriod, count: scoped.length };
+}
+
+/** Accounting view: closed invoices + summary of not-fully-closed and open. */function accountingView(portfolio) {
+  const closed = portfolio.filter((v) => CLOSED.has(v.status));
+  const open = portfolio.filter((v) => !CLOSED.has(v.status));
+  return {
+    closed,
+    open,
+    summary: {
+      closedCount: closed.length,
+      openCount: open.length,
+      openValueAtRisk: Number(open.reduce((s, v) => s + v.valueAtRisk, 0).toFixed(2)),
+    },
+  };
+}
+
+/** Finance view: high-level portfolio summary + storages with pending issues. */function financeView(portfolio) {
+  const byStatus = {};
+  portfolio.forEach((v) => { byStatus[v.status] = (byStatus[v.status] || 0) + 1; });
+
+  const storagesWithIssues = {};
+  portfolio.forEach((v) => {
+    if (v.missingQty > 0) {
+      // attribute the shortfall to storages that under-delivered vs expected is complex;
+      // for the summary we flag every storage the troubled invoice touches.
+      v.storages.forEach((s) => {
+        if (!storagesWithIssues[s]) storagesWithIssues[s] = { storageId: s, invoices: [], valueAtRisk: 0 };
+        storagesWithIssues[s].invoices.push(v.invoiceNumber);
+        storagesWithIssues[s].valueAtRisk += v.valueAtRisk;
+      });
+    }
+  });
+
+  return {
+    totals: {
+      invoices: portfolio.length,
+      totalValueAtRisk: Number(portfolio.reduce((s, v) => s + v.valueAtRisk, 0).toFixed(2)),
+      totalPendingCredit: Number(portfolio.reduce((s, v) => s + (v.contra.pendingCredit || 0), 0).toFixed(2)),
+    },
+    byStatus,
+    storagesWithIssues: Object.values(storagesWithIssues)
+      .map((s) => ({ ...s, valueAtRisk: Number(s.valueAtRisk.toFixed(2)) }))
+      .sort((a, b) => b.valueAtRisk - a.valueAtRisk),
+  };
+}
+
+
+// ===== src/lib/inventory.js =====
+// Inventory audit sub-module (logic). Produces monthly per-invoice audit detail:
+// delivered vs invoiced, contra COGS status (applied/pending/cleared), receipts by
+// storage with dates, linked delivery/credit notes, provenance, and audit history.
+// Exportable per month or per invoice. Pure functions (no DOM).
+
+
+
+
+
+/** Contra status label for audit display. */function contraStatus(view) {
+  if (view.model === ContraCogsModel.A) return 'Applied';
+  return view.contra.creditStatus === CreditNoteStatus.CLEARED ? 'Cleared' : 'Pending';
+}
+
+/** Months an invoice is active in (invoice date + any receipt periods). */function invoiceMonths(invoice, goodsReceipts) {
+  const months = new Set();
+  const p = periodOf(invoice.invoiceDate);
+  if (p) months.add(p);
+  goodsReceipts
+    .filter((g) => g.invoiceNumber === invoice.invoiceNumber)
+    .forEach((g) => { const m = periodOf(g.receiptDatetime); if (m) months.add(m); });
+  return [...months];
+}
+
+/** All months present across the portfolio (sorted). */function inventoryMonths(invoices, goodsReceipts) {
+  const set = new Set();
+  invoices.forEach((inv) => invoiceMonths(inv, goodsReceipts).forEach((m) => set.add(m)));
+  return [...set].sort();
+}
+
+/** Full audit detail for one invoice. */function invoiceDetail(invoice, { goodsReceipts, deliveryNotes = [], creditNotes = [], auditLog = [] }) {
+  const view = buildInvoiceView(invoice, goodsReceipts, deliveryNotes, {});
+  const mine = goodsReceipts.filter((g) => g.invoiceNumber === invoice.invoiceNumber);
+
+  const byStorage = {};
+  mine.forEach((g) => {
+    if (!byStorage[g.storageId]) byStorage[g.storageId] = { storageId: g.storageId, qty: 0, receipts: [] };
+    byStorage[g.storageId].qty += g.qtyReceived;
+    byStorage[g.storageId].receipts.push({ qty: g.qtyReceived, datetime: g.receiptDatetime, recadvRef: g.recadvRef, sourceFile: g.sourceFile });
+  });
+
+  return {
+    invoiceNumber: invoice.invoiceNumber,
+    distributorId: invoice.distributorId,
+    model: invoice.contraCogsModel,
+    status: invoice.status,
+    invoicedQty: view.invoicedQty,
+    receivedQty: view.receivedQty,
+    missingQty: view.missingQty,
+    contraStatus: contraStatus(view),
+    recognizedContra: view.contra.recognizedContra,
+    pendingCredit: view.contra.pendingCredit,
+    receiptsByStorage: Object.values(byStorage),
+    deliveryNotes: deliveryNotes
+      .filter((d) => d.invoiceNumber === invoice.invoiceNumber)
+      .map((d) => ({ deliveryNoteId: d.deliveryNoteId, targetStorageId: d.targetStorageId, sourceFile: d.sourceFile })),
+    creditNotes: creditNotes
+      .filter((c) => c.invoiceRef === invoice.invoiceNumber)
+      .map((c) => ({ creditNoteId: c.creditNoteId, period: c.period, amount: c.amount, status: c.status, sourceFile: c.sourceFile })),
+    provenance: { invoiceSourceFile: invoice.sourceFile ?? null },
+    audit: auditLog.filter((a) => a.entityId === invoice.invoiceNumber),
+  };
+}
+
+/** Per-invoice detail for every invoice active in `month`. */function monthlyInventory(invoices, ctx, { month }) {
+  return invoices
+    .filter((inv) => invoiceMonths(inv, ctx.goodsReceipts).includes(month))
+    .map((inv) => invoiceDetail(inv, ctx));
+}
+
+/** Export helper (JSON string) for a month or a single invoice detail. */function exportInventory(data) {
+  return JSON.stringify(data, null, 2);
+}
+
+
+// ===== src/lib/archive.js =====
+// Archival. A fully matched & Paid invoice is moved to the archive: status set to
+// Archived and an archive record stored. In the static demo this is an in-app status
+// change (+ optional JSON download). A cloud stage supplies a real file-write hook.function canArchive(invoice) {
+  return invoice.status === InvoiceStatus.PAID;
+}function buildArchiveRecord(invoice) {
+  return {
+    invoiceNumber: invoice.invoiceNumber,
+    distributorId: invoice.distributorId,
+    status: InvoiceStatus.ARCHIVED,
+    totalValueStandard: invoice.totalValueStandard,
+    archivedAt: new Date().toISOString(),
+    snapshot: invoice,
+  };
+}
+
+/**
+ * Archive a Paid invoice. Transitions Paid -> Archived (validated + audited by the
+ * lifecycle), stores an archive record, and calls the optional persistWrite hook
+ * (real file write at the cloud stage). Returns the archive record.
+ */function archiveInvoice(store, invoiceNumber, { actor = 'system', persistWrite = null } = {}) {
+  const inv = store.get('invoices', invoiceNumber);
+  if (!inv) throw new Error(`Archive: invoice "${invoiceNumber}" not found`);
+  if (inv.status !== InvoiceStatus.PAID) {
+    throw new Error('Archive: only fully matched & Paid invoices can be archived');
+  }
+  transition(store, invoiceNumber, InvoiceStatus.ARCHIVED, { actor });
+  const record = buildArchiveRecord(store.get('invoices', invoiceNumber));
+  store.put('archive', record);
+  if (typeof persistWrite === 'function') persistWrite(record); // cloud hook (no-op in demo)
+  return record;
+}function exportArchive(record) {
+  return JSON.stringify(record, null, 2);
+}
+
+
+// ===== src/lib/session.js =====
+// Session state for the demo (currently the selected Contra COGS model).
+// Backed by a key-value store: sessionStorage in the browser, memory in tests.function createMemoryKV() {
+  const m = new Map();
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => { m.set(k, String(v)); },
+    removeItem: (k) => { m.delete(k); },
+  };
+}function getSessionBackend() {
+  try { if (typeof sessionStorage !== 'undefined') return sessionStorage; } catch { /* sandboxed */ }
+  return null;
+}class Session {
+  constructor(backend = createMemoryKV(), ns = 'perfumeries:session') {
+    this.backend = backend;
+    this.ns = ns;
+  }
+
+  _k(x) { return `${this.ns}:${x}`; }
+
+  setModel(model) {
+    if (!isEnumValue(CONTRA_COGS_MODEL_VALUES, model)) throw new Error(`Session: invalid model "${model}"`);
+    this.backend.setItem(this._k('model'), model);
+    return model;
+  }
+
+  getModel() { return this.backend.getItem(this._k('model')); }
+
+  isModelSelected() { return isEnumValue(CONTRA_COGS_MODEL_VALUES, this.getModel()); }
+
+  setRole(role) {
+    if (!ROLES.includes(role)) throw new Error(`Session: invalid role "${role}"`);
+    this.backend.setItem(this._k('role'), role);
+    return role;
+  }
+
+  getRole() { return this.backend.getItem(this._k('role')); }
+
+  isRoleSelected() { return ROLES.includes(this.getRole()); }
+
+  clear() { this.backend.removeItem(this._k('model')); this.backend.removeItem(this._k('role')); }
+}const ROLES = Object.freeze(['storage', 'accounting', 'finance']);
+
+
+// ===== src/lib/pipeline.js =====
+// End-to-end pipeline orchestrator: scan -> ingest -> persist -> advance lifecycle
+// -> build portfolio. Shared by the app UI and the integration test so both drive
+// the exact same flow.async function runPipeline(store, sources, { onStatus, asOf } = {}) {
+  const { files, results } = await new SourceScanner(sources, { onStatus }).scanAll();
+  // A scan reflects the current source truth. Reset first so re-scans / page
+  // reloads are idempotent (goodsReceipts is a list and would otherwise pile up).
+  store.clearAll();
+  const ingest = ingestFiles(files);
+  persistIngest(store, ingest);
+
+  const receipts = store.all('goodsReceipts');
+  const dns = store.all('deliveryNotes');
+  for (const inv of store.all('invoices')) {
+    applyMatchStatus(store, inv.invoiceNumber, matchInvoice(inv, receipts, dns), { actor: 'system' });
+  }
+
+  const invoices = store.all('invoices');
+  const portfolio = buildPortfolio(invoices, receipts, dns, { asOf: asOf || new Date().toISOString() });
+  return { scanResults: results, ingest, invoices, portfolio };
+}
+
+
+// ===== src/ui/dashboards.js =====
+// Dashboard rendering (DOM). Consumes the pure analytics selectors and renders
+// the Storage, Accounting, and Finance views. Event wiring is attached after render.
+
+
+
+
+const money = (n) => '€' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const qty = (n) => (Number(n) || 0).toLocaleString();
+
+function tbl(headers, rows) {
+  if (!rows.length) return '<p class="muted">None.</p>';
+  const head = headers.map((h) => `<th>${h}</th>`).join('');
+  const body = rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('');
+  return `<table class="grid"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function storageHtml(pf, storageId) {
+  const sv = storageView(pf, { storageId });
+  const storages = [...new Set(pf.flatMap((v) => v.storages))].sort();
+  const options = ['<option value="">All storages</option>']
+    .concat(storages.map((s) => `<option value="${s}"${s === storageId ? ' selected' : ''}>${s}</option>`)).join('');
+  return `
+    <div class="dash-head"><h3>Storage view</h3>
+      <label class="filter">Storage <select id="storage-filter">${options}</select></label></div>
+    <h4>On the way (${sv.onWay.length})</h4>
+    ${tbl(['Invoice', 'Distributor', 'Invoiced', 'Received'], sv.onWay.map((v) => [v.invoiceNumber, v.distributorId, qty(v.invoicedQty), qty(v.receivedQty)]))}
+    <h4>Pending delivery (${sv.pendingDelivery.length})</h4>
+    ${tbl(['Invoice', 'Missing', 'Value at risk', 'Storages'], sv.pendingDelivery.map((v) => [v.invoiceNumber, qty(v.missingQty), money(v.valueAtRisk), v.storages.join(', ')]))}
+    <h4>Aged pending</h4>
+    ${tbl(['Invoice', 'Value', 'Age (days)'], sv.agedPending.map((a) => [a.invoiceNumber, money(a.value), a.ageDays]))}
+    <h4>Trend by period (debits)</h4>
+    ${tbl(['Period', 'Amount'], sv.trendByPeriod.map((t) => [t.period, money(t.amount)]))}
+  `;
+}
+
+function accountingHtml(pf) {
+  const av = accountingView(pf);
+  return `
+    <h3>Accounting view</h3>
+    <p class="muted">Open: ${av.summary.openCount} · Closed: ${av.summary.closedCount} · Open value at risk: ${money(av.summary.openValueAtRisk)}</p>
+    <h4>Open / not fully closed (${av.open.length})</h4>
+    ${tbl(['Invoice', 'Status', 'Missing', 'Value at risk'], av.open.map((v) => [v.invoiceNumber, v.status, qty(v.missingQty), money(v.valueAtRisk)]))}
+    <h4>Closed (${av.closed.length})</h4>
+    ${tbl(['Invoice', 'Status', 'Contra recognized', 'Actions'], av.closed.map((v) => [
+      v.invoiceNumber, v.status, money(v.contra.recognizedContra), closedAction(v),
+    ]))}
+  `;
+}
+
+function closedAction(v) {
+  if (v.status === 'FullyMatched') return `<button class="link act-pay" data-inv="${v.invoiceNumber}">Mark paid</button>`;
+  if (v.status === 'Paid') return `<button class="link act-archive" data-inv="${v.invoiceNumber}">Archive + download</button>`;
+  return '—';
+}
+
+function financeHtml(pf) {
+  const fv = financeView(pf);
+  const cards = `
+    <div class="cards">
+      <div class="card"><span class="k">Invoices</span><span class="v">${fv.totals.invoices}</span></div>
+      <div class="card"><span class="k">Value at risk</span><span class="v">${money(fv.totals.totalValueAtRisk)}</span></div>
+      <div class="card"><span class="k">Pending contra credit</span><span class="v">${money(fv.totals.totalPendingCredit)}</span></div>
+    </div>`;
+  return `
+    <h3>Finance view</h3>
+    ${cards}
+    <h4>By status</h4>
+    ${tbl(['Status', 'Count'], Object.entries(fv.byStatus).map(([s, c]) => [s, c]))}
+    <h4>Storages with pending issues</h4>
+    ${tbl(['Storage', 'Invoices', 'Value at risk', ''], fv.storagesWithIssues.map((s) => [s.storageId, s.invoices.join(', '), money(s.valueAtRisk), `<button class="link drill" data-storage="${s.storageId}">view</button>`]))}
+  `;
+}
+
+const fmtDate = (dt) => String(dt).replace('T', ' ').slice(0, 16);
+
+function detailCard(d) {
+  const contraLine = d.contraStatus === 'Applied'
+    ? `Contra COGS applied: ${money(d.recognizedContra)}`
+    : `Contra COGS ${d.contraStatus.toLowerCase()} — recognized ${money(d.recognizedContra)}${d.pendingCredit ? ` (${money(d.pendingCredit)} pending)` : ''}`;
+  return `
+    <div class="inv-card">
+      <div class="inv-card-head"><strong>${d.invoiceNumber}</strong> <span class="tag">${d.status}</span></div>
+      <p class="muted">${d.distributorId} · Model ${d.model}</p>
+      <ul class="kv">
+        <li><span>Delivered</span><strong>${qty(d.receivedQty)} of ${qty(d.invoicedQty)}</strong></li>
+        <li><span>Missing</span><strong>${qty(d.missingQty)}</strong></li>
+        <li><span>Contra COGS</span><strong>${contraLine}</strong></li>
+      </ul>
+      <h4>Receipts by storage</h4>
+      ${tbl(['Storage', 'Qty', 'Received on'], d.receiptsByStorage.map((s) => [s.storageId, qty(s.qty), s.receipts.map((r) => fmtDate(r.datetime)).join('<br>')]))}
+      <h4>Delivery notes</h4>
+      ${tbl(['Note', 'Storage', 'Source'], d.deliveryNotes.map((n) => [n.deliveryNoteId, n.targetStorageId, n.sourceFile || '—']))}
+      <h4>Credit notes</h4>
+      ${tbl(['Note', 'Period', 'Amount', 'Status', 'Source'], d.creditNotes.map((n) => [n.creditNoteId, n.period, money(n.amount), n.status, n.sourceFile || '—']))}
+      <h4>Audit history</h4>
+      ${tbl(['When', 'Actor', 'Change'], d.audit.map((a) => [fmtDate(a.timestamp), a.actor, a.change]))}
+      <p class="muted">Source: ${d.provenance.invoiceSourceFile || '—'}</p>
+    </div>`;
+}
+
+/**
+ * Render the Inventory audit module.
+ * ctx: { goodsReceipts, deliveryNotes, creditNotes, auditLog }
+ * handlers: { month, onMonth(month), onExport(month, list) }
+ */function renderInventory(container, invoices, ctx, handlers = {}) {
+  const months = inventoryMonths(invoices, ctx.goodsReceipts);
+  const month = handlers.month || months[months.length - 1] || '';
+  const list = month ? monthlyInventory(invoices, ctx, { month }) : [];
+  const monthOpts = months.map((m) => `<option value="${m}"${m === month ? ' selected' : ''}>${m}</option>`).join('');
+
+  container.innerHTML = `
+    <div class="dash-head"><h3>Inventory — audit</h3>
+      <div class="inv-controls">
+        <label class="filter">Month <select id="inv-month">${monthOpts}</select></label>
+        <button class="btn" id="inv-export">Export month (JSON)</button>
+      </div>
+    </div>
+    ${list.length ? list.map(detailCard).join('') : '<p class="muted">No invoices for this month.</p>'}`;
+
+  const sel = container.querySelector('#inv-month');
+  if (sel && handlers.onMonth) sel.addEventListener('change', (e) => handlers.onMonth(e.target.value));
+  const exp = container.querySelector('#inv-export');
+  if (exp && handlers.onExport) exp.addEventListener('click', () => handlers.onExport(month, list));
+}
+
+/**
+ * Render a role dashboard into `container`.
+ * handlers: { storageId, onFilter(storageId), onDrill(storageId) }
+ */function renderDashboard(container, role, pf, handlers = {}) {
+  if (role === 'storage') container.innerHTML = storageHtml(pf, handlers.storageId || null);
+  else if (role === 'accounting') container.innerHTML = accountingHtml(pf);
+  else if (role === 'finance') container.innerHTML = financeHtml(pf);
+  else container.innerHTML = '<p class="muted">Select a role.</p>';
+
+  const filter = container.querySelector('#storage-filter');
+  if (filter && handlers.onFilter) filter.addEventListener('change', (e) => handlers.onFilter(e.target.value || null));
+  container.querySelectorAll('.drill').forEach((b) => {
+    if (handlers.onDrill) b.addEventListener('click', () => handlers.onDrill(b.dataset.storage));
+  });
+  container.querySelectorAll('.act-pay').forEach((b) => {
+    if (handlers.onMarkPaid) b.addEventListener('click', () => handlers.onMarkPaid(b.dataset.inv));
+  });
+  container.querySelectorAll('.act-archive').forEach((b) => {
+    if (handlers.onArchive) b.addEventListener('click', () => handlers.onArchive(b.dataset.inv));
+  });
+}
+
+
+// ===== src/app.js =====
+// Perfumeries — Contra COGS Reconciliation
+// Startup flow: choose model -> scan -> ingest -> advance lifecycle -> build
+// portfolio -> pick role -> render dashboard.
+
+
+
+
+
+
+
+
+
+
+
+
+
+const $ = (id) => document.getElementById(id);
+const show = (el) => { if (el) el.hidden = false; };
+
+const LABELS = { database: 'Database', api: 'API', folder: 'Folder' };
+const STATE_CLASS = { [ScanStatus.FOUND]: 'found', [ScanStatus.ERROR]: 'error', [ScanStatus.NO_UPDATES]: '', [ScanStatus.SCANNING]: '' };
+const MODEL_DESC = {
+  [ContraCogsModel.A]: 'Direct / line-item — net (discounted) unit price already on the invoice.',
+  [ContraCogsModel.B]: 'Back-edge allowance — standard price + monthly credit note; contra held pending until cleared.',
+};
+const ROLE_LABELS = { storage: 'Storage', accounting: 'Accounting', finance: 'Finance' };
+
+// module state
+const store = new StateStore(getLocalStorageBackend() || createMemoryBackend(), 'perfumeries');
+const session = new Session(getSessionBackend() || createMemoryKV());
+let PORTFOLIO = [];
+let storageFilter = null;
+let currentView = 'role'; // 'role' | 'inventory'
+let invMonth = null;
+
+function downloadText(filename, text, type = 'application/json') {
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function renderModelPanel(onChosen) {
+  const panel = $('model-panel');
+  const current = session.getModel();
+  panel.innerHTML = `
+    <h2>Choose Contra COGS model</h2>
+    <div class="model-choices">
+      ${[ContraCogsModel.A, ContraCogsModel.B].map((m) => `
+        <button class="model-btn${current === m ? ' selected' : ''}" data-model="${m}">
+          <span class="model-name">Model ${m}</span>
+          <span class="model-desc">${MODEL_DESC[m]}</span>
+        </button>`).join('')}
+    </div>
+    <p class="hint">Sets the session model for the demo. Individual invoices still carry their own model.</p>`;
+  panel.querySelectorAll('.model-btn').forEach((btn) => btn.addEventListener('click', () => {
+    session.setModel(btn.dataset.model);
+    renderModelPanel(onChosen);
+    onChosen(btn.dataset.model);
+  }));
+}
+
+function renderScanRows() {
+  const scan = $('scan-status');
+  scan.innerHTML = '';
+  const rows = {};
+  for (const id of ['database', 'api', 'folder']) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="src">${LABELS[id]}</span><span class="state">idle</span>`;
+    scan.appendChild(li);
+    rows[id] = li.querySelector('.state');
+  }
+  return rows;
+}
+
+function renderIngestSummary(result, model) {
+  const el = $('ingest-summary');
+  const storages = new Set(result.goodsReceipts.map((g) => g.storageId));
+  const received = result.goodsReceipts.reduce((s, g) => s + g.qtyReceived, 0);
+  el.innerHTML = `
+    <p class="summary-line">Ingested <span class="badge">Model ${model}</span>
+      ${result.invoices.length} invoice(s), ${result.deliveryNotes.length} delivery note(s),
+      ${result.goodsReceipts.length} receipt row(s) — ${received} units / ${storages.size} storage(s),
+      ${result.creditNotes.length} credit note(s)
+      ${result.incomplete.length ? `· <span class="warn">${result.incomplete.length} incomplete</span>` : ''}
+      ${result.errors.length ? `· <span class="err">${result.errors.length} error(s)</span>` : ''}
+    </p>`;
+}
+
+function renderRoleBar() {
+  const bar = $('role-bar');
+  show(bar);
+  const current = session.getRole();
+  const roleTabs = ROLES.map((r) =>
+    `<button class="role-tab${currentView === 'role' && current === r ? ' active' : ''}" data-role="${r}">${ROLE_LABELS[r]}</button>`).join('');
+  const invTab = `<button class="role-tab${currentView === 'inventory' ? ' active' : ''}" data-inventory="1">Inventory</button>`;
+  bar.innerHTML = roleTabs + invTab;
+  bar.querySelectorAll('.role-tab').forEach((b) => b.addEventListener('click', () => {
+    if (b.dataset.inventory) openInventory(); else selectRole(b.dataset.role);
+  }));
+}
+
+function rebuildPortfolio() {
+  PORTFOLIO = buildPortfolio(store.all('invoices'), store.all('goodsReceipts'), store.all('deliveryNotes'), { asOf: new Date().toISOString() });
+}
+
+function renderCurrentDashboard() {
+  const root = $('view-root');
+  show(root);
+  renderDashboard(root, session.getRole(), PORTFOLIO, {
+    storageId: storageFilter,
+    onFilter: (sid) => { storageFilter = sid; renderCurrentDashboard(); },
+    onDrill: (sid) => { storageFilter = sid; selectRole('storage'); },
+    onMarkPaid: (inv) => { transition(store, inv, InvoiceStatus.PAID, { actor: 'accounting' }); rebuildPortfolio(); renderCurrentDashboard(); },
+    onArchive: (inv) => {
+      const record = archiveInvoice(store, inv, { actor: 'accounting' });
+      downloadText(`archive_${inv}.json`, exportArchive(record));
+      rebuildPortfolio(); renderCurrentDashboard();
+    },
+  });
+}
+
+function inventoryCtx() {
+  return {
+    goodsReceipts: store.all('goodsReceipts'),
+    deliveryNotes: store.all('deliveryNotes'),
+    creditNotes: store.all('creditNotes'),
+    auditLog: store.auditLog(),
+  };
+}
+
+function renderInventoryView() {
+  const root = $('view-root');
+  show(root);
+  const invoices = store.all('invoices');
+  renderInventory(root, invoices, inventoryCtx(), {
+    month: invMonth,
+    onMonth: (m) => { invMonth = m; renderInventoryView(); },
+    onExport: (month, list) => downloadText(`inventory_${month || 'all'}.json`, exportInventory(list)),
+  });
+}
+
+function selectRole(role) {
+  currentView = 'role';
+  session.setRole(role);
+  renderRoleBar();
+  renderCurrentDashboard();
+}
+
+function openInventory() {
+  currentView = 'inventory';
+  renderRoleBar();
+  renderInventoryView();
+}
+
+async function runScan(model) {
+  show($('scan-panel'));
+  const rows = renderScanRows();
+  const onStatus = (id, state, message) => {
+    const el = rows[id];
+    if (!el) return;
+    el.textContent = state === ScanStatus.SCANNING ? (message || 'scanning…') : (message || state);
+    el.className = `state ${STATE_CLASS[state] || ''}`.trim();
+  };
+  try {
+    const { ingest, portfolio } = await runPipeline(store, defaultSources(), { onStatus });
+    renderIngestSummary(ingest, model);
+    PORTFOLIO = portfolio;
+
+    renderRoleBar();
+    selectRole(session.isRoleSelected() ? session.getRole() : 'finance');
+  } catch (err) {
+    const root = $('view-root');
+    show(root);
+    root.innerHTML = `<h2>Startup error</h2><p class="err">${err.message}</p>`;
+  }
+}
+
+function boot() {
+  const status = $('build-status');
+  if (status) status.textContent = `v${VERSION}`;
+  let started = false;
+  const start = (model) => { if (started) return; started = true; runScan(model); };
+  renderModelPanel(start);
+  if (session.isModelSelected()) start(session.getModel());
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+
+</script>
+</body>
+</html>
