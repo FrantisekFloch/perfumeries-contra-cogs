@@ -80,8 +80,10 @@ function financeHtml(pf) {
     ${tbl([t('th.storage'), t('th.openInvoices'), t('th.detail'), ''], fv.storagesWithIssues.map((s) => [s.storageId, s.count, s.openInvoices.join(', '), `<button class="link drill" data-storage="${s.storageId}">${t('fin.view')}</button>`]))}
     <h4>${t('fin.trendTitle')}</h4>
     <div class="chart-wrap">${bars}</div>
-    <h4>${t('fin.forecastTitle')} <span class="legend-dot forecast"></span><span class="legend-label">${t('fin.legendForecast')}</span></h4>
+    <h4>${t('fin.forecastTitle')}</h4>
     <div class="chart-wrap">${line}</div>
+    <p class="chart-legend"><span class="lg lg-actual"></span>${t('fin.legendRisk')} &nbsp;&nbsp; <span class="lg lg-forecast"></span>${t('fin.legendForecast')}</p>
+    <p class="muted small">${t('fin.forecastNote')}</p>
   `;
 }
 

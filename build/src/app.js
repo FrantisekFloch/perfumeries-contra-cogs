@@ -6,7 +6,7 @@ import { VERSION } from './lib/version.js';
 import { defaultSources } from './lib/source.js';
 import { StateStore, getLocalStorageBackend, createMemoryBackend } from './lib/store.js';
 import { Session, getSessionBackend, createMemoryKV, ROLES } from './lib/session.js';
-import { ScanStatus, InvoiceStatus } from './lib/enums.js';
+import { InvoiceStatus } from './lib/enums.js';
 import { transition } from './lib/lifecycle.js';
 import { buildPortfolio } from './lib/analytics.js';
 import { runPipeline } from './lib/pipeline.js';
@@ -15,11 +15,12 @@ import { archiveInvoice, exportArchive } from './lib/archive.js';
 import { renderDashboard, renderInventory } from './ui/dashboards.js';
 import { t, setLang, getLang } from './lib/i18n.js';
 import { startTour } from './ui/tour.js';
+import { playBootLoader } from './ui/boot.js';
+
+const BOOT_STEP_MS = 1500; // per-step delay for the "connecting" sequence
 
 const $ = (id) => document.getElementById(id);
 const show = (el) => { if (el) el.hidden = false; };
-const STATE_CLASS = { [ScanStatus.FOUND]: 'found', [ScanStatus.ERROR]: 'error', [ScanStatus.NO_UPDATES]: '', [ScanStatus.SCANNING]: '' };
-const SCAN_LABEL = { database: 'Database', api: 'API', folder: 'Folder' };
 
 const store = new StateStore(getLocalStorageBackend() || createMemoryBackend(), 'perfumeries');
 const session = new Session(getSessionBackend() || createMemoryKV());
@@ -55,27 +56,39 @@ function applyI18n() {
   document.querySelectorAll('#lang-switch .flag').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
 }
 
-// ---- scan UI ----
-function renderScanRows() {
-  const scan = $('scan-status'); scan.innerHTML = '';
-  const rows = {};
-  for (const id of ['database', 'api', 'folder']) {
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="src">${SCAN_LABEL[id]}</span><span class="state">idle</span>`;
-    scan.appendChild(li);
-    rows[id] = li.querySelector('.state');
-  }
-  return rows;
+// ---- top summary (redistributed connected-source facts) ----
+function warehouseCounts(ingest) {
+  const wh = {};
+  ingest.goodsReceipts.forEach((g) => { wh[g.storageId] = (wh[g.storageId] || 0) + 1; });
+  return wh;
 }
-function renderIngestSummary() {
+function renderTopScan() {
   if (!lastIngest) return;
   const r = lastIngest;
-  const storages = new Set(r.goodsReceipts.map((g) => g.storageId));
-  const units = r.goodsReceipts.reduce((s, g) => s + g.qtyReceived, 0);
-  $('ingest-summary').innerHTML = `<p class="summary-line">${t('ingest.line', {
-    inv: r.invoices.length, dn: r.deliveryNotes.length, gr: r.goodsReceipts.length,
-    units: units.toLocaleString(), st: storages.size, cn: r.creditNotes.length,
-  })}</p>`;
+  const wh = warehouseCounts(r);
+  const rows = [
+    [t('scan.database'), t('scan.invoices', { n: r.invoices.length }), 'found'],
+    [t('scan.api'), t('scan.creditNotes', { n: r.creditNotes.length }), r.creditNotes.length ? 'found' : ''],
+    [t('scan.warehouses'), t('scan.whSummary', { w: Object.keys(wh).length, r: r.goodsReceipts.length }), 'found'],
+  ];
+  $('scan-status').innerHTML = rows.map(([src, val, cls]) =>
+    `<li><span class="src">${src}</span><span class="state ${cls}">${val}</span></li>`).join('');
+  $('ingest-summary').innerHTML = '';
+}
+
+// ---- boot connect sequence ----
+function buildBootSteps(ingest) {
+  const wh = warehouseCounts(ingest);
+  const whEntries = Object.entries(wh).sort(([a], [b]) => a.localeCompare(b));
+  return [
+    { text: t('boot.db') },
+    { text: t('boot.checkInv') },
+    { text: t('boot.invLoaded', { n: ingest.invoices.length }) },
+    { text: t('boot.api') },
+    { text: t('boot.cnLoaded', { n: ingest.creditNotes.length }) },
+    ...whEntries.map(([whId, n]) => ({ text: t('boot.whConnect', { wh: whId }), done: t('boot.whDone', { wh: whId, n }) })),
+    { text: t('boot.finalizing') },
+  ];
 }
 
 // ---- role bar ----
@@ -118,7 +131,20 @@ function renderInventoryView() {
 }
 function renderAbout() {
   const root = $('view-root'); show(root);
-  root.innerHTML = `<h3>${t('about.title')}</h3><p>${t('about.body')}</p>
+  root.innerHTML = `
+    <h3>${t('about.title')}</h3>
+    <p class="muted">${t('about.intro')}</p>
+    <h4>${t('about.h.overview')}</h4><p>${t('about.p.overview')}</p>
+    <h4>${t('about.h.data')}</h4><p>${t('about.p.data')}</p>
+    <h4>${t('about.h.tabs')}</h4>
+    <ul class="manual">
+      <li>${t('about.tab.storage')}</li>
+      <li>${t('about.tab.accounting')}</li>
+      <li>${t('about.tab.finance')}</li>
+      <li>${t('about.tab.inventory')}</li>
+    </ul>
+    <h4>${t('about.h.nav')}</h4><p>${t('about.p.nav')}</p>
+    <h4>${t('about.h.models')}</h4><p>${t('about.p.models')}</p>
     <h4>${t('about.defTitle')}</h4><p>${t('about.defBody')}</p>`;
 }
 function renderCurrentView() {
@@ -147,22 +173,20 @@ function launchTour() {
 // ---- language ----
 function switchLang(l) {
   session.setLang(l); setLang(l);
-  applyI18n(); renderIngestSummary(); renderRoleBar(); renderCurrentView();
+  applyI18n(); renderTopScan(); renderRoleBar(); renderCurrentView();
 }
 
 // ---- boot ----
-async function runScan() {
-  show($('scan-panel'));
-  const rows = renderScanRows();
-  const onStatus = (id, state, message) => {
-    const el = rows[id]; if (!el) return;
-    el.textContent = state === ScanStatus.SCANNING ? (message || 'scanning…') : (message || state);
-    el.className = `state ${STATE_CLASS[state] || ''}`.trim();
-  };
+async function runConnect() {
   try {
-    const { ingest, portfolio } = await runPipeline(store, defaultSources(), { onStatus });
+    // Read the (folder-backed) data first, then play the connection sequence with real counts.
+    const { ingest, portfolio } = await runPipeline(store, defaultSources());
     lastIngest = ingest; ALL_PORTFOLIO = portfolio;
-    renderIngestSummary();
+
+    await playBootLoader(buildBootSteps(ingest), { title: t('boot.title'), perStepMs: BOOT_STEP_MS });
+
+    show($('scan-panel'));
+    renderTopScan();
     renderRoleBar();
     selectRole(session.isRoleSelected() ? session.getRole() : 'finance');
   } catch (err) {
@@ -178,7 +202,7 @@ function boot() {
   $('model-filter').addEventListener('change', (e) => { session.setModelFilter(e.target.value); renderCurrentView(); });
   $('tour-btn').addEventListener('click', launchTour);
   document.querySelectorAll('#lang-switch .flag').forEach((b) => b.addEventListener('click', () => switchLang(b.dataset.lang)));
-  runScan();
+  runConnect();
 }
 
 document.addEventListener('DOMContentLoaded', boot);

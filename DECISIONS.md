@@ -31,3 +31,17 @@ A running record of locked-in decisions so context survives across sessions. New
 ## Notes
 - Decisions move from `Pending` → `Proposed` → `Locked`.
 - When a decision changes, add a new row rather than editing the old one (keep the history).
+
+## Session status — 2026-08-17 (end of day)
+
+Tool complete and tested (114 tests). Built beyond the base spec:
+- Full-year sample dataset (31 invoices) via `build/tools/generate_samples.js`.
+- Animated "connecting to systems" boot sequence (DB → API → warehouses) with real counts; top summary redistributes facts by source.
+- i18n EN/SK toggle across the whole UI; About expanded into a full user manual (bilingual).
+- Finance charts (bar: risk vs debits; line: value at risk) with the **forecast visually separated** (shaded region + divider + legend + note = "trend if nothing changes").
+- Guided "Walk me through" tour.
+- Offline single-file build (`build/offline/perfumeries_offline.html`) for visual iteration without git.
+
+**State:** all files saved on disk; local git checkpoint committed. GitHub repo current; Pages **deploy** pending GitHub outage recovery (re-run Actions when green). Resume guide: `RESUME.md`.
+
+**Pending for next session:** finalize boot pacing (`BOOT_STEP_MS`), Storage-view polish, optional Finance breakdowns, accessibility pass, and (future) cloud adapters + real auth.

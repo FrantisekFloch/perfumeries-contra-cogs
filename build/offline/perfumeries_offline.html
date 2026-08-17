@@ -161,6 +161,31 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
 .tour-skip { background: transparent; color: #cfcfcf; }
 .tour-next { background: var(--accent); color: #fff; }
 
+/* boot connect loader */
+.boot-overlay { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background: rgba(26,26,26,0.55); backdrop-filter: blur(2px); }
+.boot-card { width: 440px; max-width: 92vw; background: #141414; color: #eaeaea; border: 1px solid #2c2c2c; border-radius: 12px; padding: 20px 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); font-family: var(--font); }
+.boot-title { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 600; margin-bottom: 14px; }
+.boot-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(45,108,223,0.6); animation: bootPulse 1.4s infinite; }
+@keyframes bootPulse { 0% { box-shadow: 0 0 0 0 rgba(45,108,223,0.6);} 100% { box-shadow: 0 0 0 12px rgba(45,108,223,0);} }
+.boot-bar { height: 6px; background: #2a2a2a; border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
+.boot-bar-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), #5b8def); border-radius: 999px; transition: width .5s ease; }
+.boot-log { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow-y: auto; display: grid; gap: 8px; }
+.boot-step { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #9a9a9a; }
+.boot-step.active { color: #eaeaea; }
+.boot-step.done { color: #7fdcb4; }
+.boot-step .ic { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; color: var(--ok); flex: 0 0 auto; }
+.boot-step .ic.spin { border: 2px solid #3a3a3a; border-top-color: var(--accent); border-radius: 50%; animation: bootSpin .7s linear infinite; }
+@keyframes bootSpin { to { transform: rotate(360deg); } }
+
+/* about manual + chart legend */
+.manual { margin: 4px 0 8px; padding-left: 18px; display: grid; gap: 8px; }
+.manual li { font-size: 0.92rem; line-height: 1.45; }
+.chart-legend { font-size: 0.8rem; color: var(--muted); margin: 8px 0 2px; }
+.chart-legend .lg { display: inline-block; width: 18px; height: 0; vertical-align: middle; margin-right: 6px; }
+.chart-legend .lg-actual { border-top: 3px solid var(--accent); }
+.chart-legend .lg-forecast { border-top: 3px dashed var(--warn); }
+.small { font-size: 0.8rem; }
+
 </style>
 </head>
 <body>
@@ -227,7 +252,19 @@ const DICT = {
     'model.bDesc': 'Back-edge allowance — standard price + monthly credit note; contra held pending until cleared.',
     'model.allDesc': 'Show invoices from both models.',
     'model.note': 'This filters which invoices the dashboards show. Each invoice still carries its own model.',
-    'scan.title': 'Source scan',
+    'scan.title': 'Connected sources',
+    'scan.database': 'Database', 'scan.api': 'API', 'scan.warehouses': 'Warehouses (EDI)',
+    'scan.invoices': '{n} invoices', 'scan.creditNotes': '{n} credit notes',
+    'scan.whSummary': '{w} connected · {r} delivery updates',
+    'boot.title': 'Connecting to systems…',
+    'boot.db': 'Connecting to database…',
+    'boot.checkInv': 'Checking for new invoices…',
+    'boot.invLoaded': '{n} invoices downloaded',
+    'boot.api': 'Syncing API (credit notes)…',
+    'boot.cnLoaded': '{n} credit notes downloaded',
+    'boot.whConnect': 'Connecting to warehouse {wh}…',
+    'boot.whDone': '{wh} — delivery update received ({n} rows)',
+    'boot.finalizing': 'Reconciling deliveries against invoices…',
     'ingest.line': 'Ingested {inv} invoice(s), {dn} delivery note(s), {gr} receipt row(s) — {units} units / {st} storage(s), {cn} credit note(s)',
     'th.invoice': 'Invoice', 'th.distributor': 'Distributor', 'th.invoiced': 'Invoiced',
     'th.received': 'Received', 'th.missing': 'Missing', 'th.valueAtRisk': 'Value at risk',
@@ -247,7 +284,8 @@ const DICT = {
     'fin.pendingCredit': 'Pending contra credit', 'fin.byStatus': 'Invoices by status',
     'fin.storages': 'Storages with open shortfalls', 'fin.view': 'view',
     'fin.trendTitle': 'Monthly value at risk & debits', 'fin.forecastTitle': 'Forecast — value at risk (next 3 months)',
-    'fin.legendRisk': 'Value at risk', 'fin.legendDebits': 'Debits', 'fin.legendForecast': 'Forecast',
+    'fin.legendRisk': 'Value at risk (actual)', 'fin.legendDebits': 'Debits', 'fin.legendForecast': 'Forecast (projected)',
+    'fin.forecastNote': 'The shaded area and dashed orange line are a projection — the trend if nothing changes (no new deliveries or resolutions). Everything to the left of the divider is real demo data.',
     'inv.title': 'Inventory — audit', 'inv.month': 'Month', 'inv.export': 'Export month (JSON)',
     'inv.delivered': 'Delivered', 'inv.of': 'of', 'inv.missing': 'Missing', 'inv.contra': 'Contra COGS',
     'inv.receipts': 'Receipts by storage', 'inv.deliveryNotes': 'Delivery notes',
@@ -258,8 +296,21 @@ const DICT = {
     'status.PartiallyReceived': 'Partially received', 'status.FullyMatched': 'Fully matched',
     'status.Paid': 'Paid', 'status.Archived': 'Archived', 'status.UnderInvestigation': 'Under investigation',
     'status.Resolved': 'Resolved', 'status.Unresolvable': 'Unresolvable',
-    'about.title': 'About this tool',
-    'about.body': 'Perfumeries reconciles supplier invoices against goods actually received across many storage locations. It detects <strong>Contra COGS gaps</strong> (the difference between the discount baked into an invoice and what is justified by verified received quantity), tracks them to closure, and gives Storage, Accounting and Finance role views plus an Inventory audit module.',
+    'about.title': 'User manual',
+    'about.intro': 'A quick manual: what the tool does, where its data comes from, what each tab shows, and how to get around.',
+    'about.h.overview': 'What it does',
+    'about.p.overview': 'Perfumeries reconciles supplier invoices against goods actually received across many warehouses. It detects <strong>Contra COGS gaps</strong> (the difference between the discount baked into an invoice and what is justified by the verified received quantity), tracks each gap to closure, and provides role-based views plus an audit module.',
+    'about.h.data': 'How it gets the data',
+    'about.p.data': 'On start-up the tool connects to your systems: invoices from the <strong>Database</strong>, credit notes from the <strong>API</strong>, and delivery updates (EDI/RECADV) from each <strong>warehouse</strong> — shown on the connection screen. In this demo the data is read from bundled sample files, but the flow mimics live feeds. The summary at the top shows how many invoices, credit notes and delivery updates arrived from where.',
+    'about.h.tabs': 'The tabs',
+    'about.tab.storage': '<strong>Storage</strong> — for warehouse teams: what is on the way, pending delivery, aged-pending items, and a monthly debit trend. Filter by a specific warehouse.',
+    'about.tab.accounting': '<strong>Accounting</strong> — open vs closed invoices and open value at risk, with actions to mark a fully matched invoice as paid and then archive it (downloads a JSON record).',
+    'about.tab.finance': '<strong>Finance</strong> — high-level KPIs (invoices, open value at risk, pending contra credit), invoices by status, storages with open shortfalls, plus charts and a forecast.',
+    'about.tab.inventory': '<strong>Inventory</strong> — a month-by-month audit: delivered vs invoiced, contra status, receipts by storage with dates, linked delivery and credit notes, and full history. Exportable to JSON.',
+    'about.h.nav': 'Getting around',
+    'about.p.nav': 'Use the tabs to switch views. In Finance, click “view” on a storage to jump to it filtered. Use the <strong>Model</strong> filter (top-right) to show only Model A or Model B invoices. Switch language with the 🇬🇧/🇸🇰 flags. Press <strong>Walk me through</strong> for a guided tour.',
+    'about.h.models': 'The two Contra COGS models',
+    'about.p.models': '<strong>Model A</strong> (direct / line-item): the discounted price is already on the invoice. <strong>Model B</strong> (back-edge): standard price on the invoice, with the discount settled later via a monthly credit note — so the contra credit is held pending until the full volume is delivered.',
     'about.defTitle': 'What is Contra COGS?',
     'about.defBody': 'Contra COGS reduces the cost of goods sold by offsetting margin/marketing contributions against the invoicing for goods. Two models are used: <strong>direct / line-item</strong> (the net discounted price is already on the per-warehouse invoice) and <strong>back-edge allowance</strong> (goods at standard price, with volume/marketing discounts settled monthly via a credit note against the central delivery record). Because deliveries are split across warehouses and can straddle month-end, the discount is only fully earned once the whole volume is confirmed delivered — until then a contra COGS credit is held pending.',
     'tour.done': 'Done', 'tour.next': 'Next', 'tour.skip': 'Skip',
@@ -274,7 +325,19 @@ const DICT = {
     'model.bDesc': 'Doúčtovanie (back-edge) — štandardná cena + mesačný dobropis; contra čaká na vyrovnanie.',
     'model.allDesc': 'Zobraziť faktúry z oboch modelov.',
     'model.note': 'Filtruje, ktoré faktúry sa zobrazujú. Každá faktúra má vlastný model.',
-    'scan.title': 'Skenovanie zdrojov',
+    'scan.title': 'Pripojené zdroje',
+    'scan.database': 'Databáza', 'scan.api': 'API', 'scan.warehouses': 'Sklady (EDI)',
+    'scan.invoices': '{n} faktúr', 'scan.creditNotes': '{n} dobropisov',
+    'scan.whSummary': '{w} pripojených · {r} aktualizácií dodávok',
+    'boot.title': 'Pripájam sa k systémom…',
+    'boot.db': 'Pripájam sa k databáze…',
+    'boot.checkInv': 'Kontrolujem nové faktúry…',
+    'boot.invLoaded': 'Stiahnutých {n} faktúr',
+    'boot.api': 'Synchronizujem API (dobropisy)…',
+    'boot.cnLoaded': 'Stiahnutých {n} dobropisov',
+    'boot.whConnect': 'Pripájam sa k skladu {wh}…',
+    'boot.whDone': '{wh} — prijatá aktualizácia dodávok ({n} riadkov)',
+    'boot.finalizing': 'Rekonciliujem dodávky voči faktúram…',
     'ingest.line': 'Načítané: {inv} faktúr, {dn} dodacích listov, {gr} riadkov príjmu — {units} ks / {st} skladov, {cn} dobropisov',
     'th.invoice': 'Faktúra', 'th.distributor': 'Dodávateľ', 'th.invoiced': 'Fakturované',
     'th.received': 'Prijaté', 'th.missing': 'Chýba', 'th.valueAtRisk': 'Riziková hodnota',
@@ -294,7 +357,8 @@ const DICT = {
     'fin.pendingCredit': 'Čakajúci Contra dobropis', 'fin.byStatus': 'Faktúry podľa stavu',
     'fin.storages': 'Sklady s otvorenými mankami', 'fin.view': 'zobraziť',
     'fin.trendTitle': 'Mesačná riziková hodnota a odpisy', 'fin.forecastTitle': 'Predpoveď — riziková hodnota (ďalšie 3 mesiace)',
-    'fin.legendRisk': 'Riziková hodnota', 'fin.legendDebits': 'Odpisy', 'fin.legendForecast': 'Predpoveď',
+    'fin.legendRisk': 'Riziková hodnota (skutočná)', 'fin.legendDebits': 'Odpisy', 'fin.legendForecast': 'Predpoveď (projekcia)',
+    'fin.forecastNote': 'Šrafovaná oblasť a prerušovaná oranžová čiara sú projekcia — trend, ak sa nič nezmení (žiadne nové dodávky ani riešenia). Všetko naľavo od deliacej čiary sú skutočné demo dáta.',
     'inv.title': 'Inventúra — audit', 'inv.month': 'Mesiac', 'inv.export': 'Exportovať mesiac (JSON)',
     'inv.delivered': 'Dodané', 'inv.of': 'z', 'inv.missing': 'Chýba', 'inv.contra': 'Contra COGS',
     'inv.receipts': 'Príjmy podľa skladu', 'inv.deliveryNotes': 'Dodacie listy',
@@ -305,8 +369,21 @@ const DICT = {
     'status.PartiallyReceived': 'Čiastočne prijaté', 'status.FullyMatched': 'Plne spárované',
     'status.Paid': 'Zaplatené', 'status.Archived': 'Archivované', 'status.UnderInvestigation': 'V riešení',
     'status.Resolved': 'Vyriešené', 'status.Unresolvable': 'Neriešiteľné',
-    'about.title': 'O tomto nástroji',
-    'about.body': 'Perfumeries porovnáva faktúry dodávateľa s tovarom skutočne prijatým vo viacerých skladoch. Odhaľuje <strong>Contra COGS medzery</strong> (rozdiel medzi zľavou zahrnutou vo faktúre a tým, čo je podložené overeným prijatým množstvom), sleduje ich až po vyriešenie a poskytuje pohľady pre Sklad, Účtovníctvo a Financie plus audit modul Inventúra.',
+    'about.title': 'Používateľská príručka',
+    'about.intro': 'Krátka príručka: čo nástroj robí, odkiaľ berie dáta, čo zobrazuje každá záložka a ako sa pohybovať.',
+    'about.h.overview': 'Čo nástroj robí',
+    'about.p.overview': 'Perfumeries porovnáva faktúry dodávateľa s tovarom skutočne prijatým vo viacerých skladoch. Odhaľuje <strong>Contra COGS medzery</strong> (rozdiel medzi zľavou vo faktúre a tým, čo je podložené overeným prijatým množstvom), sleduje každú medzeru až po vyriešenie a poskytuje pohľady podľa rolí plus audit modul.',
+    'about.h.data': 'Odkiaľ berie dáta',
+    'about.p.data': 'Pri štarte sa nástroj pripája k vašim systémom: faktúry z <strong>Databázy</strong>, dobropisy z <strong>API</strong> a aktualizácie dodávok (EDI/RECADV) z každého <strong>skladu</strong> — vidíte to na pripájacej obrazovke. V tomto deme sa dáta čítajú z priložených vzorových súborov, no tok napodobňuje živé zdroje. Súhrn hore ukazuje, koľko faktúr, dobropisov a aktualizácií dodávok prišlo odkiaľ.',
+    'about.h.tabs': 'Záložky',
+    'about.tab.storage': '<strong>Sklad</strong> — pre skladové tímy: čo je na ceste, čaká na dodanie, dlho čakajúce položky a mesačný trend odpisov. Filtrovateľné podľa konkrétneho skladu.',
+    'about.tab.accounting': '<strong>Účtovníctvo</strong> — otvorené vs uzavreté faktúry a otvorená riziková hodnota, s akciami označiť plne spárovanú faktúru ako zaplatenú a archivovať ju (stiahne JSON záznam).',
+    'about.tab.finance': '<strong>Financie</strong> — kľúčové ukazovatele (faktúry, otvorená riziková hodnota, čakajúci contra dobropis), faktúry podľa stavu, sklady s otvorenými mankami plus grafy a predpoveď.',
+    'about.tab.inventory': '<strong>Inventúra</strong> — audit po mesiacoch: dodané vs fakturované, stav contra, príjmy podľa skladu s dátumami, prepojené dodacie listy a dobropisy a celá história. Exportovateľné do JSON.',
+    'about.h.nav': 'Navigácia',
+    'about.p.nav': 'Záložkami prepínate pohľady. Vo Financiách kliknite na „zobraziť“ pri sklade a prejdete naň s filtrom. Filtrom <strong>Model</strong> (vpravo hore) zobrazíte len faktúry Modelu A alebo B. Jazyk prepnete vlajkami 🇬🇧/🇸🇰. Tlačidlom <strong>Preveď ma</strong> spustíte sprievodcu.',
+    'about.h.models': 'Dva modely Contra COGS',
+    'about.p.models': '<strong>Model A</strong> (priamy / položkový): zľavnená cena je už na faktúre. <strong>Model B</strong> (zúčtovanie pozadia): na faktúre je štandardná cena a zľava sa vyrovná neskôr mesačným dobropisom — contra dobropis sa teda drží ako čakajúci, kým sa nedodá celý objem.',
     'about.defTitle': 'Čo je Contra COGS?',
     'about.defBody': 'Pri uplatnení Contra COGS (zníženie nákladov predaného tovaru, resp. započítanie maržových/marketingových príspevkov voči fakturácii za tovar) dodávateľ buď vystaví faktúru so zníženou jednotkovou cenou priamo pri expedícii (<strong>položková úprava</strong>), alebo dodáva za štandardné ceny a zľavy vyrovnáva formou dobropisov či súhrnných marketingových/kooperačných faktúr voči centrálnej evidencii dodávok za mesiac (<strong>zúčtovanie pozadia</strong>). Keďže dodávky sú rozdelené do viacerých skladov a môžu presahovať koniec mesiaca, zľava je plne nárokovateľná až po potvrdení celého objemu — dovtedy sa Contra COGS dobropis drží ako čakajúci.',
     'tour.done': 'Hotovo', 'tour.next': 'Ďalej', 'tour.skip': 'Preskočiť',
@@ -1973,6 +2050,10 @@ const short = (lab) => String(lab).slice(2); // '2026-01' -> '26-01'
   const n = allLabels.length || 1, stepX = iw / Math.max(1, n - 1);
   const x = (i) => pad.l + i * stepX;
   const y = (v) => pad.t + ih - ((Number(v) || 0) / max) * ih;
+  // Shade + separator to clearly mark where real data ends and the projection begins.
+  const bIdx = Math.max(0, actual.length - 1);
+  const shade = fValues.length ? `<rect x="${x(bIdx).toFixed(1)}" y="${pad.t}" width="${(width - pad.r - x(bIdx)).toFixed(1)}" height="${ih}" fill="${fcolor}" opacity="0.08"/>` : '';
+  const sep = fValues.length ? `<line x1="${x(bIdx).toFixed(1)}" y1="${pad.t}" x2="${x(bIdx).toFixed(1)}" y2="${pad.t + ih}" stroke="${fcolor}" stroke-dasharray="3 3" opacity="0.7"/>` : '';
   const actualLine = `<polyline points="${actual.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="2"/>`;
   const fSeq = [];
   if (actual.length) fSeq.push(`${x(actual.length - 1).toFixed(1)},${y(actual[actual.length - 1]).toFixed(1)}`);
@@ -1982,7 +2063,7 @@ const short = (lab) => String(lab).slice(2); // '2026-01' -> '26-01'
     + fValues.map((v, i) => `<circle cx="${x(actual.length + i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.5" fill="${fcolor}"/>`).join('');
   const xlabels = allLabels.map((lab, i) => `<text x="${x(i).toFixed(1)}" y="${height - 10}" font-size="9" text-anchor="middle" fill="#6b6b6b">${short(lab)}</text>`).join('');
   const axis = `<line x1="${pad.l}" y1="${pad.t + ih}" x2="${width - pad.r}" y2="${pad.t + ih}" stroke="#e5e5e5"/><text x="2" y="${pad.t + 8}" font-size="9" fill="#6b6b6b">${max.toLocaleString()}</text>`;
-  return `<svg viewBox="0 0 ${width} ${height}" class="chart" preserveAspectRatio="xMidYMid meet">${axis}${actualLine}${fLine}${dots}${xlabels}</svg>`;
+  return `<svg viewBox="0 0 ${width} ${height}" class="chart" preserveAspectRatio="xMidYMid meet">${axis}${shade}${sep}${actualLine}${fLine}${dots}${xlabels}</svg>`;
 }
 
 
@@ -2069,8 +2150,10 @@ function financeHtml(pf) {
     ${tbl([t('th.storage'), t('th.openInvoices'), t('th.detail'), ''], fv.storagesWithIssues.map((s) => [s.storageId, s.count, s.openInvoices.join(', '), `<button class="link drill" data-storage="${s.storageId}">${t('fin.view')}</button>`]))}
     <h4>${t('fin.trendTitle')}</h4>
     <div class="chart-wrap">${bars}</div>
-    <h4>${t('fin.forecastTitle')} <span class="legend-dot forecast"></span><span class="legend-label">${t('fin.legendForecast')}</span></h4>
+    <h4>${t('fin.forecastTitle')}</h4>
     <div class="chart-wrap">${line}</div>
+    <p class="chart-legend"><span class="lg lg-actual"></span>${t('fin.legendRisk')} &nbsp;&nbsp; <span class="lg lg-forecast"></span>${t('fin.legendForecast')}</p>
+    <p class="muted small">${t('fin.forecastNote')}</p>
   `;
 }
 
@@ -2181,6 +2264,53 @@ function detailCard(d) {
 }
 
 
+// ===== src/ui/boot.js =====
+// Animated "connecting to systems" boot loader. Shows a centered console card with
+// a progress bar and a step log: the current step spins, completed steps get a ✓
+// (and can swap to a "done" text). Returns a promise that resolves when finished.
+// Steps: [{ text, done? }].function playBootLoader(steps, { title = 'Connecting…', perStepMs = 1500 } = {}) {
+  return new Promise((resolve) => {
+    const ov = document.createElement('div');
+    ov.className = 'boot-overlay';
+    ov.innerHTML = `
+      <div class="boot-card">
+        <div class="boot-title"><span class="boot-dot"></span>${title}</div>
+        <div class="boot-bar"><div class="boot-bar-fill" id="boot-fill"></div></div>
+        <ul class="boot-log" id="boot-log"></ul>
+      </div>`;
+    document.body.appendChild(ov);
+    const log = ov.querySelector('#boot-log');
+    const fill = ov.querySelector('#boot-fill');
+    let i = 0;
+
+    function tick() {
+      // finalize the previous step
+      if (i > 0) {
+        const prev = log.children[i - 1];
+        prev.classList.remove('active');
+        prev.classList.add('done');
+        prev.querySelector('.ic').textContent = '✓';
+        if (steps[i - 1].done) prev.querySelector('.tx').textContent = steps[i - 1].done;
+      }
+      if (i >= steps.length) {
+        fill.style.width = '100%';
+        setTimeout(() => { ov.remove(); resolve(); }, 350);
+        return;
+      }
+      const li = document.createElement('li');
+      li.className = 'boot-step active';
+      li.innerHTML = `<span class="ic spin"></span><span class="tx">${steps[i].text}</span>`;
+      log.appendChild(li);
+      log.scrollTop = log.scrollHeight;
+      fill.style.width = `${Math.round((i / steps.length) * 100)}%`;
+      i += 1;
+      setTimeout(tick, perStepMs);
+    }
+    tick();
+  });
+}
+
+
 // ===== src/app.js =====
 // Perfumeries — Contra COGS Reconciliation
 // Startup: scan -> ingest -> advance lifecycle -> build portfolio -> dashboards.
@@ -2200,10 +2330,11 @@ function detailCard(d) {
 
 
 
+
+const BOOT_STEP_MS = 1500; // per-step delay for the "connecting" sequence
+
 const $ = (id) => document.getElementById(id);
 const show = (el) => { if (el) el.hidden = false; };
-const STATE_CLASS = { [ScanStatus.FOUND]: 'found', [ScanStatus.ERROR]: 'error', [ScanStatus.NO_UPDATES]: '', [ScanStatus.SCANNING]: '' };
-const SCAN_LABEL = { database: 'Database', api: 'API', folder: 'Folder' };
 
 const store = new StateStore(getLocalStorageBackend() || createMemoryBackend(), 'perfumeries');
 const session = new Session(getSessionBackend() || createMemoryKV());
@@ -2239,27 +2370,39 @@ function applyI18n() {
   document.querySelectorAll('#lang-switch .flag').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
 }
 
-// ---- scan UI ----
-function renderScanRows() {
-  const scan = $('scan-status'); scan.innerHTML = '';
-  const rows = {};
-  for (const id of ['database', 'api', 'folder']) {
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="src">${SCAN_LABEL[id]}</span><span class="state">idle</span>`;
-    scan.appendChild(li);
-    rows[id] = li.querySelector('.state');
-  }
-  return rows;
+// ---- top summary (redistributed connected-source facts) ----
+function warehouseCounts(ingest) {
+  const wh = {};
+  ingest.goodsReceipts.forEach((g) => { wh[g.storageId] = (wh[g.storageId] || 0) + 1; });
+  return wh;
 }
-function renderIngestSummary() {
+function renderTopScan() {
   if (!lastIngest) return;
   const r = lastIngest;
-  const storages = new Set(r.goodsReceipts.map((g) => g.storageId));
-  const units = r.goodsReceipts.reduce((s, g) => s + g.qtyReceived, 0);
-  $('ingest-summary').innerHTML = `<p class="summary-line">${t('ingest.line', {
-    inv: r.invoices.length, dn: r.deliveryNotes.length, gr: r.goodsReceipts.length,
-    units: units.toLocaleString(), st: storages.size, cn: r.creditNotes.length,
-  })}</p>`;
+  const wh = warehouseCounts(r);
+  const rows = [
+    [t('scan.database'), t('scan.invoices', { n: r.invoices.length }), 'found'],
+    [t('scan.api'), t('scan.creditNotes', { n: r.creditNotes.length }), r.creditNotes.length ? 'found' : ''],
+    [t('scan.warehouses'), t('scan.whSummary', { w: Object.keys(wh).length, r: r.goodsReceipts.length }), 'found'],
+  ];
+  $('scan-status').innerHTML = rows.map(([src, val, cls]) =>
+    `<li><span class="src">${src}</span><span class="state ${cls}">${val}</span></li>`).join('');
+  $('ingest-summary').innerHTML = '';
+}
+
+// ---- boot connect sequence ----
+function buildBootSteps(ingest) {
+  const wh = warehouseCounts(ingest);
+  const whEntries = Object.entries(wh).sort(([a], [b]) => a.localeCompare(b));
+  return [
+    { text: t('boot.db') },
+    { text: t('boot.checkInv') },
+    { text: t('boot.invLoaded', { n: ingest.invoices.length }) },
+    { text: t('boot.api') },
+    { text: t('boot.cnLoaded', { n: ingest.creditNotes.length }) },
+    ...whEntries.map(([whId, n]) => ({ text: t('boot.whConnect', { wh: whId }), done: t('boot.whDone', { wh: whId, n }) })),
+    { text: t('boot.finalizing') },
+  ];
 }
 
 // ---- role bar ----
@@ -2302,7 +2445,20 @@ function renderInventoryView() {
 }
 function renderAbout() {
   const root = $('view-root'); show(root);
-  root.innerHTML = `<h3>${t('about.title')}</h3><p>${t('about.body')}</p>
+  root.innerHTML = `
+    <h3>${t('about.title')}</h3>
+    <p class="muted">${t('about.intro')}</p>
+    <h4>${t('about.h.overview')}</h4><p>${t('about.p.overview')}</p>
+    <h4>${t('about.h.data')}</h4><p>${t('about.p.data')}</p>
+    <h4>${t('about.h.tabs')}</h4>
+    <ul class="manual">
+      <li>${t('about.tab.storage')}</li>
+      <li>${t('about.tab.accounting')}</li>
+      <li>${t('about.tab.finance')}</li>
+      <li>${t('about.tab.inventory')}</li>
+    </ul>
+    <h4>${t('about.h.nav')}</h4><p>${t('about.p.nav')}</p>
+    <h4>${t('about.h.models')}</h4><p>${t('about.p.models')}</p>
     <h4>${t('about.defTitle')}</h4><p>${t('about.defBody')}</p>`;
 }
 function renderCurrentView() {
@@ -2331,22 +2487,20 @@ function launchTour() {
 // ---- language ----
 function switchLang(l) {
   session.setLang(l); setLang(l);
-  applyI18n(); renderIngestSummary(); renderRoleBar(); renderCurrentView();
+  applyI18n(); renderTopScan(); renderRoleBar(); renderCurrentView();
 }
 
 // ---- boot ----
-async function runScan() {
-  show($('scan-panel'));
-  const rows = renderScanRows();
-  const onStatus = (id, state, message) => {
-    const el = rows[id]; if (!el) return;
-    el.textContent = state === ScanStatus.SCANNING ? (message || 'scanning…') : (message || state);
-    el.className = `state ${STATE_CLASS[state] || ''}`.trim();
-  };
+async function runConnect() {
   try {
-    const { ingest, portfolio } = await runPipeline(store, defaultSources(), { onStatus });
+    // Read the (folder-backed) data first, then play the connection sequence with real counts.
+    const { ingest, portfolio } = await runPipeline(store, defaultSources());
     lastIngest = ingest; ALL_PORTFOLIO = portfolio;
-    renderIngestSummary();
+
+    await playBootLoader(buildBootSteps(ingest), { title: t('boot.title'), perStepMs: BOOT_STEP_MS });
+
+    show($('scan-panel'));
+    renderTopScan();
     renderRoleBar();
     selectRole(session.isRoleSelected() ? session.getRole() : 'finance');
   } catch (err) {
@@ -2362,7 +2516,7 @@ function boot() {
   $('model-filter').addEventListener('change', (e) => { session.setModelFilter(e.target.value); renderCurrentView(); });
   $('tour-btn').addEventListener('click', launchTour);
   document.querySelectorAll('#lang-switch .flag').forEach((b) => b.addEventListener('click', () => switchLang(b.dataset.lang)));
-  runScan();
+  runConnect();
 }
 
 document.addEventListener('DOMContentLoaded', boot);

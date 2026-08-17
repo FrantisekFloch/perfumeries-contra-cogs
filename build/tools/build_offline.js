@@ -29,7 +29,8 @@ const MODULES = [
   'src/lib/ingest.js', 'src/lib/matching.js', 'src/lib/gap.js', 'src/lib/timing.js',
   'src/lib/governance.js', 'src/lib/lifecycle.js', 'src/lib/analytics.js',
   'src/lib/inventory.js', 'src/lib/archive.js', 'src/lib/session.js', 'src/lib/forecast.js',
-  'src/lib/pipeline.js', 'src/ui/charts.js', 'src/ui/dashboards.js', 'src/ui/tour.js', 'src/app.js',
+  'src/lib/pipeline.js', 'src/ui/charts.js', 'src/ui/dashboards.js', 'src/ui/tour.js',
+  'src/ui/boot.js', 'src/app.js',
 ];
 const strip = (src) => src
   .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"];/g, '') // drop import statements

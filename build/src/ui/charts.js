@@ -37,6 +37,10 @@ export function lineForecast(labels, actual, fLabels, fValues, opts = {}) {
   const n = allLabels.length || 1, stepX = iw / Math.max(1, n - 1);
   const x = (i) => pad.l + i * stepX;
   const y = (v) => pad.t + ih - ((Number(v) || 0) / max) * ih;
+  // Shade + separator to clearly mark where real data ends and the projection begins.
+  const bIdx = Math.max(0, actual.length - 1);
+  const shade = fValues.length ? `<rect x="${x(bIdx).toFixed(1)}" y="${pad.t}" width="${(width - pad.r - x(bIdx)).toFixed(1)}" height="${ih}" fill="${fcolor}" opacity="0.08"/>` : '';
+  const sep = fValues.length ? `<line x1="${x(bIdx).toFixed(1)}" y1="${pad.t}" x2="${x(bIdx).toFixed(1)}" y2="${pad.t + ih}" stroke="${fcolor}" stroke-dasharray="3 3" opacity="0.7"/>` : '';
   const actualLine = `<polyline points="${actual.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="2"/>`;
   const fSeq = [];
   if (actual.length) fSeq.push(`${x(actual.length - 1).toFixed(1)},${y(actual[actual.length - 1]).toFixed(1)}`);
@@ -46,5 +50,5 @@ export function lineForecast(labels, actual, fLabels, fValues, opts = {}) {
     + fValues.map((v, i) => `<circle cx="${x(actual.length + i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.5" fill="${fcolor}"/>`).join('');
   const xlabels = allLabels.map((lab, i) => `<text x="${x(i).toFixed(1)}" y="${height - 10}" font-size="9" text-anchor="middle" fill="#6b6b6b">${short(lab)}</text>`).join('');
   const axis = `<line x1="${pad.l}" y1="${pad.t + ih}" x2="${width - pad.r}" y2="${pad.t + ih}" stroke="#e5e5e5"/><text x="2" y="${pad.t + 8}" font-size="9" fill="#6b6b6b">${max.toLocaleString()}</text>`;
-  return `<svg viewBox="0 0 ${width} ${height}" class="chart" preserveAspectRatio="xMidYMid meet">${axis}${actualLine}${fLine}${dots}${xlabels}</svg>`;
+  return `<svg viewBox="0 0 ${width} ${height}" class="chart" preserveAspectRatio="xMidYMid meet">${axis}${shade}${sep}${actualLine}${fLine}${dots}${xlabels}</svg>`;
 }
