@@ -35,5 +35,17 @@ export class Session {
 
   isModelSelected() { return isEnumValue(CONTRA_COGS_MODEL_VALUES, this.getModel()); }
 
-  clear() { this.backend.removeItem(this._k('model')); }
+  setRole(role) {
+    if (!ROLES.includes(role)) throw new Error(`Session: invalid role "${role}"`);
+    this.backend.setItem(this._k('role'), role);
+    return role;
+  }
+
+  getRole() { return this.backend.getItem(this._k('role')); }
+
+  isRoleSelected() { return ROLES.includes(this.getRole()); }
+
+  clear() { this.backend.removeItem(this._k('model')); this.backend.removeItem(this._k('role')); }
 }
+
+export const ROLES = Object.freeze(['storage', 'accounting', 'finance']);

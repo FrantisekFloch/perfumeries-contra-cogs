@@ -1,33 +1,37 @@
 // Perfumeries — Contra COGS Reconciliation
-// Entry point. Startup flow: choose Contra COGS model -> scan sources ->
-// ingest -> persist -> render ingest summary. Dashboards/Inventory come later.
+// Startup flow: choose model -> scan -> ingest -> advance lifecycle -> build
+// portfolio -> pick role -> render dashboard.
 
 import { VERSION } from './lib/version.js';
 import { SourceScanner, defaultSources } from './lib/source.js';
 import { ingestFiles, persistIngest } from './lib/ingest.js';
 import { StateStore, getLocalStorageBackend, createMemoryBackend } from './lib/store.js';
-import { Session, getSessionBackend, createMemoryKV } from './lib/session.js';
+import { Session, getSessionBackend, createMemoryKV, ROLES } from './lib/session.js';
 import { ScanStatus, ContraCogsModel } from './lib/enums.js';
+import { matchInvoice } from './lib/matching.js';
+import { applyMatchStatus } from './lib/lifecycle.js';
+import { buildPortfolio } from './lib/analytics.js';
+import { renderDashboard } from './ui/dashboards.js';
+
+const $ = (id) => document.getElementById(id);
+const show = (el) => { if (el) el.hidden = false; };
 
 const LABELS = { database: 'Database', api: 'API', folder: 'Folder' };
-const STATE_CLASS = {
-  [ScanStatus.FOUND]: 'found',
-  [ScanStatus.ERROR]: 'error',
-  [ScanStatus.NO_UPDATES]: '',
-  [ScanStatus.SCANNING]: '',
-};
+const STATE_CLASS = { [ScanStatus.FOUND]: 'found', [ScanStatus.ERROR]: 'error', [ScanStatus.NO_UPDATES]: '', [ScanStatus.SCANNING]: '' };
 const MODEL_DESC = {
   [ContraCogsModel.A]: 'Direct / line-item — net (discounted) unit price already on the invoice.',
   [ContraCogsModel.B]: 'Back-edge allowance — standard price + monthly credit note; contra held pending until cleared.',
 };
+const ROLE_LABELS = { storage: 'Storage', accounting: 'Accounting', finance: 'Finance' };
 
-const $ = (id) => document.getElementById(id);
+// module state
+const store = new StateStore(getLocalStorageBackend() || createMemoryBackend(), 'perfumeries');
+const session = new Session(getSessionBackend() || createMemoryKV());
+let PORTFOLIO = [];
+let storageFilter = null;
 
-function show(el) { if (el) el.hidden = false; }
-
-function renderModelPanel(session, onChosen) {
+function renderModelPanel(onChosen) {
   const panel = $('model-panel');
-  if (!panel) return;
   const current = session.getModel();
   panel.innerHTML = `
     <h2>Choose Contra COGS model</h2>
@@ -38,20 +42,16 @@ function renderModelPanel(session, onChosen) {
           <span class="model-desc">${MODEL_DESC[m]}</span>
         </button>`).join('')}
     </div>
-    <p class="hint">This sets the session model for the demo. Individual invoices still carry their own model.</p>
-  `;
-  panel.querySelectorAll('.model-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      session.setModel(btn.dataset.model);
-      renderModelPanel(session, onChosen); // reflect selection
-      onChosen(btn.dataset.model);
-    });
-  });
+    <p class="hint">Sets the session model for the demo. Individual invoices still carry their own model.</p>`;
+  panel.querySelectorAll('.model-btn').forEach((btn) => btn.addEventListener('click', () => {
+    session.setModel(btn.dataset.model);
+    renderModelPanel(onChosen);
+    onChosen(btn.dataset.model);
+  }));
 }
 
 function renderScanRows() {
   const scan = $('scan-status');
-  if (!scan) return {};
   scan.innerHTML = '';
   const rows = {};
   for (const id of ['database', 'api', 'folder']) {
@@ -63,29 +63,56 @@ function renderScanRows() {
   return rows;
 }
 
-function renderSummary(result, model) {
-  const root = $('view-root');
-  if (!root) return;
-  show(root);
+function renderIngestSummary(result, model) {
+  const el = $('ingest-summary');
   const storages = new Set(result.goodsReceipts.map((g) => g.storageId));
   const received = result.goodsReceipts.reduce((s, g) => s + g.qtyReceived, 0);
-  root.innerHTML = `
-    <h2>Ingest summary <span class="badge">Model ${model}</span></h2>
-    <ul class="summary">
-      <li><strong>${result.invoices.length}</strong> invoice(s)</li>
-      <li><strong>${result.deliveryNotes.length}</strong> delivery note(s)</li>
-      <li><strong>${result.goodsReceipts.length}</strong> goods-receipt row(s) — ${received} units across ${storages.size} storage(s)</li>
-      <li><strong>${result.creditNotes.length}</strong> credit note(s)</li>
-      ${result.incomplete.length ? `<li class="warn">${result.incomplete.length} invoice(s) flagged incomplete</li>` : ''}
-      ${result.errors.length ? `<li class="err">${result.errors.length} file error(s)</li>` : ''}
-    </ul>
-    <p class="hint">Matching, gaps, dashboards and the Inventory module arrive in the next tasks.</p>
-  `;
+  el.innerHTML = `
+    <p class="summary-line">Ingested <span class="badge">Model ${model}</span>
+      ${result.invoices.length} invoice(s), ${result.deliveryNotes.length} delivery note(s),
+      ${result.goodsReceipts.length} receipt row(s) — ${received} units / ${storages.size} storage(s),
+      ${result.creditNotes.length} credit note(s)
+      ${result.incomplete.length ? `· <span class="warn">${result.incomplete.length} incomplete</span>` : ''}
+      ${result.errors.length ? `· <span class="err">${result.errors.length} error(s)</span>` : ''}
+    </p>`;
 }
 
-async function runScan(store, model) {
-  const scanPanel = $('scan-panel');
-  show(scanPanel);
+function advanceStatuses() {
+  const receipts = store.all('goodsReceipts');
+  const dns = store.all('deliveryNotes');
+  for (const inv of store.all('invoices')) {
+    const m = matchInvoice(inv, receipts, dns);
+    applyMatchStatus(store, inv.invoiceNumber, m, { actor: 'system' });
+  }
+  return { invoices: store.all('invoices'), receipts, dns };
+}
+
+function renderRoleBar() {
+  const bar = $('role-bar');
+  show(bar);
+  const current = session.getRole();
+  bar.innerHTML = ROLES.map((r) => `<button class="role-tab${current === r ? ' active' : ''}" data-role="${r}">${ROLE_LABELS[r]}</button>`).join('');
+  bar.querySelectorAll('.role-tab').forEach((b) => b.addEventListener('click', () => selectRole(b.dataset.role)));
+}
+
+function renderCurrentDashboard() {
+  const root = $('view-root');
+  show(root);
+  renderDashboard(root, session.getRole(), PORTFOLIO, {
+    storageId: storageFilter,
+    onFilter: (sid) => { storageFilter = sid; renderCurrentDashboard(); },
+    onDrill: (sid) => { storageFilter = sid; selectRole('storage'); },
+  });
+}
+
+function selectRole(role) {
+  session.setRole(role);
+  renderRoleBar();
+  renderCurrentDashboard();
+}
+
+async function runScan(model) {
+  show($('scan-panel'));
   const rows = renderScanRows();
   const onStatus = (id, state, message) => {
     const el = rows[id];
@@ -97,25 +124,27 @@ async function runScan(store, model) {
     const { files } = await new SourceScanner(defaultSources(), { onStatus }).scanAll();
     const result = ingestFiles(files);
     persistIngest(store, result);
-    renderSummary(result, model);
+    renderIngestSummary(result, model);
+
+    const { invoices, receipts, dns } = advanceStatuses();
+    PORTFOLIO = buildPortfolio(invoices, receipts, dns, { asOf: new Date().toISOString() });
+
+    renderRoleBar();
+    selectRole(session.isRoleSelected() ? session.getRole() : 'finance');
   } catch (err) {
     const root = $('view-root');
-    if (root) { show(root); root.innerHTML = `<h2>Startup error</h2><p class="err">${err.message}</p>`; }
+    show(root);
+    root.innerHTML = `<h2>Startup error</h2><p class="err">${err.message}</p>`;
   }
 }
 
 function boot() {
   const status = $('build-status');
   if (status) status.textContent = `v${VERSION}`;
-
-  const store = new StateStore(getLocalStorageBackend() || createMemoryBackend(), 'perfumeries');
-  const session = new Session(getSessionBackend() || createMemoryKV());
-
   let started = false;
-  const start = (model) => { if (started) return; started = true; runScan(store, model); };
-
-  renderModelPanel(session, start);
-  if (session.isModelSelected()) start(session.getModel()); // resume prior choice
+  const start = (model) => { if (started) return; started = true; runScan(model); };
+  renderModelPanel(start);
+  if (session.isModelSelected()) start(session.getModel());
 }
 
 document.addEventListener('DOMContentLoaded', boot);
