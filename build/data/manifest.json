@@ -1,0 +1,11 @@
+{
+  "description": "File manifest for the FolderSource. Static hosts (GitHub Pages) have no directory listing, so the folder scan enumerates inbox files from here.",
+  "generatedFor": "demo",
+  "inbox": {
+    "invoices": ["INV-2026-0001.xml"],
+    "delivery_notes": ["DN-2026-0001-01.xml"],
+    "storage_reports": ["recadv_2026-01_02.csv"],
+    "credit_notes": ["CN-2026-01-DIST-EU-01.xml"]
+  },
+  "archive": []
+}

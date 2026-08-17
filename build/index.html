@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Perfumeries — Contra COGS Reconciliation</title>
+  <link rel="stylesheet" href="./src/ui/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Perfumeries</h1>
+    <span class="subtitle">Contra COGS Reconciliation</span>
+  </header>
+
+  <main id="app">
+    <section id="scan-panel" class="panel">
+      <h2>Source scan</h2>
+      <ul id="scan-status" class="scan-status" aria-live="polite"></ul>
+    </section>
+    <section id="view-root" class="panel"></section>
+  </main>
+
+  <footer class="app-footer">
+    <span id="build-status">scaffold ready</span>
+  </footer>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

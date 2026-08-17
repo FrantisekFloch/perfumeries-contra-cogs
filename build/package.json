@@ -1,0 +1,11 @@
+{
+  "name": "perfumeries-contra-cogs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Perfumeries Contra COGS Reconciliation — vanilla JS demo (no build step). package.json only configures ES modules + the zero-dependency test runner.",
+  "scripts": {
+    "test": "node --test",
+    "serve": "node ./tools/serve.js"
+  }
+}
