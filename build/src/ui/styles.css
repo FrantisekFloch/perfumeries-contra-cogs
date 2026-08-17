@@ -117,3 +117,7 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
 .inv-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 14px; }
 .inv-card-head { font-size: 1rem; margin-bottom: 4px; }
 .tag { display: inline-block; font-size: 0.72rem; font-weight: 700; background: #eef2fb; color: var(--accent); border-radius: 999px; padding: 2px 10px; }
+
+.kv { list-style: none; margin: 6px 0 4px; padding: 0; display: grid; gap: 4px; }
+.kv li { display: flex; gap: 10px; font-size: 0.92rem; }
+.kv li span { color: var(--muted); min-width: 90px; }

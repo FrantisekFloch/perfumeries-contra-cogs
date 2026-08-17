@@ -10,6 +10,9 @@ import { buildPortfolio } from './analytics.js';
 
 export async function runPipeline(store, sources, { onStatus, asOf } = {}) {
   const { files, results } = await new SourceScanner(sources, { onStatus }).scanAll();
+  // A scan reflects the current source truth. Reset first so re-scans / page
+  // reloads are idempotent (goodsReceipts is a list and would otherwise pile up).
+  store.clearAll();
   const ingest = ingestFiles(files);
   persistIngest(store, ingest);
 

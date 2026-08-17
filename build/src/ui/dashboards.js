@@ -4,7 +4,8 @@
 import { storageView, accountingView, financeView } from '../lib/analytics.js';
 import { monthlyInventory, inventoryMonths } from '../lib/inventory.js';
 
-const money = (n) => (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = (n) => '€' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const qty = (n) => (Number(n) || 0).toLocaleString();
 
 function tbl(headers, rows) {
   if (!rows.length) return '<p class="muted">None.</p>';
@@ -22,9 +23,9 @@ function storageHtml(pf, storageId) {
     <div class="dash-head"><h3>Storage view</h3>
       <label class="filter">Storage <select id="storage-filter">${options}</select></label></div>
     <h4>On the way (${sv.onWay.length})</h4>
-    ${tbl(['Invoice', 'Distributor', 'Invoiced', 'Received'], sv.onWay.map((v) => [v.invoiceNumber, v.distributorId, v.invoicedQty, v.receivedQty]))}
+    ${tbl(['Invoice', 'Distributor', 'Invoiced', 'Received'], sv.onWay.map((v) => [v.invoiceNumber, v.distributorId, qty(v.invoicedQty), qty(v.receivedQty)]))}
     <h4>Pending delivery (${sv.pendingDelivery.length})</h4>
-    ${tbl(['Invoice', 'Missing', 'Value at risk', 'Storages'], sv.pendingDelivery.map((v) => [v.invoiceNumber, v.missingQty, money(v.valueAtRisk), v.storages.join(', ')]))}
+    ${tbl(['Invoice', 'Missing', 'Value at risk', 'Storages'], sv.pendingDelivery.map((v) => [v.invoiceNumber, qty(v.missingQty), money(v.valueAtRisk), v.storages.join(', ')]))}
     <h4>Aged pending</h4>
     ${tbl(['Invoice', 'Value', 'Age (days)'], sv.agedPending.map((a) => [a.invoiceNumber, money(a.value), a.ageDays]))}
     <h4>Trend by period (debits)</h4>
@@ -38,7 +39,7 @@ function accountingHtml(pf) {
     <h3>Accounting view</h3>
     <p class="muted">Open: ${av.summary.openCount} · Closed: ${av.summary.closedCount} · Open value at risk: ${money(av.summary.openValueAtRisk)}</p>
     <h4>Open / not fully closed (${av.open.length})</h4>
-    ${tbl(['Invoice', 'Status', 'Missing', 'Value at risk'], av.open.map((v) => [v.invoiceNumber, v.status, v.missingQty, money(v.valueAtRisk)]))}
+    ${tbl(['Invoice', 'Status', 'Missing', 'Value at risk'], av.open.map((v) => [v.invoiceNumber, v.status, qty(v.missingQty), money(v.valueAtRisk)]))}
     <h4>Closed (${av.closed.length})</h4>
     ${tbl(['Invoice', 'Status', 'Contra recognized', 'Actions'], av.closed.map((v) => [
       v.invoiceNumber, v.status, money(v.contra.recognizedContra), closedAction(v),
@@ -70,19 +71,29 @@ function financeHtml(pf) {
   `;
 }
 
+const fmtDate = (dt) => String(dt).replace('T', ' ').slice(0, 16);
+
 function detailCard(d) {
+  const contraLine = d.contraStatus === 'Applied'
+    ? `Contra COGS applied: ${money(d.recognizedContra)}`
+    : `Contra COGS ${d.contraStatus.toLowerCase()} — recognized ${money(d.recognizedContra)}${d.pendingCredit ? ` (${money(d.pendingCredit)} pending)` : ''}`;
   return `
     <div class="inv-card">
-      <div class="inv-card-head"><strong>${d.invoiceNumber}</strong> · ${d.distributorId} · Model ${d.model} · <span class="tag">${d.status}</span></div>
-      <p class="muted">Invoiced ${d.invoicedQty} · Received ${d.receivedQty} · Missing ${d.missingQty} · Contra ${d.contraStatus} (recognized ${money(d.recognizedContra)}${d.pendingCredit ? `, pending ${money(d.pendingCredit)}` : ''})</p>
+      <div class="inv-card-head"><strong>${d.invoiceNumber}</strong> <span class="tag">${d.status}</span></div>
+      <p class="muted">${d.distributorId} · Model ${d.model}</p>
+      <ul class="kv">
+        <li><span>Delivered</span><strong>${qty(d.receivedQty)} of ${qty(d.invoicedQty)}</strong></li>
+        <li><span>Missing</span><strong>${qty(d.missingQty)}</strong></li>
+        <li><span>Contra COGS</span><strong>${contraLine}</strong></li>
+      </ul>
       <h4>Receipts by storage</h4>
-      ${tbl(['Storage', 'Qty', 'Dates'], d.receiptsByStorage.map((s) => [s.storageId, s.qty, s.receipts.map((r) => r.datetime).join('<br>')]))}
+      ${tbl(['Storage', 'Qty', 'Received on'], d.receiptsByStorage.map((s) => [s.storageId, qty(s.qty), s.receipts.map((r) => fmtDate(r.datetime)).join('<br>')]))}
       <h4>Delivery notes</h4>
       ${tbl(['Note', 'Storage', 'Source'], d.deliveryNotes.map((n) => [n.deliveryNoteId, n.targetStorageId, n.sourceFile || '—']))}
       <h4>Credit notes</h4>
       ${tbl(['Note', 'Period', 'Amount', 'Status', 'Source'], d.creditNotes.map((n) => [n.creditNoteId, n.period, money(n.amount), n.status, n.sourceFile || '—']))}
       <h4>Audit history</h4>
-      ${tbl(['When', 'Actor', 'Change'], d.audit.map((a) => [a.timestamp, a.actor, a.change]))}
+      ${tbl(['When', 'Actor', 'Change'], d.audit.map((a) => [fmtDate(a.timestamp), a.actor, a.change]))}
       <p class="muted">Source: ${d.provenance.invoiceSourceFile || '—'}</p>
     </div>`;
 }
