@@ -110,6 +110,19 @@ export function computeContra(invoice, matchResult) {
   };
 }
 
+/** Map of stockId -> net unit price under the active model (used by the timing engine). */
+export function netUnitPrices(invoice) {
+  const allocs = allocateDiscount(invoice);
+  const map = {};
+  invoice.lines.forEach((l, i) => { map[l.stockId] = netUnitPrice(invoice, l, allocs[i]); });
+  return map;
+}
+
+/** Net payable retained for the invoice (never reduced by unreceived goods). */
+export function netPayable(invoice) {
+  return Number((invoice.totalValueStandard - headerDiscountTotal(invoice)).toFixed(2));
+}
+
 /** Convenience: match + gaps + contra for one invoice. */
 export function analyzeInvoice(invoice, goodsReceipts, deliveryNotes = []) {
   const match = matchInvoice(invoice, goodsReceipts, deliveryNotes);
