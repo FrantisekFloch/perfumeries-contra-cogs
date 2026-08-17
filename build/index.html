@@ -8,14 +8,26 @@
 </head>
 <body>
   <header class="app-header">
-    <h1>Perfumeries</h1>
-    <span class="subtitle">Contra COGS Reconciliation</span>
+    <div class="brand">
+      <h1>Perfumeries</h1>
+      <span class="subtitle" id="subtitle">Contra COGS Reconciliation</span>
+    </div>
+    <div class="header-controls">
+      <label class="hc-model">
+        <span id="model-filter-label">Model</span>
+        <select id="model-filter"></select>
+      </label>
+      <button id="tour-btn" class="hc-btn">Walk me through</button>
+      <div class="lang" id="lang-switch">
+        <button data-lang="en" class="flag">🇬🇧 EN</button>
+        <button data-lang="sk" class="flag">🇸🇰 SK</button>
+      </div>
+    </div>
   </header>
 
   <main id="app">
-    <section id="model-panel" class="panel"></section>
     <section id="scan-panel" class="panel" hidden>
-      <h2>Source scan</h2>
+      <h2 id="scan-title">Source scan</h2>
       <ul id="scan-status" class="scan-status" aria-live="polite"></ul>
       <div id="ingest-summary"></div>
     </section>
@@ -24,7 +36,7 @@
   </main>
 
   <footer class="app-footer">
-    <span id="build-status">scaffold ready</span>
+    <span id="build-status">loading…</span>
   </footer>
 
   <script type="module" src="./src/app.js"></script>

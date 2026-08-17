@@ -45,7 +45,14 @@ export class Session {
 
   isRoleSelected() { return ROLES.includes(this.getRole()); }
 
-  clear() { this.backend.removeItem(this._k('model')); this.backend.removeItem(this._k('role')); }
+  setLang(l) { if (!['en', 'sk'].includes(l)) throw new Error(`Session: invalid lang "${l}"`); this.backend.setItem(this._k('lang'), l); return l; }
+  getLang() { return this.backend.getItem(this._k('lang')) || 'en'; }
+
+  /** Model filter for dashboards: 'all' | 'A' | 'B'. */
+  setModelFilter(m) { if (!['all', 'A', 'B'].includes(m)) throw new Error(`Session: invalid model filter "${m}"`); this.backend.setItem(this._k('modelFilter'), m); return m; }
+  getModelFilter() { return this.backend.getItem(this._k('modelFilter')) || 'all'; }
+
+  clear() { ['model', 'role', 'lang', 'modelFilter'].forEach((k) => this.backend.removeItem(this._k(k))); }
 }
 
 export const ROLES = Object.freeze(['storage', 'accounting', 'finance']);

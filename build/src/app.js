@@ -1,190 +1,184 @@
 // Perfumeries — Contra COGS Reconciliation
-// Startup flow: choose model -> scan -> ingest -> advance lifecycle -> build
-// portfolio -> pick role -> render dashboard.
+// Startup: scan -> ingest -> advance lifecycle -> build portfolio -> dashboards.
+// Plus language (EN/SK), a model filter, an About view, and a guided tour.
 
 import { VERSION } from './lib/version.js';
 import { defaultSources } from './lib/source.js';
 import { StateStore, getLocalStorageBackend, createMemoryBackend } from './lib/store.js';
 import { Session, getSessionBackend, createMemoryKV, ROLES } from './lib/session.js';
-import { ScanStatus, ContraCogsModel, InvoiceStatus } from './lib/enums.js';
+import { ScanStatus, InvoiceStatus } from './lib/enums.js';
 import { transition } from './lib/lifecycle.js';
 import { buildPortfolio } from './lib/analytics.js';
 import { runPipeline } from './lib/pipeline.js';
 import { exportInventory } from './lib/inventory.js';
 import { archiveInvoice, exportArchive } from './lib/archive.js';
 import { renderDashboard, renderInventory } from './ui/dashboards.js';
+import { t, setLang, getLang } from './lib/i18n.js';
+import { startTour } from './ui/tour.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (el) => { if (el) el.hidden = false; };
-
-const LABELS = { database: 'Database', api: 'API', folder: 'Folder' };
 const STATE_CLASS = { [ScanStatus.FOUND]: 'found', [ScanStatus.ERROR]: 'error', [ScanStatus.NO_UPDATES]: '', [ScanStatus.SCANNING]: '' };
-const MODEL_DESC = {
-  [ContraCogsModel.A]: 'Direct / line-item — net (discounted) unit price already on the invoice.',
-  [ContraCogsModel.B]: 'Back-edge allowance — standard price + monthly credit note; contra held pending until cleared.',
-};
-const ROLE_LABELS = { storage: 'Storage', accounting: 'Accounting', finance: 'Finance' };
+const SCAN_LABEL = { database: 'Database', api: 'API', folder: 'Folder' };
 
-// module state
 const store = new StateStore(getLocalStorageBackend() || createMemoryBackend(), 'perfumeries');
 const session = new Session(getSessionBackend() || createMemoryKV());
-let PORTFOLIO = [];
+let ALL_PORTFOLIO = [];
+let lastIngest = null;
+let currentView = 'role'; // 'role' | 'inventory' | 'about'
 let storageFilter = null;
-let currentView = 'role'; // 'role' | 'inventory'
 let invMonth = null;
 
 function downloadText(filename, text, type = 'application/json') {
   const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); a.remove();
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
 
-function renderModelPanel(onChosen) {
-  const panel = $('model-panel');
-  const current = session.getModel();
-  panel.innerHTML = `
-    <h2>Choose Contra COGS model</h2>
-    <div class="model-choices">
-      ${[ContraCogsModel.A, ContraCogsModel.B].map((m) => `
-        <button class="model-btn${current === m ? ' selected' : ''}" data-model="${m}">
-          <span class="model-name">Model ${m}</span>
-          <span class="model-desc">${MODEL_DESC[m]}</span>
-        </button>`).join('')}
-    </div>
-    <p class="hint">Sets the session model for the demo. Individual invoices still carry their own model.</p>`;
-  panel.querySelectorAll('.model-btn').forEach((btn) => btn.addEventListener('click', () => {
-    session.setModel(btn.dataset.model);
-    renderModelPanel(onChosen);
-    onChosen(btn.dataset.model);
-  }));
+const filteredPortfolio = () => {
+  const f = session.getModelFilter();
+  return f === 'all' ? ALL_PORTFOLIO : ALL_PORTFOLIO.filter((v) => v.model === f);
+};
+
+// ---- static chrome (i18n) ----
+function applyI18n() {
+  $('subtitle').textContent = t('app.subtitle');
+  $('model-filter-label').textContent = t('model.title');
+  $('tour-btn').textContent = t('btn.tour');
+  $('scan-title').textContent = t('scan.title');
+  const mf = $('model-filter');
+  const cur = session.getModelFilter();
+  mf.innerHTML = [['all', t('model.all')], ['A', t('model.aName')], ['B', t('model.bName')]]
+    .map(([v, l]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${l}</option>`).join('');
+  document.querySelectorAll('#lang-switch .flag').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
 }
 
+// ---- scan UI ----
 function renderScanRows() {
-  const scan = $('scan-status');
-  scan.innerHTML = '';
+  const scan = $('scan-status'); scan.innerHTML = '';
   const rows = {};
   for (const id of ['database', 'api', 'folder']) {
     const li = document.createElement('li');
-    li.innerHTML = `<span class="src">${LABELS[id]}</span><span class="state">idle</span>`;
+    li.innerHTML = `<span class="src">${SCAN_LABEL[id]}</span><span class="state">idle</span>`;
     scan.appendChild(li);
     rows[id] = li.querySelector('.state');
   }
   return rows;
 }
-
-function renderIngestSummary(result, model) {
-  const el = $('ingest-summary');
-  const storages = new Set(result.goodsReceipts.map((g) => g.storageId));
-  const received = result.goodsReceipts.reduce((s, g) => s + g.qtyReceived, 0);
-  el.innerHTML = `
-    <p class="summary-line">Ingested <span class="badge">Model ${model}</span>
-      ${result.invoices.length} invoice(s), ${result.deliveryNotes.length} delivery note(s),
-      ${result.goodsReceipts.length} receipt row(s) — ${received} units / ${storages.size} storage(s),
-      ${result.creditNotes.length} credit note(s)
-      ${result.incomplete.length ? `· <span class="warn">${result.incomplete.length} incomplete</span>` : ''}
-      ${result.errors.length ? `· <span class="err">${result.errors.length} error(s)</span>` : ''}
-    </p>`;
+function renderIngestSummary() {
+  if (!lastIngest) return;
+  const r = lastIngest;
+  const storages = new Set(r.goodsReceipts.map((g) => g.storageId));
+  const units = r.goodsReceipts.reduce((s, g) => s + g.qtyReceived, 0);
+  $('ingest-summary').innerHTML = `<p class="summary-line">${t('ingest.line', {
+    inv: r.invoices.length, dn: r.deliveryNotes.length, gr: r.goodsReceipts.length,
+    units: units.toLocaleString(), st: storages.size, cn: r.creditNotes.length,
+  })}</p>`;
 }
 
+// ---- role bar ----
 function renderRoleBar() {
-  const bar = $('role-bar');
-  show(bar);
-  const current = session.getRole();
-  const roleTabs = ROLES.map((r) =>
-    `<button class="role-tab${currentView === 'role' && current === r ? ' active' : ''}" data-role="${r}">${ROLE_LABELS[r]}</button>`).join('');
-  const invTab = `<button class="role-tab${currentView === 'inventory' ? ' active' : ''}" data-inventory="1">Inventory</button>`;
-  bar.innerHTML = roleTabs + invTab;
+  const bar = $('role-bar'); show(bar);
+  const role = session.getRole();
+  const tabs = ROLES.map((r) => `<button class="role-tab${currentView === 'role' && role === r ? ' active' : ''}" data-role="${r}">${t('nav.' + r)}</button>`).join('');
+  const inv = `<button class="role-tab${currentView === 'inventory' ? ' active' : ''}" data-inventory="1">${t('nav.inventory')}</button>`;
+  const about = `<button class="role-tab${currentView === 'about' ? ' active' : ''}" data-about="1">${t('nav.about')}</button>`;
+  bar.innerHTML = tabs + inv + about;
   bar.querySelectorAll('.role-tab').forEach((b) => b.addEventListener('click', () => {
-    if (b.dataset.inventory) openInventory(); else selectRole(b.dataset.role);
+    if (b.dataset.inventory) openInventory();
+    else if (b.dataset.about) showAbout();
+    else selectRole(b.dataset.role);
   }));
 }
 
+// ---- views ----
 function rebuildPortfolio() {
-  PORTFOLIO = buildPortfolio(store.all('invoices'), store.all('goodsReceipts'), store.all('deliveryNotes'), { asOf: new Date().toISOString() });
+  ALL_PORTFOLIO = buildPortfolio(store.all('invoices'), store.all('goodsReceipts'), store.all('deliveryNotes'), { asOf: new Date().toISOString() });
 }
-
-function renderCurrentDashboard() {
-  const root = $('view-root');
-  show(root);
-  renderDashboard(root, session.getRole(), PORTFOLIO, {
+function renderDash() {
+  const root = $('view-root'); show(root);
+  renderDashboard(root, session.getRole(), filteredPortfolio(), {
     storageId: storageFilter,
-    onFilter: (sid) => { storageFilter = sid; renderCurrentDashboard(); },
+    onFilter: (sid) => { storageFilter = sid; renderDash(); },
     onDrill: (sid) => { storageFilter = sid; selectRole('storage'); },
-    onMarkPaid: (inv) => { transition(store, inv, InvoiceStatus.PAID, { actor: 'accounting' }); rebuildPortfolio(); renderCurrentDashboard(); },
-    onArchive: (inv) => {
-      const record = archiveInvoice(store, inv, { actor: 'accounting' });
-      downloadText(`archive_${inv}.json`, exportArchive(record));
-      rebuildPortfolio(); renderCurrentDashboard();
-    },
+    onMarkPaid: (inv) => { transition(store, inv, InvoiceStatus.PAID, { actor: 'accounting' }); rebuildPortfolio(); renderDash(); },
+    onArchive: (inv) => { const rec = archiveInvoice(store, inv, { actor: 'accounting' }); downloadText(`archive_${inv}.json`, exportArchive(rec)); rebuildPortfolio(); renderDash(); },
   });
 }
-
-function inventoryCtx() {
-  return {
-    goodsReceipts: store.all('goodsReceipts'),
-    deliveryNotes: store.all('deliveryNotes'),
-    creditNotes: store.all('creditNotes'),
-    auditLog: store.auditLog(),
-  };
-}
-
 function renderInventoryView() {
-  const root = $('view-root');
-  show(root);
-  const invoices = store.all('invoices');
-  renderInventory(root, invoices, inventoryCtx(), {
+  const root = $('view-root'); show(root);
+  const ctx = { goodsReceipts: store.all('goodsReceipts'), deliveryNotes: store.all('deliveryNotes'), creditNotes: store.all('creditNotes'), auditLog: store.auditLog() };
+  renderInventory(root, store.all('invoices'), ctx, {
     month: invMonth,
     onMonth: (m) => { invMonth = m; renderInventoryView(); },
     onExport: (month, list) => downloadText(`inventory_${month || 'all'}.json`, exportInventory(list)),
   });
 }
+function renderAbout() {
+  const root = $('view-root'); show(root);
+  root.innerHTML = `<h3>${t('about.title')}</h3><p>${t('about.body')}</p>
+    <h4>${t('about.defTitle')}</h4><p>${t('about.defBody')}</p>`;
+}
+function renderCurrentView() {
+  if (currentView === 'inventory') renderInventoryView();
+  else if (currentView === 'about') renderAbout();
+  else renderDash();
+}
+function selectRole(role) { currentView = 'role'; session.setRole(role); renderRoleBar(); renderDash(); }
+function openInventory() { currentView = 'inventory'; renderRoleBar(); renderInventoryView(); }
+function showAbout() { currentView = 'about'; renderRoleBar(); renderAbout(); }
 
-function selectRole(role) {
-  currentView = 'role';
-  session.setRole(role);
-  renderRoleBar();
-  renderCurrentDashboard();
+// ---- tour ----
+function launchTour() {
+  const steps = [
+    { selector: '#model-filter', text: t('model.note') },
+    { selector: '.role-tab[data-role="finance"]', text: t('fin.title') + ' — ' + t('fin.openVar') + ', ' + t('fin.pendingCredit') + '.', before: () => selectRole('finance') },
+    { selector: '.cards', text: t('fin.openVar') + ' / ' + t('fin.pendingCredit') + '.' },
+    { selector: '.chart-wrap', text: t('fin.trendTitle') + ' + ' + t('fin.forecastTitle') + '.' },
+    { selector: '.role-tab[data-role="storage"]', text: t('storage.onway') + ' · ' + t('storage.pending') + ' · ' + t('storage.aged') + '.', before: () => selectRole('storage') },
+    { selector: '.role-tab[data-inventory]', text: t('inv.title'), before: () => openInventory() },
+    { selector: '.role-tab[data-about]', text: t('about.defTitle'), before: () => showAbout() },
+  ];
+  startTour(steps, { next: t('tour.next'), skip: t('tour.skip'), done: t('tour.done') });
 }
 
-function openInventory() {
-  currentView = 'inventory';
-  renderRoleBar();
-  renderInventoryView();
+// ---- language ----
+function switchLang(l) {
+  session.setLang(l); setLang(l);
+  applyI18n(); renderIngestSummary(); renderRoleBar(); renderCurrentView();
 }
 
-async function runScan(model) {
+// ---- boot ----
+async function runScan() {
   show($('scan-panel'));
   const rows = renderScanRows();
   const onStatus = (id, state, message) => {
-    const el = rows[id];
-    if (!el) return;
+    const el = rows[id]; if (!el) return;
     el.textContent = state === ScanStatus.SCANNING ? (message || 'scanning…') : (message || state);
     el.className = `state ${STATE_CLASS[state] || ''}`.trim();
   };
   try {
     const { ingest, portfolio } = await runPipeline(store, defaultSources(), { onStatus });
-    renderIngestSummary(ingest, model);
-    PORTFOLIO = portfolio;
-
+    lastIngest = ingest; ALL_PORTFOLIO = portfolio;
+    renderIngestSummary();
     renderRoleBar();
     selectRole(session.isRoleSelected() ? session.getRole() : 'finance');
   } catch (err) {
-    const root = $('view-root');
-    show(root);
+    const root = $('view-root'); show(root);
     root.innerHTML = `<h2>Startup error</h2><p class="err">${err.message}</p>`;
   }
 }
 
 function boot() {
-  const status = $('build-status');
-  if (status) status.textContent = `v${VERSION}`;
-  let started = false;
-  const start = (model) => { if (started) return; started = true; runScan(model); };
-  renderModelPanel(start);
-  if (session.isModelSelected()) start(session.getModel());
+  setLang(session.getLang());
+  if ($('build-status')) $('build-status').textContent = `v${VERSION}`;
+  applyI18n();
+  $('model-filter').addEventListener('change', (e) => { session.setModelFilter(e.target.value); renderCurrentView(); });
+  $('tour-btn').addEventListener('click', launchTour);
+  document.querySelectorAll('#lang-switch .flag').forEach((b) => b.addEventListener('click', () => switchLang(b.dataset.lang)));
+  runScan();
 }
 
 document.addEventListener('DOMContentLoaded', boot);

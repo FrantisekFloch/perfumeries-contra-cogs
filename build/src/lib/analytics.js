@@ -3,7 +3,7 @@
 // Pure functions (no DOM) so they can be unit-tested.
 
 import { analyzeInvoice } from './gap.js';
-import { analyzeTiming } from './timing.js';
+import { analyzeTiming, periodOf } from './timing.js';
 import { InvoiceStatus } from './enums.js';
 
 const CLOSED = new Set([InvoiceStatus.FULLY_MATCHED, InvoiceStatus.PAID, InvoiceStatus.ARCHIVED]);
@@ -25,6 +25,7 @@ export function buildInvoiceView(invoice, goodsReceipts, deliveryNotes = [], opt
     distributorId: invoice.distributorId,
     model: invoice.contraCogsModel,
     status: invoice.status,
+    month: periodOf(invoice.invoiceDate),
     invoicedQty: invoice.lines.reduce((s, l) => s + l.qtyInvoiced, 0),
     receivedQty: match.lines.reduce((s, l) => s + l.received, 0),
     missingQty: match.lines.reduce((s, l) => s + l.missingQty, 0),
@@ -84,15 +85,16 @@ export function financeView(portfolio) {
   const byStatus = {};
   portfolio.forEach((v) => { byStatus[v.status] = (byStatus[v.status] || 0) + 1; });
 
+  // Storages linked to still-open invoices that have a shortfall. We count open
+  // invoices per storage (no value inflation — the same invoice's value at risk is
+  // not multiplied across every storage it touches).
   const storagesWithIssues = {};
   portfolio.forEach((v) => {
-    if (v.missingQty > 0) {
-      // attribute the shortfall to storages that under-delivered vs expected is complex;
-      // for the summary we flag every storage the troubled invoice touches.
+    if (v.missingQty > 0 && !CLOSED.has(v.status)) {
       v.storages.forEach((s) => {
-        if (!storagesWithIssues[s]) storagesWithIssues[s] = { storageId: s, invoices: [], valueAtRisk: 0 };
-        storagesWithIssues[s].invoices.push(v.invoiceNumber);
-        storagesWithIssues[s].valueAtRisk += v.valueAtRisk;
+        if (!storagesWithIssues[s]) storagesWithIssues[s] = { storageId: s, openInvoices: [], count: 0 };
+        storagesWithIssues[s].openInvoices.push(v.invoiceNumber);
+        storagesWithIssues[s].count += 1;
       });
     }
   });
@@ -100,12 +102,10 @@ export function financeView(portfolio) {
   return {
     totals: {
       invoices: portfolio.length,
-      totalValueAtRisk: Number(portfolio.reduce((s, v) => s + v.valueAtRisk, 0).toFixed(2)),
+      openValueAtRisk: Number(portfolio.filter((v) => !CLOSED.has(v.status)).reduce((s, v) => s + v.valueAtRisk, 0).toFixed(2)),
       totalPendingCredit: Number(portfolio.reduce((s, v) => s + (v.contra.pendingCredit || 0), 0).toFixed(2)),
     },
     byStatus,
-    storagesWithIssues: Object.values(storagesWithIssues)
-      .map((s) => ({ ...s, valueAtRisk: Number(s.valueAtRisk.toFixed(2)) }))
-      .sort((a, b) => b.valueAtRisk - a.valueAtRisk),
+    storagesWithIssues: Object.values(storagesWithIssues).sort((a, b) => b.count - a.count),
   };
 }

@@ -57,9 +57,10 @@ test('financeView totals + storages with issues', () => {
   const pf = buildPortfolio([invoiceWith(InvoiceStatus.PARTIALLY_RECEIVED)], receipts(), dn(), opts);
   const fv = financeView(pf);
   assert.equal(fv.totals.invoices, 1);
-  assert.equal(fv.totals.totalValueAtRisk, 198);
+  assert.equal(fv.totals.openValueAtRisk, 198);
   assert.equal(fv.totals.totalPendingCredit, 98);
   assert.equal(fv.storagesWithIssues.length, 5);
+  assert.equal(fv.storagesWithIssues[0].count, 1); // one open invoice per touched storage
 });
 
 test('session role: set/get/validate', () => {

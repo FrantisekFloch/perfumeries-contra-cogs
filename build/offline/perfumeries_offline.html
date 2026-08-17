@@ -129,18 +129,62 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
 .kv li { display: flex; gap: 10px; font-size: 0.92rem; }
 .kv li span { color: var(--muted); min-width: 90px; }
 
+/* header controls */
+.app-header { justify-content: space-between; align-items: center; }
+.app-header .brand { display: flex; align-items: baseline; gap: 12px; }
+.header-controls { display: flex; align-items: center; gap: 12px; }
+.hc-model { display: flex; align-items: center; gap: 6px; color: #cfcfcf; font-size: 0.8rem; }
+.hc-model select { padding: 4px 6px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; }
+.hc-btn { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font: inherit; font-size: 0.85rem; }
+.hc-btn:hover { filter: brightness(1.08); }
+.lang { display: flex; gap: 4px; }
+.lang .flag { background: #2a2a2a; color: #cfcfcf; border: 1px solid #444; border-radius: 6px; padding: 5px 8px; cursor: pointer; font-size: 0.8rem; }
+.lang .flag.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* charts */
+.chart-wrap { border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: #fff; }
+.chart { width: 100%; height: auto; display: block; }
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-left: 8px; }
+.legend-dot.forecast { background: var(--warn); }
+.legend-label { font-size: 0.75rem; color: var(--muted); text-transform: none; letter-spacing: 0; }
+
+/* tour */
+.tour-overlay { position: absolute; inset: 0; z-index: 9999; pointer-events: none; }
+.tour-ring { position: absolute; border: 2px solid var(--accent); border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.35); transition: all .35s ease; }
+.tour-pointer { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: rgba(45,108,223,0.85); border: 2px solid #fff; transition: transform .5s cubic-bezier(.4,.2,.2,1); }
+.tour-pointer.click { animation: tourClick .5s ease; }
+@keyframes tourClick { 0% { box-shadow: 0 0 0 0 rgba(45,108,223,0.5);} 100% { box-shadow: 0 0 0 22px rgba(45,108,223,0);} }
+.tour-box { position: absolute; width: 320px; background: #1a1a1a; color: #fff; border-radius: 10px; padding: 14px 16px; pointer-events: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.tour-box p { margin: 0 0 12px; font-size: 0.9rem; line-height: 1.4; }
+.tour-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.tour-actions button { border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font: inherit; font-size: 0.82rem; }
+.tour-skip { background: transparent; color: #cfcfcf; }
+.tour-next { background: var(--accent); color: #fff; }
+
 </style>
 </head>
 <body>
   <header class="app-header">
-    <h1>Perfumeries</h1>
-    <span class="subtitle">Contra COGS Reconciliation</span>
+    <div class="brand">
+      <h1>Perfumeries</h1>
+      <span class="subtitle" id="subtitle">Contra COGS Reconciliation</span>
+    </div>
+    <div class="header-controls">
+      <label class="hc-model">
+        <span id="model-filter-label">Model</span>
+        <select id="model-filter"></select>
+      </label>
+      <button id="tour-btn" class="hc-btn">Walk me through</button>
+      <div class="lang" id="lang-switch">
+        <button data-lang="en" class="flag">🇬🇧 EN</button>
+        <button data-lang="sk" class="flag">🇸🇰 SK</button>
+      </div>
+    </div>
   </header>
 
   <main id="app">
-    <section id="model-panel" class="panel"></section>
     <section id="scan-panel" class="panel" hidden>
-      <h2>Source scan</h2>
+      <h2 id="scan-title">Source scan</h2>
       <ul id="scan-status" class="scan-status" aria-live="polite"></ul>
       <div id="ingest-summary"></div>
     </section>
@@ -149,7 +193,7 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
   </main>
 
   <footer class="app-footer">
-    <span id="build-status">offline build</span>
+    <span id="build-status">loading…</span>
   </footer>
 
   <script type="module">
@@ -161,6 +205,113 @@ globalThis.__PERFUMERIES_READ_TEXT__ = (url) => {
 
 // ===== src/lib/version.js =====
 // Single source of truth for the app version. Bump as the build progresses.const VERSION = '0.1.0';
+
+
+// ===== src/lib/i18n.js =====
+// Lightweight i18n. Flat dot-keys, EN + SK dictionaries, a module-level current
+// language, and t(key) with {var} interpolation. Falls back to EN then the key.const LANGS = ['en', 'sk'];
+let LANG = 'en';function setLang(l) { if (DICT[l]) LANG = l; return LANG; }function getLang() { return LANG; }function t(key, vars) {
+  let s = (DICT[LANG] && DICT[LANG][key]) ?? DICT.en[key] ?? key;
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, String(v));
+  return s;
+}
+
+const DICT = {
+  en: {
+    'app.subtitle': 'Contra COGS Reconciliation',
+    'nav.storage': 'Storage', 'nav.accounting': 'Accounting', 'nav.finance': 'Finance',
+    'nav.inventory': 'Inventory', 'nav.about': 'About', 'btn.tour': 'Walk me through',
+    'model.title': 'Filter by Contra COGS model', 'model.all': 'All models',
+    'model.aName': 'Model A', 'model.bName': 'Model B',
+    'model.aDesc': 'Direct / line-item — net (discounted) unit price already on the invoice.',
+    'model.bDesc': 'Back-edge allowance — standard price + monthly credit note; contra held pending until cleared.',
+    'model.allDesc': 'Show invoices from both models.',
+    'model.note': 'This filters which invoices the dashboards show. Each invoice still carries its own model.',
+    'scan.title': 'Source scan',
+    'ingest.line': 'Ingested {inv} invoice(s), {dn} delivery note(s), {gr} receipt row(s) — {units} units / {st} storage(s), {cn} credit note(s)',
+    'th.invoice': 'Invoice', 'th.distributor': 'Distributor', 'th.invoiced': 'Invoiced',
+    'th.received': 'Received', 'th.missing': 'Missing', 'th.valueAtRisk': 'Value at risk',
+    'th.storages': 'Storages', 'th.status': 'Status', 'th.contraRecognized': 'Contra recognized',
+    'th.actions': 'Actions', 'th.period': 'Period', 'th.amount': 'Amount', 'th.count': 'Count',
+    'th.storage': 'Storage', 'th.openInvoices': 'Open invoices', 'th.detail': 'Detail',
+    'th.note': 'Note', 'th.source': 'Source', 'th.when': 'When', 'th.actor': 'Actor',
+    'th.change': 'Change', 'th.receivedOn': 'Received on', 'th.qty': 'Qty', 'th.value': 'Value',
+    'th.ageDays': 'Age (days)',
+    'storage.title': 'Storage view', 'storage.onway': 'On the way',
+    'storage.pending': 'Pending delivery', 'storage.aged': 'Aged pending',
+    'storage.trend': 'Trend by period (debits)', 'storage.filter': 'Storage',
+    'acc.title': 'Accounting view', 'acc.open': 'Open / not fully closed', 'acc.closed': 'Closed',
+    'acc.summary': 'Open: {open} · Closed: {closed} · Open value at risk: {risk}',
+    'act.markPaid': 'Mark paid', 'act.archive': 'Archive + download',
+    'fin.title': 'Finance view', 'fin.invoices': 'Invoices', 'fin.openVar': 'Open value at risk',
+    'fin.pendingCredit': 'Pending contra credit', 'fin.byStatus': 'Invoices by status',
+    'fin.storages': 'Storages with open shortfalls', 'fin.view': 'view',
+    'fin.trendTitle': 'Monthly value at risk & debits', 'fin.forecastTitle': 'Forecast — value at risk (next 3 months)',
+    'fin.legendRisk': 'Value at risk', 'fin.legendDebits': 'Debits', 'fin.legendForecast': 'Forecast',
+    'inv.title': 'Inventory — audit', 'inv.month': 'Month', 'inv.export': 'Export month (JSON)',
+    'inv.delivered': 'Delivered', 'inv.of': 'of', 'inv.missing': 'Missing', 'inv.contra': 'Contra COGS',
+    'inv.receipts': 'Receipts by storage', 'inv.deliveryNotes': 'Delivery notes',
+    'inv.creditNotes': 'Credit notes', 'inv.audit': 'Audit history', 'inv.none': 'No invoices for this month.',
+    'inv.source': 'Source', 'contra.applied': 'applied', 'contra.pending': 'pending', 'contra.cleared': 'cleared',
+    'contra.recognized': 'recognized',
+    'status.Received': 'Received', 'status.InTransitPending': 'In transit / pending',
+    'status.PartiallyReceived': 'Partially received', 'status.FullyMatched': 'Fully matched',
+    'status.Paid': 'Paid', 'status.Archived': 'Archived', 'status.UnderInvestigation': 'Under investigation',
+    'status.Resolved': 'Resolved', 'status.Unresolvable': 'Unresolvable',
+    'about.title': 'About this tool',
+    'about.body': 'Perfumeries reconciles supplier invoices against goods actually received across many storage locations. It detects <strong>Contra COGS gaps</strong> (the difference between the discount baked into an invoice and what is justified by verified received quantity), tracks them to closure, and gives Storage, Accounting and Finance role views plus an Inventory audit module.',
+    'about.defTitle': 'What is Contra COGS?',
+    'about.defBody': 'Contra COGS reduces the cost of goods sold by offsetting margin/marketing contributions against the invoicing for goods. Two models are used: <strong>direct / line-item</strong> (the net discounted price is already on the per-warehouse invoice) and <strong>back-edge allowance</strong> (goods at standard price, with volume/marketing discounts settled monthly via a credit note against the central delivery record). Because deliveries are split across warehouses and can straddle month-end, the discount is only fully earned once the whole volume is confirmed delivered — until then a contra COGS credit is held pending.',
+    'tour.done': 'Done', 'tour.next': 'Next', 'tour.skip': 'Skip',
+  },
+  sk: {
+    'app.subtitle': 'Rekonciliácia Contra COGS',
+    'nav.storage': 'Sklad', 'nav.accounting': 'Účtovníctvo', 'nav.finance': 'Financie',
+    'nav.inventory': 'Inventúra', 'nav.about': 'O nástroji', 'btn.tour': 'Preveď ma',
+    'model.title': 'Filter podľa modelu Contra COGS', 'model.all': 'Všetky modely',
+    'model.aName': 'Model A', 'model.bName': 'Model B',
+    'model.aDesc': 'Priamy / položkový — čistá (zľavnená) jednotková cena je už na faktúre.',
+    'model.bDesc': 'Doúčtovanie (back-edge) — štandardná cena + mesačný dobropis; contra čaká na vyrovnanie.',
+    'model.allDesc': 'Zobraziť faktúry z oboch modelov.',
+    'model.note': 'Filtruje, ktoré faktúry sa zobrazujú. Každá faktúra má vlastný model.',
+    'scan.title': 'Skenovanie zdrojov',
+    'ingest.line': 'Načítané: {inv} faktúr, {dn} dodacích listov, {gr} riadkov príjmu — {units} ks / {st} skladov, {cn} dobropisov',
+    'th.invoice': 'Faktúra', 'th.distributor': 'Dodávateľ', 'th.invoiced': 'Fakturované',
+    'th.received': 'Prijaté', 'th.missing': 'Chýba', 'th.valueAtRisk': 'Riziková hodnota',
+    'th.storages': 'Sklady', 'th.status': 'Stav', 'th.contraRecognized': 'Uznané Contra',
+    'th.actions': 'Akcie', 'th.period': 'Obdobie', 'th.amount': 'Suma', 'th.count': 'Počet',
+    'th.storage': 'Sklad', 'th.openInvoices': 'Otvorené faktúry', 'th.detail': 'Detail',
+    'th.note': 'Doklad', 'th.source': 'Zdroj', 'th.when': 'Kedy', 'th.actor': 'Aktér',
+    'th.change': 'Zmena', 'th.receivedOn': 'Prijaté dňa', 'th.qty': 'Množstvo', 'th.value': 'Hodnota',
+    'th.ageDays': 'Vek (dni)',
+    'storage.title': 'Pohľad skladu', 'storage.onway': 'Na ceste',
+    'storage.pending': 'Čaká na dodanie', 'storage.aged': 'Dlho čakajúce',
+    'storage.trend': 'Trend podľa období (odpisy)', 'storage.filter': 'Sklad',
+    'acc.title': 'Pohľad účtovníctva', 'acc.open': 'Otvorené / neuzavreté', 'acc.closed': 'Uzavreté',
+    'acc.summary': 'Otvorené: {open} · Uzavreté: {closed} · Otvorená riziková hodnota: {risk}',
+    'act.markPaid': 'Označiť ako zaplatené', 'act.archive': 'Archivovať + stiahnuť',
+    'fin.title': 'Pohľad financií', 'fin.invoices': 'Faktúry', 'fin.openVar': 'Otvorená riziková hodnota',
+    'fin.pendingCredit': 'Čakajúci Contra dobropis', 'fin.byStatus': 'Faktúry podľa stavu',
+    'fin.storages': 'Sklady s otvorenými mankami', 'fin.view': 'zobraziť',
+    'fin.trendTitle': 'Mesačná riziková hodnota a odpisy', 'fin.forecastTitle': 'Predpoveď — riziková hodnota (ďalšie 3 mesiace)',
+    'fin.legendRisk': 'Riziková hodnota', 'fin.legendDebits': 'Odpisy', 'fin.legendForecast': 'Predpoveď',
+    'inv.title': 'Inventúra — audit', 'inv.month': 'Mesiac', 'inv.export': 'Exportovať mesiac (JSON)',
+    'inv.delivered': 'Dodané', 'inv.of': 'z', 'inv.missing': 'Chýba', 'inv.contra': 'Contra COGS',
+    'inv.receipts': 'Príjmy podľa skladu', 'inv.deliveryNotes': 'Dodacie listy',
+    'inv.creditNotes': 'Dobropisy', 'inv.audit': 'História auditu', 'inv.none': 'Žiadne faktúry za tento mesiac.',
+    'inv.source': 'Zdroj', 'contra.applied': 'uplatnené', 'contra.pending': 'čakajúce', 'contra.cleared': 'vyrovnané',
+    'contra.recognized': 'uznané',
+    'status.Received': 'Prijaté', 'status.InTransitPending': 'Na ceste / čaká',
+    'status.PartiallyReceived': 'Čiastočne prijaté', 'status.FullyMatched': 'Plne spárované',
+    'status.Paid': 'Zaplatené', 'status.Archived': 'Archivované', 'status.UnderInvestigation': 'V riešení',
+    'status.Resolved': 'Vyriešené', 'status.Unresolvable': 'Neriešiteľné',
+    'about.title': 'O tomto nástroji',
+    'about.body': 'Perfumeries porovnáva faktúry dodávateľa s tovarom skutočne prijatým vo viacerých skladoch. Odhaľuje <strong>Contra COGS medzery</strong> (rozdiel medzi zľavou zahrnutou vo faktúre a tým, čo je podložené overeným prijatým množstvom), sleduje ich až po vyriešenie a poskytuje pohľady pre Sklad, Účtovníctvo a Financie plus audit modul Inventúra.',
+    'about.defTitle': 'Čo je Contra COGS?',
+    'about.defBody': 'Pri uplatnení Contra COGS (zníženie nákladov predaného tovaru, resp. započítanie maržových/marketingových príspevkov voči fakturácii za tovar) dodávateľ buď vystaví faktúru so zníženou jednotkovou cenou priamo pri expedícii (<strong>položková úprava</strong>), alebo dodáva za štandardné ceny a zľavy vyrovnáva formou dobropisov či súhrnných marketingových/kooperačných faktúr voči centrálnej evidencii dodávok za mesiac (<strong>zúčtovanie pozadia</strong>). Keďže dodávky sú rozdelené do viacerých skladov a môžu presahovať koniec mesiaca, zľava je plne nárokovateľná až po potvrdení celého objemu — dovtedy sa Contra COGS dobropis drží ako čakajúci.',
+    'tour.done': 'Hotovo', 'tour.next': 'Ďalej', 'tour.skip': 'Preskočiť',
+  },
+};
 
 
 // ===== src/lib/enums.js =====
@@ -1032,7 +1183,8 @@ function expectedStorages(deliveryNotes, invoiceNumber, stockId) {
       expectedStorages: expectedStorages(deliveryNotes, invoice.invoiceNumber, l.stockId),
     };
   });
-  const fullyMatched = lines.length > 0 && lines.every((l) => l.status === FulfilmentStatus.FULLY_DELIVERED);
+  // "Fully matched" = no shortfall on any line (an over-delivery still counts as fulfilled).
+  const fullyMatched = lines.length > 0 && lines.every((l) => l.received >= l.qtyInvoiced);
   const anyShort = lines.some((l) => l.status === FulfilmentStatus.SHORT);
   return { invoiceNumber: invoice.invoiceNumber, lines, fullyMatched, anyShort };
 }
@@ -1448,6 +1600,7 @@ const CLOSED = new Set([InvoiceStatus.FULLY_MATCHED, InvoiceStatus.PAID, Invoice
     distributorId: invoice.distributorId,
     model: invoice.contraCogsModel,
     status: invoice.status,
+    month: periodOf(invoice.invoiceDate),
     invoicedQty: invoice.lines.reduce((s, l) => s + l.qtyInvoiced, 0),
     receivedQty: match.lines.reduce((s, l) => s + l.received, 0),
     missingQty: match.lines.reduce((s, l) => s + l.missingQty, 0),
@@ -1502,15 +1655,16 @@ function touchesStorage(view, storageId) {
   const byStatus = {};
   portfolio.forEach((v) => { byStatus[v.status] = (byStatus[v.status] || 0) + 1; });
 
+  // Storages linked to still-open invoices that have a shortfall. We count open
+  // invoices per storage (no value inflation — the same invoice's value at risk is
+  // not multiplied across every storage it touches).
   const storagesWithIssues = {};
   portfolio.forEach((v) => {
-    if (v.missingQty > 0) {
-      // attribute the shortfall to storages that under-delivered vs expected is complex;
-      // for the summary we flag every storage the troubled invoice touches.
+    if (v.missingQty > 0 && !CLOSED.has(v.status)) {
       v.storages.forEach((s) => {
-        if (!storagesWithIssues[s]) storagesWithIssues[s] = { storageId: s, invoices: [], valueAtRisk: 0 };
-        storagesWithIssues[s].invoices.push(v.invoiceNumber);
-        storagesWithIssues[s].valueAtRisk += v.valueAtRisk;
+        if (!storagesWithIssues[s]) storagesWithIssues[s] = { storageId: s, openInvoices: [], count: 0 };
+        storagesWithIssues[s].openInvoices.push(v.invoiceNumber);
+        storagesWithIssues[s].count += 1;
       });
     }
   });
@@ -1518,13 +1672,11 @@ function touchesStorage(view, storageId) {
   return {
     totals: {
       invoices: portfolio.length,
-      totalValueAtRisk: Number(portfolio.reduce((s, v) => s + v.valueAtRisk, 0).toFixed(2)),
+      openValueAtRisk: Number(portfolio.filter((v) => !CLOSED.has(v.status)).reduce((s, v) => s + v.valueAtRisk, 0).toFixed(2)),
       totalPendingCredit: Number(portfolio.reduce((s, v) => s + (v.contra.pendingCredit || 0), 0).toFixed(2)),
     },
     byStatus,
-    storagesWithIssues: Object.values(storagesWithIssues)
-      .map((s) => ({ ...s, valueAtRisk: Number(s.valueAtRisk.toFixed(2)) }))
-      .sort((a, b) => b.valueAtRisk - a.valueAtRisk),
+    storagesWithIssues: Object.values(storagesWithIssues).sort((a, b) => b.count - a.count),
   };
 }
 
@@ -1681,8 +1833,83 @@ function touchesStorage(view, storageId) {
 
   isRoleSelected() { return ROLES.includes(this.getRole()); }
 
-  clear() { this.backend.removeItem(this._k('model')); this.backend.removeItem(this._k('role')); }
+  setLang(l) { if (!['en', 'sk'].includes(l)) throw new Error(`Session: invalid lang "${l}"`); this.backend.setItem(this._k('lang'), l); return l; }
+  getLang() { return this.backend.getItem(this._k('lang')) || 'en'; }
+
+  /** Model filter for dashboards: 'all' | 'A' | 'B'. */
+  setModelFilter(m) { if (!['all', 'A', 'B'].includes(m)) throw new Error(`Session: invalid model filter "${m}"`); this.backend.setItem(this._k('modelFilter'), m); return m; }
+  getModelFilter() { return this.backend.getItem(this._k('modelFilter')) || 'all'; }
+
+  clear() { ['model', 'role', 'lang', 'modelFilter'].forEach((k) => this.backend.removeItem(this._k(k))); }
 }const ROLES = Object.freeze(['storage', 'accounting', 'finance']);
+
+
+// ===== src/lib/forecast.js =====
+// Monthly aggregation + a simple forecast for the Finance view. Pure functions.
+
+/** Aggregate a portfolio into monthly series: value at risk, debits, recognized contra. */function monthlySeries(portfolio) {
+  const months = new Set();
+  const risk = {};
+  const debits = {};
+  const contra = {};
+
+  for (const v of portfolio) {
+    if (v.month) {
+      months.add(v.month);
+      risk[v.month] = (risk[v.month] || 0) + v.valueAtRisk;
+      contra[v.month] = (contra[v.month] || 0) + (v.contra?.recognizedContra || 0);
+    }
+    for (const d of v.timing?.splitDebits || []) {
+      months.add(d.period);
+      debits[d.period] = (debits[d.period] || 0) + d.amount;
+    }
+  }
+
+  const sorted = [...months].sort();
+  return {
+    months: sorted,
+    risk: sorted.map((m) => Number((risk[m] || 0).toFixed(2))),
+    debits: sorted.map((m) => Number((debits[m] || 0).toFixed(2))),
+    contra: sorted.map((m) => Number((contra[m] || 0).toFixed(2))),
+  };
+}
+
+/** Add n months to a 'YYYY-MM' string. */function addMonths(period, n) {
+  const [y, m] = period.split('-').map(Number);
+  const idx = (y * 12 + (m - 1)) + n;
+  const ny = Math.floor(idx / 12);
+  const nm = (idx % 12) + 1;
+  return `${ny}-${String(nm).padStart(2, '0')}`;
+}
+
+/**
+ * Least-squares linear forecast of `values` projected `n` steps ahead.
+ * Returns { months, values } for the projected points (clamped at >= 0).
+ */function forecast(months, values, n = 3) {
+  const k = values.length;
+  if (k === 0) return { months: [], values: [] };
+  if (k === 1) {
+    const out = { months: [], values: [] };
+    for (let i = 1; i <= n; i++) { out.months.push(addMonths(months[0], i)); out.values.push(Number(values[0].toFixed(2))); }
+    return out;
+  }
+  // linear regression y = a + b*x, x = 0..k-1
+  const xs = values.map((_, i) => i);
+  const meanX = xs.reduce((s, x) => s + x, 0) / k;
+  const meanY = values.reduce((s, y) => s + y, 0) / k;
+  let num = 0, den = 0;
+  for (let i = 0; i < k; i++) { num += (xs[i] - meanX) * (values[i] - meanY); den += (xs[i] - meanX) ** 2; }
+  const b = den === 0 ? 0 : num / den;
+  const a = meanY - b * meanX;
+  const out = { months: [], values: [] };
+  const last = months[months.length - 1];
+  for (let i = 1; i <= n; i++) {
+    const y = a + b * (k - 1 + i);
+    out.months.push(addMonths(last, i));
+    out.values.push(Number(Math.max(0, y).toFixed(2)));
+  }
+  return out;
+}
 
 
 // ===== src/lib/pipeline.js =====
@@ -1708,159 +1935,258 @@ function touchesStorage(view, storageId) {
 }
 
 
+// ===== src/ui/charts.js =====
+// Tiny dependency-free SVG charts. Return markup strings.
+
+function scaleMax(vals) {
+  const m = Math.max(1, ...vals.map((v) => Number(v) || 0));
+  const pow = Math.pow(10, Math.floor(Math.log10(m)));
+  return Math.ceil(m / pow) * pow;
+}
+const short = (lab) => String(lab).slice(2); // '2026-01' -> '26-01'
+
+/** Grouped bar chart of two monthly series. */function groupedBars(labels, a, b, opts = {}) {
+  const { width = 680, height = 220, colorA = '#2d6cdf', colorB = '#1c9c6b', labelA = 'A', labelB = 'B' } = opts;
+  const pad = { l: 44, r: 10, t: 18, b: 28 };
+  const iw = width - pad.l - pad.r, ih = height - pad.t - pad.b;
+  const max = scaleMax([...a, ...b]);
+  const n = labels.length || 1, groupW = iw / n, barW = Math.min(16, groupW / 3);
+  const y = (v) => pad.t + ih - ((Number(v) || 0) / max) * ih;
+  let bars = '';
+  labels.forEach((lab, i) => {
+    const gx = pad.l + i * groupW + groupW / 2;
+    bars += `<rect x="${(gx - barW - 1).toFixed(1)}" y="${y(a[i]).toFixed(1)}" width="${barW}" height="${(pad.t + ih - y(a[i])).toFixed(1)}" fill="${colorA}"/>`;
+    bars += `<rect x="${(gx + 1).toFixed(1)}" y="${y(b[i]).toFixed(1)}" width="${barW}" height="${(pad.t + ih - y(b[i])).toFixed(1)}" fill="${colorB}"/>`;
+    bars += `<text x="${gx.toFixed(1)}" y="${height - 10}" font-size="9" text-anchor="middle" fill="#6b6b6b">${short(lab)}</text>`;
+  });
+  const axis = `<line x1="${pad.l}" y1="${pad.t + ih}" x2="${width - pad.r}" y2="${pad.t + ih}" stroke="#e5e5e5"/><text x="2" y="${pad.t + 8}" font-size="9" fill="#6b6b6b">${max.toLocaleString()}</text>`;
+  const legend = `<rect x="${pad.l}" y="2" width="10" height="10" fill="${colorA}"/><text x="${pad.l + 14}" y="11" font-size="10" fill="#1a1a1a">${labelA}</text><rect x="${pad.l + 120}" y="2" width="10" height="10" fill="${colorB}"/><text x="${pad.l + 134}" y="11" font-size="10" fill="#1a1a1a">${labelB}</text>`;
+  return `<svg viewBox="0 0 ${width} ${height}" class="chart" preserveAspectRatio="xMidYMid meet">${axis}${bars}${legend}</svg>`;
+}
+
+/** Line chart with a dashed forecast tail. */function lineForecast(labels, actual, fLabels, fValues, opts = {}) {
+  const { width = 680, height = 220, color = '#2d6cdf', fcolor = '#e0a400' } = opts;
+  const pad = { l: 44, r: 10, t: 18, b: 28 };
+  const iw = width - pad.l - pad.r, ih = height - pad.t - pad.b;
+  const allLabels = [...labels, ...fLabels];
+  const max = scaleMax([...actual, ...fValues]);
+  const n = allLabels.length || 1, stepX = iw / Math.max(1, n - 1);
+  const x = (i) => pad.l + i * stepX;
+  const y = (v) => pad.t + ih - ((Number(v) || 0) / max) * ih;
+  const actualLine = `<polyline points="${actual.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="2"/>`;
+  const fSeq = [];
+  if (actual.length) fSeq.push(`${x(actual.length - 1).toFixed(1)},${y(actual[actual.length - 1]).toFixed(1)}`);
+  fValues.forEach((v, i) => fSeq.push(`${x(actual.length + i).toFixed(1)},${y(v).toFixed(1)}`));
+  const fLine = `<polyline points="${fSeq.join(' ')}" fill="none" stroke="${fcolor}" stroke-width="2" stroke-dasharray="5 4"/>`;
+  const dots = actual.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.5" fill="${color}"/>`).join('')
+    + fValues.map((v, i) => `<circle cx="${x(actual.length + i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.5" fill="${fcolor}"/>`).join('');
+  const xlabels = allLabels.map((lab, i) => `<text x="${x(i).toFixed(1)}" y="${height - 10}" font-size="9" text-anchor="middle" fill="#6b6b6b">${short(lab)}</text>`).join('');
+  const axis = `<line x1="${pad.l}" y1="${pad.t + ih}" x2="${width - pad.r}" y2="${pad.t + ih}" stroke="#e5e5e5"/><text x="2" y="${pad.t + 8}" font-size="9" fill="#6b6b6b">${max.toLocaleString()}</text>`;
+  return `<svg viewBox="0 0 ${width} ${height}" class="chart" preserveAspectRatio="xMidYMid meet">${axis}${actualLine}${fLine}${dots}${xlabels}</svg>`;
+}
+
+
 // ===== src/ui/dashboards.js =====
-// Dashboard rendering (DOM). Consumes the pure analytics selectors and renders
-// the Storage, Accounting, and Finance views. Event wiring is attached after render.
+// Dashboard rendering (DOM). Uses the analytics selectors + i18n. Renders the
+// Storage, Accounting and Finance views (Finance includes SVG charts + forecast)
+// and the Inventory audit module.
+
+
+
 
 
 
 
 const money = (n) => '€' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const qty = (n) => (Number(n) || 0).toLocaleString();
+const STATUS_ORDER = ['Received', 'InTransitPending', 'PartiallyReceived', 'FullyMatched', 'Paid', 'Archived', 'UnderInvestigation', 'Resolved', 'Unresolvable'];
+const label = (status) => t('status.' + status);
 
 function tbl(headers, rows) {
-  if (!rows.length) return '<p class="muted">None.</p>';
+  if (!rows.length) return `<p class="muted">${t('inv.none')}</p>`;
   const head = headers.map((h) => `<th>${h}</th>`).join('');
   const body = rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('');
   return `<table class="grid"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
 
+// ---- Storage ----
 function storageHtml(pf, storageId) {
   const sv = storageView(pf, { storageId });
   const storages = [...new Set(pf.flatMap((v) => v.storages))].sort();
-  const options = ['<option value="">All storages</option>']
+  const options = [`<option value="">${t('model.all')}</option>`]
     .concat(storages.map((s) => `<option value="${s}"${s === storageId ? ' selected' : ''}>${s}</option>`)).join('');
   return `
-    <div class="dash-head"><h3>Storage view</h3>
-      <label class="filter">Storage <select id="storage-filter">${options}</select></label></div>
-    <h4>On the way (${sv.onWay.length})</h4>
-    ${tbl(['Invoice', 'Distributor', 'Invoiced', 'Received'], sv.onWay.map((v) => [v.invoiceNumber, v.distributorId, qty(v.invoicedQty), qty(v.receivedQty)]))}
-    <h4>Pending delivery (${sv.pendingDelivery.length})</h4>
-    ${tbl(['Invoice', 'Missing', 'Value at risk', 'Storages'], sv.pendingDelivery.map((v) => [v.invoiceNumber, qty(v.missingQty), money(v.valueAtRisk), v.storages.join(', ')]))}
-    <h4>Aged pending</h4>
-    ${tbl(['Invoice', 'Value', 'Age (days)'], sv.agedPending.map((a) => [a.invoiceNumber, money(a.value), a.ageDays]))}
-    <h4>Trend by period (debits)</h4>
-    ${tbl(['Period', 'Amount'], sv.trendByPeriod.map((t) => [t.period, money(t.amount)]))}
+    <div class="dash-head"><h3>${t('storage.title')}</h3>
+      <label class="filter">${t('storage.filter')} <select id="storage-filter">${options}</select></label></div>
+    <h4>${t('storage.onway')} (${sv.onWay.length})</h4>
+    ${tbl([t('th.invoice'), t('th.distributor'), t('th.invoiced'), t('th.received')], sv.onWay.map((v) => [v.invoiceNumber, v.distributorId, qty(v.invoicedQty), qty(v.received)]))}
+    <h4>${t('storage.pending')} (${sv.pendingDelivery.length})</h4>
+    ${tbl([t('th.invoice'), t('th.missing'), t('th.valueAtRisk'), t('th.storages')], sv.pendingDelivery.map((v) => [v.invoiceNumber, qty(v.missingQty), money(v.valueAtRisk), v.storages.join(', ')]))}
+    <h4>${t('storage.aged')}</h4>
+    ${tbl([t('th.invoice'), t('th.value'), t('th.ageDays')], sv.agedPending.map((a) => [a.invoiceNumber, money(a.value), a.ageDays]))}
+    <h4>${t('storage.trend')}</h4>
+    ${tbl([t('th.period'), t('th.amount')], sv.trendByPeriod.map((r) => [r.period, money(r.amount)]))}
   `;
 }
 
+// ---- Accounting ----
+function closedAction(v) {
+  if (v.status === 'FullyMatched') return `<button class="link act-pay" data-inv="${v.invoiceNumber}">${t('act.markPaid')}</button>`;
+  if (v.status === 'Paid') return `<button class="link act-archive" data-inv="${v.invoiceNumber}">${t('act.archive')}</button>`;
+  return '—';
+}
 function accountingHtml(pf) {
   const av = accountingView(pf);
   return `
-    <h3>Accounting view</h3>
-    <p class="muted">Open: ${av.summary.openCount} · Closed: ${av.summary.closedCount} · Open value at risk: ${money(av.summary.openValueAtRisk)}</p>
-    <h4>Open / not fully closed (${av.open.length})</h4>
-    ${tbl(['Invoice', 'Status', 'Missing', 'Value at risk'], av.open.map((v) => [v.invoiceNumber, v.status, qty(v.missingQty), money(v.valueAtRisk)]))}
-    <h4>Closed (${av.closed.length})</h4>
-    ${tbl(['Invoice', 'Status', 'Contra recognized', 'Actions'], av.closed.map((v) => [
-      v.invoiceNumber, v.status, money(v.contra.recognizedContra), closedAction(v),
-    ]))}
+    <h3>${t('acc.title')}</h3>
+    <p class="muted">${t('acc.summary', { open: av.summary.openCount, closed: av.summary.closedCount, risk: money(av.summary.openValueAtRisk) })}</p>
+    <h4>${t('acc.open')} (${av.open.length})</h4>
+    ${tbl([t('th.invoice'), t('th.status'), t('th.missing'), t('th.valueAtRisk')], av.open.map((v) => [v.invoiceNumber, label(v.status), qty(v.missingQty), money(v.valueAtRisk)]))}
+    <h4>${t('acc.closed')} (${av.closed.length})</h4>
+    ${tbl([t('th.invoice'), t('th.status'), t('th.contraRecognized'), t('th.actions')], av.closed.map((v) => [v.invoiceNumber, label(v.status), money(v.contra.recognizedContra), closedAction(v)]))}
   `;
 }
 
-function closedAction(v) {
-  if (v.status === 'FullyMatched') return `<button class="link act-pay" data-inv="${v.invoiceNumber}">Mark paid</button>`;
-  if (v.status === 'Paid') return `<button class="link act-archive" data-inv="${v.invoiceNumber}">Archive + download</button>`;
-  return '—';
-}
-
+// ---- Finance (with charts + forecast) ----
 function financeHtml(pf) {
   const fv = financeView(pf);
+  const series = monthlySeries(pf);
+  const fc = forecast(series.months, series.risk, 3);
+  const bars = groupedBars(series.months, series.risk, series.debits, { labelA: t('fin.legendRisk'), labelB: t('fin.legendDebits') });
+  const line = lineForecast(series.months, series.risk, fc.months, fc.values, {});
   const cards = `
     <div class="cards">
-      <div class="card"><span class="k">Invoices</span><span class="v">${fv.totals.invoices}</span></div>
-      <div class="card"><span class="k">Value at risk</span><span class="v">${money(fv.totals.totalValueAtRisk)}</span></div>
-      <div class="card"><span class="k">Pending contra credit</span><span class="v">${money(fv.totals.totalPendingCredit)}</span></div>
+      <div class="card"><span class="k">${t('fin.invoices')}</span><span class="v">${fv.totals.invoices}</span></div>
+      <div class="card"><span class="k">${t('fin.openVar')}</span><span class="v">${money(fv.totals.openValueAtRisk)}</span></div>
+      <div class="card"><span class="k">${t('fin.pendingCredit')}</span><span class="v">${money(fv.totals.totalPendingCredit)}</span></div>
     </div>`;
   return `
-    <h3>Finance view</h3>
+    <h3>${t('fin.title')}</h3>
     ${cards}
-    <h4>By status</h4>
-    ${tbl(['Status', 'Count'], Object.entries(fv.byStatus).map(([s, c]) => [s, c]))}
-    <h4>Storages with pending issues</h4>
-    ${tbl(['Storage', 'Invoices', 'Value at risk', ''], fv.storagesWithIssues.map((s) => [s.storageId, s.invoices.join(', '), money(s.valueAtRisk), `<button class="link drill" data-storage="${s.storageId}">view</button>`]))}
+    <h4>${t('fin.byStatus')}</h4>
+    ${tbl([t('th.status'), t('th.count')], Object.entries(fv.byStatus).sort(([a], [b]) => STATUS_ORDER.indexOf(a) - STATUS_ORDER.indexOf(b)).map(([s, c]) => [label(s), c]))}
+    <h4>${t('fin.storages')}</h4>
+    ${tbl([t('th.storage'), t('th.openInvoices'), t('th.detail'), ''], fv.storagesWithIssues.map((s) => [s.storageId, s.count, s.openInvoices.join(', '), `<button class="link drill" data-storage="${s.storageId}">${t('fin.view')}</button>`]))}
+    <h4>${t('fin.trendTitle')}</h4>
+    <div class="chart-wrap">${bars}</div>
+    <h4>${t('fin.forecastTitle')} <span class="legend-dot forecast"></span><span class="legend-label">${t('fin.legendForecast')}</span></h4>
+    <div class="chart-wrap">${line}</div>
   `;
 }
 
+// ---- Inventory ----
 const fmtDate = (dt) => String(dt).replace('T', ' ').slice(0, 16);
-
 function detailCard(d) {
-  const contraLine = d.contraStatus === 'Applied'
-    ? `Contra COGS applied: ${money(d.recognizedContra)}`
-    : `Contra COGS ${d.contraStatus.toLowerCase()} — recognized ${money(d.recognizedContra)}${d.pendingCredit ? ` (${money(d.pendingCredit)} pending)` : ''}`;
+  const cs = d.contraStatus === 'Applied'
+    ? `${t('inv.contra')} ${t('contra.applied')}: ${money(d.recognizedContra)}`
+    : `${t('inv.contra')} ${t('contra.' + d.contraStatus.toLowerCase())} — ${t('contra.recognized')} ${money(d.recognizedContra)}${d.pendingCredit ? ` (${money(d.pendingCredit)} ${t('contra.pending')})` : ''}`;
   return `
     <div class="inv-card">
-      <div class="inv-card-head"><strong>${d.invoiceNumber}</strong> <span class="tag">${d.status}</span></div>
+      <div class="inv-card-head"><strong>${d.invoiceNumber}</strong> <span class="tag">${label(d.status)}</span></div>
       <p class="muted">${d.distributorId} · Model ${d.model}</p>
       <ul class="kv">
-        <li><span>Delivered</span><strong>${qty(d.receivedQty)} of ${qty(d.invoicedQty)}</strong></li>
-        <li><span>Missing</span><strong>${qty(d.missingQty)}</strong></li>
-        <li><span>Contra COGS</span><strong>${contraLine}</strong></li>
+        <li><span>${t('inv.delivered')}</span><strong>${qty(d.receivedQty)} ${t('inv.of')} ${qty(d.invoicedQty)}</strong></li>
+        <li><span>${t('inv.missing')}</span><strong>${qty(d.missingQty)}</strong></li>
+        <li><span>${t('inv.contra')}</span><strong>${cs}</strong></li>
       </ul>
-      <h4>Receipts by storage</h4>
-      ${tbl(['Storage', 'Qty', 'Received on'], d.receiptsByStorage.map((s) => [s.storageId, qty(s.qty), s.receipts.map((r) => fmtDate(r.datetime)).join('<br>')]))}
-      <h4>Delivery notes</h4>
-      ${tbl(['Note', 'Storage', 'Source'], d.deliveryNotes.map((n) => [n.deliveryNoteId, n.targetStorageId, n.sourceFile || '—']))}
-      <h4>Credit notes</h4>
-      ${tbl(['Note', 'Period', 'Amount', 'Status', 'Source'], d.creditNotes.map((n) => [n.creditNoteId, n.period, money(n.amount), n.status, n.sourceFile || '—']))}
-      <h4>Audit history</h4>
-      ${tbl(['When', 'Actor', 'Change'], d.audit.map((a) => [fmtDate(a.timestamp), a.actor, a.change]))}
-      <p class="muted">Source: ${d.provenance.invoiceSourceFile || '—'}</p>
+      <h4>${t('inv.receipts')}</h4>
+      ${tbl([t('th.storage'), t('th.qty'), t('th.receivedOn')], d.receiptsByStorage.map((s) => [s.storageId, qty(s.qty), s.receipts.map((r) => fmtDate(r.datetime)).join('<br>')]))}
+      <h4>${t('inv.deliveryNotes')}</h4>
+      ${tbl([t('th.note'), t('th.storage'), t('th.source')], d.deliveryNotes.map((n) => [n.deliveryNoteId, n.targetStorageId, n.sourceFile || '—']))}
+      <h4>${t('inv.creditNotes')}</h4>
+      ${tbl([t('th.note'), t('th.period'), t('th.amount'), t('th.status'), t('th.source')], d.creditNotes.map((n) => [n.creditNoteId, n.period, money(n.amount), n.status, n.sourceFile || '—']))}
+      <h4>${t('inv.audit')}</h4>
+      ${tbl([t('th.when'), t('th.actor'), t('th.change')], d.audit.map((a) => [fmtDate(a.timestamp), a.actor, a.change]))}
+      <p class="muted">${t('inv.source')}: ${d.provenance.invoiceSourceFile || '—'}</p>
     </div>`;
-}
-
-/**
- * Render the Inventory audit module.
- * ctx: { goodsReceipts, deliveryNotes, creditNotes, auditLog }
- * handlers: { month, onMonth(month), onExport(month, list) }
- */function renderInventory(container, invoices, ctx, handlers = {}) {
+}function renderInventory(container, invoices, ctx, handlers = {}) {
   const months = inventoryMonths(invoices, ctx.goodsReceipts);
   const month = handlers.month || months[months.length - 1] || '';
   const list = month ? monthlyInventory(invoices, ctx, { month }) : [];
   const monthOpts = months.map((m) => `<option value="${m}"${m === month ? ' selected' : ''}>${m}</option>`).join('');
-
   container.innerHTML = `
-    <div class="dash-head"><h3>Inventory — audit</h3>
+    <div class="dash-head"><h3>${t('inv.title')}</h3>
       <div class="inv-controls">
-        <label class="filter">Month <select id="inv-month">${monthOpts}</select></label>
-        <button class="btn" id="inv-export">Export month (JSON)</button>
+        <label class="filter">${t('inv.month')} <select id="inv-month">${monthOpts}</select></label>
+        <button class="btn" id="inv-export">${t('inv.export')}</button>
       </div>
     </div>
-    ${list.length ? list.map(detailCard).join('') : '<p class="muted">No invoices for this month.</p>'}`;
-
+    ${list.length ? list.map(detailCard).join('') : `<p class="muted">${t('inv.none')}</p>`}`;
   const sel = container.querySelector('#inv-month');
   if (sel && handlers.onMonth) sel.addEventListener('change', (e) => handlers.onMonth(e.target.value));
   const exp = container.querySelector('#inv-export');
   if (exp && handlers.onExport) exp.addEventListener('click', () => handlers.onExport(month, list));
-}
-
-/**
- * Render a role dashboard into `container`.
- * handlers: { storageId, onFilter(storageId), onDrill(storageId) }
- */function renderDashboard(container, role, pf, handlers = {}) {
+}function renderDashboard(container, role, pf, handlers = {}) {
   if (role === 'storage') container.innerHTML = storageHtml(pf, handlers.storageId || null);
   else if (role === 'accounting') container.innerHTML = accountingHtml(pf);
   else if (role === 'finance') container.innerHTML = financeHtml(pf);
-  else container.innerHTML = '<p class="muted">Select a role.</p>';
+  else container.innerHTML = `<p class="muted">${t('inv.none')}</p>`;
 
   const filter = container.querySelector('#storage-filter');
   if (filter && handlers.onFilter) filter.addEventListener('change', (e) => handlers.onFilter(e.target.value || null));
-  container.querySelectorAll('.drill').forEach((b) => {
-    if (handlers.onDrill) b.addEventListener('click', () => handlers.onDrill(b.dataset.storage));
-  });
-  container.querySelectorAll('.act-pay').forEach((b) => {
-    if (handlers.onMarkPaid) b.addEventListener('click', () => handlers.onMarkPaid(b.dataset.inv));
-  });
-  container.querySelectorAll('.act-archive').forEach((b) => {
-    if (handlers.onArchive) b.addEventListener('click', () => handlers.onArchive(b.dataset.inv));
-  });
+  container.querySelectorAll('.drill').forEach((b) => { if (handlers.onDrill) b.addEventListener('click', () => handlers.onDrill(b.dataset.storage)); });
+  container.querySelectorAll('.act-pay').forEach((b) => { if (handlers.onMarkPaid) b.addEventListener('click', () => handlers.onMarkPaid(b.dataset.inv)); });
+  container.querySelectorAll('.act-archive').forEach((b) => { if (handlers.onArchive) b.addEventListener('click', () => handlers.onArchive(b.dataset.inv)); });
+}
+
+
+// ===== src/ui/tour.js =====
+// Guided "walk me through" demo: an animated pointer glides to each target, a
+// spotlight ring highlights it, a click pulse fires, and a caption explains the step.
+// Steps: [{ selector, text, before? }]. `before` navigates (e.g., switch tab) first.function startTour(steps, labels = { next: 'Next', skip: 'Skip', done: 'Done' }) {
+  let i = 0;
+  const overlay = document.createElement('div'); overlay.className = 'tour-overlay';
+  const ring = document.createElement('div'); ring.className = 'tour-ring';
+  const pointer = document.createElement('div'); pointer.className = 'tour-pointer';
+  const box = document.createElement('div'); box.className = 'tour-box';
+  overlay.append(ring, pointer, box);
+  document.body.appendChild(overlay);
+
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const cleanup = () => overlay.remove();
+
+  function positionTo(el) {
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2 + window.scrollX;
+    const cy = r.top + r.height / 2 + window.scrollY;
+    pointer.style.transform = `translate(${cx}px, ${cy}px)`;
+    ring.style.left = `${r.left + window.scrollX}px`;
+    ring.style.top = `${r.top + window.scrollY}px`;
+    ring.style.width = `${r.width}px`;
+    ring.style.height = `${r.height}px`;
+    const boxTop = r.bottom + window.scrollY + 12;
+    box.style.left = `${Math.max(12, Math.min(window.innerWidth - 340, r.left + window.scrollX))}px`;
+    box.style.top = `${boxTop}px`;
+    pointer.classList.remove('click'); void pointer.offsetWidth; pointer.classList.add('click');
+  }
+
+  async function show() {
+    const step = steps[i];
+    if (step.before) { try { step.before(); } catch { /* ignore */ } }
+    await wait(140);
+    const el = document.querySelector(step.selector) || document.body;
+    try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch { /* ignore */ }
+    await wait(220);
+    positionTo(el);
+    const last = i === steps.length - 1;
+    box.innerHTML = `<p>${step.text}</p><div class="tour-actions">
+      <button class="tour-skip">${labels.skip}</button>
+      <button class="tour-next">${last ? labels.done : labels.next}</button></div>`;
+    box.querySelector('.tour-next').onclick = () => { i += 1; if (i >= steps.length) cleanup(); else show(); };
+    box.querySelector('.tour-skip').onclick = cleanup;
+  }
+
+  show();
+  return { stop: cleanup };
 }
 
 
 // ===== src/app.js =====
 // Perfumeries — Contra COGS Reconciliation
-// Startup flow: choose model -> scan -> ingest -> advance lifecycle -> build
-// portfolio -> pick role -> render dashboard.
+// Startup: scan -> ingest -> advance lifecycle -> build portfolio -> dashboards.
+// Plus language (EN/SK), a model filter, an About view, and a guided tour.
+
+
 
 
 
@@ -1876,175 +2202,167 @@ function detailCard(d) {
 
 const $ = (id) => document.getElementById(id);
 const show = (el) => { if (el) el.hidden = false; };
-
-const LABELS = { database: 'Database', api: 'API', folder: 'Folder' };
 const STATE_CLASS = { [ScanStatus.FOUND]: 'found', [ScanStatus.ERROR]: 'error', [ScanStatus.NO_UPDATES]: '', [ScanStatus.SCANNING]: '' };
-const MODEL_DESC = {
-  [ContraCogsModel.A]: 'Direct / line-item — net (discounted) unit price already on the invoice.',
-  [ContraCogsModel.B]: 'Back-edge allowance — standard price + monthly credit note; contra held pending until cleared.',
-};
-const ROLE_LABELS = { storage: 'Storage', accounting: 'Accounting', finance: 'Finance' };
+const SCAN_LABEL = { database: 'Database', api: 'API', folder: 'Folder' };
 
-// module state
 const store = new StateStore(getLocalStorageBackend() || createMemoryBackend(), 'perfumeries');
 const session = new Session(getSessionBackend() || createMemoryKV());
-let PORTFOLIO = [];
+let ALL_PORTFOLIO = [];
+let lastIngest = null;
+let currentView = 'role'; // 'role' | 'inventory' | 'about'
 let storageFilter = null;
-let currentView = 'role'; // 'role' | 'inventory'
 let invMonth = null;
 
 function downloadText(filename, text, type = 'application/json') {
   const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); a.remove();
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
 
-function renderModelPanel(onChosen) {
-  const panel = $('model-panel');
-  const current = session.getModel();
-  panel.innerHTML = `
-    <h2>Choose Contra COGS model</h2>
-    <div class="model-choices">
-      ${[ContraCogsModel.A, ContraCogsModel.B].map((m) => `
-        <button class="model-btn${current === m ? ' selected' : ''}" data-model="${m}">
-          <span class="model-name">Model ${m}</span>
-          <span class="model-desc">${MODEL_DESC[m]}</span>
-        </button>`).join('')}
-    </div>
-    <p class="hint">Sets the session model for the demo. Individual invoices still carry their own model.</p>`;
-  panel.querySelectorAll('.model-btn').forEach((btn) => btn.addEventListener('click', () => {
-    session.setModel(btn.dataset.model);
-    renderModelPanel(onChosen);
-    onChosen(btn.dataset.model);
-  }));
+const filteredPortfolio = () => {
+  const f = session.getModelFilter();
+  return f === 'all' ? ALL_PORTFOLIO : ALL_PORTFOLIO.filter((v) => v.model === f);
+};
+
+// ---- static chrome (i18n) ----
+function applyI18n() {
+  $('subtitle').textContent = t('app.subtitle');
+  $('model-filter-label').textContent = t('model.title');
+  $('tour-btn').textContent = t('btn.tour');
+  $('scan-title').textContent = t('scan.title');
+  const mf = $('model-filter');
+  const cur = session.getModelFilter();
+  mf.innerHTML = [['all', t('model.all')], ['A', t('model.aName')], ['B', t('model.bName')]]
+    .map(([v, l]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${l}</option>`).join('');
+  document.querySelectorAll('#lang-switch .flag').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
 }
 
+// ---- scan UI ----
 function renderScanRows() {
-  const scan = $('scan-status');
-  scan.innerHTML = '';
+  const scan = $('scan-status'); scan.innerHTML = '';
   const rows = {};
   for (const id of ['database', 'api', 'folder']) {
     const li = document.createElement('li');
-    li.innerHTML = `<span class="src">${LABELS[id]}</span><span class="state">idle</span>`;
+    li.innerHTML = `<span class="src">${SCAN_LABEL[id]}</span><span class="state">idle</span>`;
     scan.appendChild(li);
     rows[id] = li.querySelector('.state');
   }
   return rows;
 }
-
-function renderIngestSummary(result, model) {
-  const el = $('ingest-summary');
-  const storages = new Set(result.goodsReceipts.map((g) => g.storageId));
-  const received = result.goodsReceipts.reduce((s, g) => s + g.qtyReceived, 0);
-  el.innerHTML = `
-    <p class="summary-line">Ingested <span class="badge">Model ${model}</span>
-      ${result.invoices.length} invoice(s), ${result.deliveryNotes.length} delivery note(s),
-      ${result.goodsReceipts.length} receipt row(s) — ${received} units / ${storages.size} storage(s),
-      ${result.creditNotes.length} credit note(s)
-      ${result.incomplete.length ? `· <span class="warn">${result.incomplete.length} incomplete</span>` : ''}
-      ${result.errors.length ? `· <span class="err">${result.errors.length} error(s)</span>` : ''}
-    </p>`;
+function renderIngestSummary() {
+  if (!lastIngest) return;
+  const r = lastIngest;
+  const storages = new Set(r.goodsReceipts.map((g) => g.storageId));
+  const units = r.goodsReceipts.reduce((s, g) => s + g.qtyReceived, 0);
+  $('ingest-summary').innerHTML = `<p class="summary-line">${t('ingest.line', {
+    inv: r.invoices.length, dn: r.deliveryNotes.length, gr: r.goodsReceipts.length,
+    units: units.toLocaleString(), st: storages.size, cn: r.creditNotes.length,
+  })}</p>`;
 }
 
+// ---- role bar ----
 function renderRoleBar() {
-  const bar = $('role-bar');
-  show(bar);
-  const current = session.getRole();
-  const roleTabs = ROLES.map((r) =>
-    `<button class="role-tab${currentView === 'role' && current === r ? ' active' : ''}" data-role="${r}">${ROLE_LABELS[r]}</button>`).join('');
-  const invTab = `<button class="role-tab${currentView === 'inventory' ? ' active' : ''}" data-inventory="1">Inventory</button>`;
-  bar.innerHTML = roleTabs + invTab;
+  const bar = $('role-bar'); show(bar);
+  const role = session.getRole();
+  const tabs = ROLES.map((r) => `<button class="role-tab${currentView === 'role' && role === r ? ' active' : ''}" data-role="${r}">${t('nav.' + r)}</button>`).join('');
+  const inv = `<button class="role-tab${currentView === 'inventory' ? ' active' : ''}" data-inventory="1">${t('nav.inventory')}</button>`;
+  const about = `<button class="role-tab${currentView === 'about' ? ' active' : ''}" data-about="1">${t('nav.about')}</button>`;
+  bar.innerHTML = tabs + inv + about;
   bar.querySelectorAll('.role-tab').forEach((b) => b.addEventListener('click', () => {
-    if (b.dataset.inventory) openInventory(); else selectRole(b.dataset.role);
+    if (b.dataset.inventory) openInventory();
+    else if (b.dataset.about) showAbout();
+    else selectRole(b.dataset.role);
   }));
 }
 
+// ---- views ----
 function rebuildPortfolio() {
-  PORTFOLIO = buildPortfolio(store.all('invoices'), store.all('goodsReceipts'), store.all('deliveryNotes'), { asOf: new Date().toISOString() });
+  ALL_PORTFOLIO = buildPortfolio(store.all('invoices'), store.all('goodsReceipts'), store.all('deliveryNotes'), { asOf: new Date().toISOString() });
 }
-
-function renderCurrentDashboard() {
-  const root = $('view-root');
-  show(root);
-  renderDashboard(root, session.getRole(), PORTFOLIO, {
+function renderDash() {
+  const root = $('view-root'); show(root);
+  renderDashboard(root, session.getRole(), filteredPortfolio(), {
     storageId: storageFilter,
-    onFilter: (sid) => { storageFilter = sid; renderCurrentDashboard(); },
+    onFilter: (sid) => { storageFilter = sid; renderDash(); },
     onDrill: (sid) => { storageFilter = sid; selectRole('storage'); },
-    onMarkPaid: (inv) => { transition(store, inv, InvoiceStatus.PAID, { actor: 'accounting' }); rebuildPortfolio(); renderCurrentDashboard(); },
-    onArchive: (inv) => {
-      const record = archiveInvoice(store, inv, { actor: 'accounting' });
-      downloadText(`archive_${inv}.json`, exportArchive(record));
-      rebuildPortfolio(); renderCurrentDashboard();
-    },
+    onMarkPaid: (inv) => { transition(store, inv, InvoiceStatus.PAID, { actor: 'accounting' }); rebuildPortfolio(); renderDash(); },
+    onArchive: (inv) => { const rec = archiveInvoice(store, inv, { actor: 'accounting' }); downloadText(`archive_${inv}.json`, exportArchive(rec)); rebuildPortfolio(); renderDash(); },
   });
 }
-
-function inventoryCtx() {
-  return {
-    goodsReceipts: store.all('goodsReceipts'),
-    deliveryNotes: store.all('deliveryNotes'),
-    creditNotes: store.all('creditNotes'),
-    auditLog: store.auditLog(),
-  };
-}
-
 function renderInventoryView() {
-  const root = $('view-root');
-  show(root);
-  const invoices = store.all('invoices');
-  renderInventory(root, invoices, inventoryCtx(), {
+  const root = $('view-root'); show(root);
+  const ctx = { goodsReceipts: store.all('goodsReceipts'), deliveryNotes: store.all('deliveryNotes'), creditNotes: store.all('creditNotes'), auditLog: store.auditLog() };
+  renderInventory(root, store.all('invoices'), ctx, {
     month: invMonth,
     onMonth: (m) => { invMonth = m; renderInventoryView(); },
     onExport: (month, list) => downloadText(`inventory_${month || 'all'}.json`, exportInventory(list)),
   });
 }
+function renderAbout() {
+  const root = $('view-root'); show(root);
+  root.innerHTML = `<h3>${t('about.title')}</h3><p>${t('about.body')}</p>
+    <h4>${t('about.defTitle')}</h4><p>${t('about.defBody')}</p>`;
+}
+function renderCurrentView() {
+  if (currentView === 'inventory') renderInventoryView();
+  else if (currentView === 'about') renderAbout();
+  else renderDash();
+}
+function selectRole(role) { currentView = 'role'; session.setRole(role); renderRoleBar(); renderDash(); }
+function openInventory() { currentView = 'inventory'; renderRoleBar(); renderInventoryView(); }
+function showAbout() { currentView = 'about'; renderRoleBar(); renderAbout(); }
 
-function selectRole(role) {
-  currentView = 'role';
-  session.setRole(role);
-  renderRoleBar();
-  renderCurrentDashboard();
+// ---- tour ----
+function launchTour() {
+  const steps = [
+    { selector: '#model-filter', text: t('model.note') },
+    { selector: '.role-tab[data-role="finance"]', text: t('fin.title') + ' — ' + t('fin.openVar') + ', ' + t('fin.pendingCredit') + '.', before: () => selectRole('finance') },
+    { selector: '.cards', text: t('fin.openVar') + ' / ' + t('fin.pendingCredit') + '.' },
+    { selector: '.chart-wrap', text: t('fin.trendTitle') + ' + ' + t('fin.forecastTitle') + '.' },
+    { selector: '.role-tab[data-role="storage"]', text: t('storage.onway') + ' · ' + t('storage.pending') + ' · ' + t('storage.aged') + '.', before: () => selectRole('storage') },
+    { selector: '.role-tab[data-inventory]', text: t('inv.title'), before: () => openInventory() },
+    { selector: '.role-tab[data-about]', text: t('about.defTitle'), before: () => showAbout() },
+  ];
+  startTour(steps, { next: t('tour.next'), skip: t('tour.skip'), done: t('tour.done') });
 }
 
-function openInventory() {
-  currentView = 'inventory';
-  renderRoleBar();
-  renderInventoryView();
+// ---- language ----
+function switchLang(l) {
+  session.setLang(l); setLang(l);
+  applyI18n(); renderIngestSummary(); renderRoleBar(); renderCurrentView();
 }
 
-async function runScan(model) {
+// ---- boot ----
+async function runScan() {
   show($('scan-panel'));
   const rows = renderScanRows();
   const onStatus = (id, state, message) => {
-    const el = rows[id];
-    if (!el) return;
+    const el = rows[id]; if (!el) return;
     el.textContent = state === ScanStatus.SCANNING ? (message || 'scanning…') : (message || state);
     el.className = `state ${STATE_CLASS[state] || ''}`.trim();
   };
   try {
     const { ingest, portfolio } = await runPipeline(store, defaultSources(), { onStatus });
-    renderIngestSummary(ingest, model);
-    PORTFOLIO = portfolio;
-
+    lastIngest = ingest; ALL_PORTFOLIO = portfolio;
+    renderIngestSummary();
     renderRoleBar();
     selectRole(session.isRoleSelected() ? session.getRole() : 'finance');
   } catch (err) {
-    const root = $('view-root');
-    show(root);
+    const root = $('view-root'); show(root);
     root.innerHTML = `<h2>Startup error</h2><p class="err">${err.message}</p>`;
   }
 }
 
 function boot() {
-  const status = $('build-status');
-  if (status) status.textContent = `v${VERSION}`;
-  let started = false;
-  const start = (model) => { if (started) return; started = true; runScan(model); };
-  renderModelPanel(start);
-  if (session.isModelSelected()) start(session.getModel());
+  setLang(session.getLang());
+  if ($('build-status')) $('build-status').textContent = `v${VERSION}`;
+  applyI18n();
+  $('model-filter').addEventListener('change', (e) => { session.setModelFilter(e.target.value); renderCurrentView(); });
+  $('tour-btn').addEventListener('click', launchTour);
+  document.querySelectorAll('#lang-switch .flag').forEach((b) => b.addEventListener('click', () => switchLang(b.dataset.lang)));
+  runScan();
 }
 
 document.addEventListener('DOMContentLoaded', boot);

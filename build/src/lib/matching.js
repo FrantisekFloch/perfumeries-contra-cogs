@@ -59,7 +59,8 @@ export function matchInvoice(invoice, aggOrReceipts, deliveryNotes = []) {
       expectedStorages: expectedStorages(deliveryNotes, invoice.invoiceNumber, l.stockId),
     };
   });
-  const fullyMatched = lines.length > 0 && lines.every((l) => l.status === FulfilmentStatus.FULLY_DELIVERED);
+  // "Fully matched" = no shortfall on any line (an over-delivery still counts as fulfilled).
+  const fullyMatched = lines.length > 0 && lines.every((l) => l.received >= l.qtyInvoiced);
   const anyShort = lines.some((l) => l.status === FulfilmentStatus.SHORT);
   return { invoiceNumber: invoice.invoiceNumber, lines, fullyMatched, anyShort };
 }
