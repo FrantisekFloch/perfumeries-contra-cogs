@@ -31,6 +31,7 @@ const COLLECTIONS = {
   creditNotes: { type: 'keyed', key: (o) => o.creditNoteId },
   gaps: { type: 'keyed', key: (o) => o.gapId },
   accruals: { type: 'keyed', key: (o) => `${o.invoiceNumber}|${o.period}` },
+  archive: { type: 'keyed', key: (o) => o.invoiceNumber },
   goodsReceipts: { type: 'list' },
   resolutions: { type: 'list' },
   audit: { type: 'list' },

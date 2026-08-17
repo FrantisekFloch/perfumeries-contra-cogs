@@ -9,9 +9,11 @@ import { StateStore, getLocalStorageBackend, createMemoryBackend } from './lib/s
 import { Session, getSessionBackend, createMemoryKV, ROLES } from './lib/session.js';
 import { ScanStatus, ContraCogsModel } from './lib/enums.js';
 import { matchInvoice } from './lib/matching.js';
-import { applyMatchStatus } from './lib/lifecycle.js';
+import { applyMatchStatus, transition } from './lib/lifecycle.js';
+import { InvoiceStatus as Status } from './lib/enums.js';
 import { buildPortfolio } from './lib/analytics.js';
 import { exportInventory } from './lib/inventory.js';
+import { archiveInvoice, exportArchive } from './lib/archive.js';
 import { renderDashboard, renderInventory } from './ui/dashboards.js';
 
 const $ = (id) => document.getElementById(id);
@@ -112,6 +114,10 @@ function renderRoleBar() {
   }));
 }
 
+function rebuildPortfolio() {
+  PORTFOLIO = buildPortfolio(store.all('invoices'), store.all('goodsReceipts'), store.all('deliveryNotes'), { asOf: new Date().toISOString() });
+}
+
 function renderCurrentDashboard() {
   const root = $('view-root');
   show(root);
@@ -119,6 +125,12 @@ function renderCurrentDashboard() {
     storageId: storageFilter,
     onFilter: (sid) => { storageFilter = sid; renderCurrentDashboard(); },
     onDrill: (sid) => { storageFilter = sid; selectRole('storage'); },
+    onMarkPaid: (inv) => { transition(store, inv, Status.PAID, { actor: 'accounting' }); rebuildPortfolio(); renderCurrentDashboard(); },
+    onArchive: (inv) => {
+      const record = archiveInvoice(store, inv, { actor: 'accounting' });
+      downloadText(`archive_${inv}.json`, exportArchive(record));
+      rebuildPortfolio(); renderCurrentDashboard();
+    },
   });
 }
 

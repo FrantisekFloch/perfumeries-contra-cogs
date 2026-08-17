@@ -40,8 +40,16 @@ function accountingHtml(pf) {
     <h4>Open / not fully closed (${av.open.length})</h4>
     ${tbl(['Invoice', 'Status', 'Missing', 'Value at risk'], av.open.map((v) => [v.invoiceNumber, v.status, v.missingQty, money(v.valueAtRisk)]))}
     <h4>Closed (${av.closed.length})</h4>
-    ${tbl(['Invoice', 'Status', 'Contra recognized'], av.closed.map((v) => [v.invoiceNumber, v.status, money(v.contra.recognizedContra)]))}
+    ${tbl(['Invoice', 'Status', 'Contra recognized', 'Actions'], av.closed.map((v) => [
+      v.invoiceNumber, v.status, money(v.contra.recognizedContra), closedAction(v),
+    ]))}
   `;
+}
+
+function closedAction(v) {
+  if (v.status === 'FullyMatched') return `<button class="link act-pay" data-inv="${v.invoiceNumber}">Mark paid</button>`;
+  if (v.status === 'Paid') return `<button class="link act-archive" data-inv="${v.invoiceNumber}">Archive + download</button>`;
+  return '—';
 }
 
 function financeHtml(pf) {
@@ -119,5 +127,11 @@ export function renderDashboard(container, role, pf, handlers = {}) {
   if (filter && handlers.onFilter) filter.addEventListener('change', (e) => handlers.onFilter(e.target.value || null));
   container.querySelectorAll('.drill').forEach((b) => {
     if (handlers.onDrill) b.addEventListener('click', () => handlers.onDrill(b.dataset.storage));
+  });
+  container.querySelectorAll('.act-pay').forEach((b) => {
+    if (handlers.onMarkPaid) b.addEventListener('click', () => handlers.onMarkPaid(b.dataset.inv));
+  });
+  container.querySelectorAll('.act-archive').forEach((b) => {
+    if (handlers.onArchive) b.addEventListener('click', () => handlers.onArchive(b.dataset.inv));
   });
 }
