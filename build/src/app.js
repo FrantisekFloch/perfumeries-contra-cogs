@@ -3,15 +3,14 @@
 // portfolio -> pick role -> render dashboard.
 
 import { VERSION } from './lib/version.js';
-import { SourceScanner, defaultSources } from './lib/source.js';
-import { ingestFiles, persistIngest } from './lib/ingest.js';
+import { defaultSources } from './lib/source.js';
 import { StateStore, getLocalStorageBackend, createMemoryBackend } from './lib/store.js';
 import { Session, getSessionBackend, createMemoryKV, ROLES } from './lib/session.js';
 import { ScanStatus, ContraCogsModel } from './lib/enums.js';
-import { matchInvoice } from './lib/matching.js';
-import { applyMatchStatus, transition } from './lib/lifecycle.js';
+import { transition } from './lib/lifecycle.js';
 import { InvoiceStatus as Status } from './lib/enums.js';
 import { buildPortfolio } from './lib/analytics.js';
+import { runPipeline } from './lib/pipeline.js';
 import { exportInventory } from './lib/inventory.js';
 import { archiveInvoice, exportArchive } from './lib/archive.js';
 import { renderDashboard, renderInventory } from './ui/dashboards.js';
@@ -91,16 +90,6 @@ function renderIngestSummary(result, model) {
     </p>`;
 }
 
-function advanceStatuses() {
-  const receipts = store.all('goodsReceipts');
-  const dns = store.all('deliveryNotes');
-  for (const inv of store.all('invoices')) {
-    const m = matchInvoice(inv, receipts, dns);
-    applyMatchStatus(store, inv.invoiceNumber, m, { actor: 'system' });
-  }
-  return { invoices: store.all('invoices'), receipts, dns };
-}
-
 function renderRoleBar() {
   const bar = $('role-bar');
   show(bar);
@@ -177,13 +166,9 @@ async function runScan(model) {
     el.className = `state ${STATE_CLASS[state] || ''}`.trim();
   };
   try {
-    const { files } = await new SourceScanner(defaultSources(), { onStatus }).scanAll();
-    const result = ingestFiles(files);
-    persistIngest(store, result);
-    renderIngestSummary(result, model);
-
-    const { invoices, receipts, dns } = advanceStatuses();
-    PORTFOLIO = buildPortfolio(invoices, receipts, dns, { asOf: new Date().toISOString() });
+    const { ingest, portfolio } = await runPipeline(store, defaultSources(), { onStatus });
+    renderIngestSummary(ingest, model);
+    PORTFOLIO = portfolio;
 
     renderRoleBar();
     selectRole(session.isRoleSelected() ? session.getRole() : 'finance');
