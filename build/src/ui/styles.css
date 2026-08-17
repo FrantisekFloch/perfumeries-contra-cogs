@@ -110,3 +110,10 @@ table.grid tbody tr:hover { background: #fafafa; }
 .card .v { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
 
 button.link { background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font: inherit; text-decoration: underline; }
+
+.inv-controls { display: flex; align-items: center; gap: 10px; }
+.btn { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 7px 12px; cursor: pointer; font: inherit; }
+.btn:hover { filter: brightness(1.05); }
+.inv-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 14px; }
+.inv-card-head { font-size: 1rem; margin-bottom: 4px; }
+.tag { display: inline-block; font-size: 0.72rem; font-weight: 700; background: #eef2fb; color: var(--accent); border-radius: 999px; padding: 2px 10px; }

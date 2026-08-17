@@ -11,7 +11,8 @@ import { ScanStatus, ContraCogsModel } from './lib/enums.js';
 import { matchInvoice } from './lib/matching.js';
 import { applyMatchStatus } from './lib/lifecycle.js';
 import { buildPortfolio } from './lib/analytics.js';
-import { renderDashboard } from './ui/dashboards.js';
+import { exportInventory } from './lib/inventory.js';
+import { renderDashboard, renderInventory } from './ui/dashboards.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (el) => { if (el) el.hidden = false; };
@@ -29,6 +30,17 @@ const store = new StateStore(getLocalStorageBackend() || createMemoryBackend(), 
 const session = new Session(getSessionBackend() || createMemoryKV());
 let PORTFOLIO = [];
 let storageFilter = null;
+let currentView = 'role'; // 'role' | 'inventory'
+let invMonth = null;
+
+function downloadText(filename, text, type = 'application/json') {
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
 
 function renderModelPanel(onChosen) {
   const panel = $('model-panel');
@@ -91,8 +103,13 @@ function renderRoleBar() {
   const bar = $('role-bar');
   show(bar);
   const current = session.getRole();
-  bar.innerHTML = ROLES.map((r) => `<button class="role-tab${current === r ? ' active' : ''}" data-role="${r}">${ROLE_LABELS[r]}</button>`).join('');
-  bar.querySelectorAll('.role-tab').forEach((b) => b.addEventListener('click', () => selectRole(b.dataset.role)));
+  const roleTabs = ROLES.map((r) =>
+    `<button class="role-tab${currentView === 'role' && current === r ? ' active' : ''}" data-role="${r}">${ROLE_LABELS[r]}</button>`).join('');
+  const invTab = `<button class="role-tab${currentView === 'inventory' ? ' active' : ''}" data-inventory="1">Inventory</button>`;
+  bar.innerHTML = roleTabs + invTab;
+  bar.querySelectorAll('.role-tab').forEach((b) => b.addEventListener('click', () => {
+    if (b.dataset.inventory) openInventory(); else selectRole(b.dataset.role);
+  }));
 }
 
 function renderCurrentDashboard() {
@@ -105,10 +122,37 @@ function renderCurrentDashboard() {
   });
 }
 
+function inventoryCtx() {
+  return {
+    goodsReceipts: store.all('goodsReceipts'),
+    deliveryNotes: store.all('deliveryNotes'),
+    creditNotes: store.all('creditNotes'),
+    auditLog: store.auditLog(),
+  };
+}
+
+function renderInventoryView() {
+  const root = $('view-root');
+  show(root);
+  const invoices = store.all('invoices');
+  renderInventory(root, invoices, inventoryCtx(), {
+    month: invMonth,
+    onMonth: (m) => { invMonth = m; renderInventoryView(); },
+    onExport: (month, list) => downloadText(`inventory_${month || 'all'}.json`, exportInventory(list)),
+  });
+}
+
 function selectRole(role) {
+  currentView = 'role';
   session.setRole(role);
   renderRoleBar();
   renderCurrentDashboard();
+}
+
+function openInventory() {
+  currentView = 'inventory';
+  renderRoleBar();
+  renderInventoryView();
 }
 
 async function runScan(model) {

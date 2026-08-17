@@ -2,6 +2,7 @@
 // the Storage, Accounting, and Finance views. Event wiring is attached after render.
 
 import { storageView, accountingView, financeView } from '../lib/analytics.js';
+import { monthlyInventory, inventoryMonths } from '../lib/inventory.js';
 
 const money = (n) => (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -59,6 +60,49 @@ function financeHtml(pf) {
     <h4>Storages with pending issues</h4>
     ${tbl(['Storage', 'Invoices', 'Value at risk', ''], fv.storagesWithIssues.map((s) => [s.storageId, s.invoices.join(', '), money(s.valueAtRisk), `<button class="link drill" data-storage="${s.storageId}">view</button>`]))}
   `;
+}
+
+function detailCard(d) {
+  return `
+    <div class="inv-card">
+      <div class="inv-card-head"><strong>${d.invoiceNumber}</strong> · ${d.distributorId} · Model ${d.model} · <span class="tag">${d.status}</span></div>
+      <p class="muted">Invoiced ${d.invoicedQty} · Received ${d.receivedQty} · Missing ${d.missingQty} · Contra ${d.contraStatus} (recognized ${money(d.recognizedContra)}${d.pendingCredit ? `, pending ${money(d.pendingCredit)}` : ''})</p>
+      <h4>Receipts by storage</h4>
+      ${tbl(['Storage', 'Qty', 'Dates'], d.receiptsByStorage.map((s) => [s.storageId, s.qty, s.receipts.map((r) => r.datetime).join('<br>')]))}
+      <h4>Delivery notes</h4>
+      ${tbl(['Note', 'Storage', 'Source'], d.deliveryNotes.map((n) => [n.deliveryNoteId, n.targetStorageId, n.sourceFile || '—']))}
+      <h4>Credit notes</h4>
+      ${tbl(['Note', 'Period', 'Amount', 'Status', 'Source'], d.creditNotes.map((n) => [n.creditNoteId, n.period, money(n.amount), n.status, n.sourceFile || '—']))}
+      <h4>Audit history</h4>
+      ${tbl(['When', 'Actor', 'Change'], d.audit.map((a) => [a.timestamp, a.actor, a.change]))}
+      <p class="muted">Source: ${d.provenance.invoiceSourceFile || '—'}</p>
+    </div>`;
+}
+
+/**
+ * Render the Inventory audit module.
+ * ctx: { goodsReceipts, deliveryNotes, creditNotes, auditLog }
+ * handlers: { month, onMonth(month), onExport(month, list) }
+ */
+export function renderInventory(container, invoices, ctx, handlers = {}) {
+  const months = inventoryMonths(invoices, ctx.goodsReceipts);
+  const month = handlers.month || months[months.length - 1] || '';
+  const list = month ? monthlyInventory(invoices, ctx, { month }) : [];
+  const monthOpts = months.map((m) => `<option value="${m}"${m === month ? ' selected' : ''}>${m}</option>`).join('');
+
+  container.innerHTML = `
+    <div class="dash-head"><h3>Inventory — audit</h3>
+      <div class="inv-controls">
+        <label class="filter">Month <select id="inv-month">${monthOpts}</select></label>
+        <button class="btn" id="inv-export">Export month (JSON)</button>
+      </div>
+    </div>
+    ${list.length ? list.map(detailCard).join('') : '<p class="muted">No invoices for this month.</p>'}`;
+
+  const sel = container.querySelector('#inv-month');
+  if (sel && handlers.onMonth) sel.addEventListener('change', (e) => handlers.onMonth(e.target.value));
+  const exp = container.querySelector('#inv-export');
+  if (exp && handlers.onExport) exp.addEventListener('click', () => handlers.onExport(month, list));
 }
 
 /**
