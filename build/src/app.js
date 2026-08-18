@@ -449,4 +449,66 @@ function boot() {
   runConnect();
 }
 
-document.addEventListener('DOMContentLoaded', boot);
+// ---- login gate (demo-only, hardcoded credentials) ----
+// NOTE: client-side hardcoded credentials are visible in the source and provide no
+// real security. This is a demonstration gate only.
+const DEMO_CREDS = { user: 'Finance', pass: 'Pegasus' };
+
+function enterApp() {
+  $('login-screen').hidden = true;
+  $('denied-screen').hidden = true;
+  $('app-header').hidden = false;
+  $('app').hidden = false;
+  $('app-footer').hidden = false;
+  boot();
+}
+
+function showDenied() {
+  $('login-screen').hidden = true;
+  $('app-header').hidden = true;
+  $('app').hidden = true;
+  $('app-footer').hidden = true;
+  $('denied-screen').hidden = false;
+}
+
+function applyLoginI18n() {
+  if ($('login-sub')) $('login-sub').textContent = t('app.subtitle');
+  if ($('login-user-label')) $('login-user-label').textContent = t('login.user');
+  if ($('login-pass-label')) $('login-pass-label').textContent = t('login.pass');
+  if ($('login-btn')) $('login-btn').textContent = t('login.signIn');
+  if ($('login-note')) $('login-note').textContent = t('login.note');
+  if ($('denied-title')) $('denied-title').textContent = t('login.deniedTitle');
+  if ($('denied-body')) $('denied-body').textContent = t('login.deniedBody');
+  if ($('denied-back')) $('denied-back').textContent = t('login.back');
+}
+
+function wireLogin() {
+  setLang(session.getLang());
+  applyLoginI18n();
+  const form = $('login-card');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const u = $('login-user').value.trim();
+    const p = $('login-pass').value;
+    if (u === DEMO_CREDS.user && p === DEMO_CREDS.pass) {
+      enterApp();
+    } else {
+      const err = $('login-err');
+      err.textContent = t('login.error');
+      err.hidden = false;
+      // After a clearly wrong attempt, route to the "not granted" page.
+      setTimeout(showDenied, 700);
+    }
+  });
+  const back = $('denied-back');
+  if (back) back.addEventListener('click', () => {
+    $('denied-screen').hidden = true;
+    $('login-screen').hidden = false;
+    $('login-err').hidden = true;
+    $('login-pass').value = '';
+    try { $('login-user').focus(); } catch { /* ignore */ }
+  });
+  try { $('login-user').focus(); } catch { /* ignore */ }
+}
+
+document.addEventListener('DOMContentLoaded', wireLogin);

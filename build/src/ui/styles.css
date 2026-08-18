@@ -368,3 +368,31 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
   .app-header, .app-footer, #scan-panel, #role-bar, .modal-head { display: none !important; }
   .modal, .modal-card { position: static; background: #fff; box-shadow: none; max-height: none; }
 }
+
+/* ---- Login gate (demo) ---- */
+.login-screen, .denied-screen {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #1a1a1a 0%, #23324a 100%); z-index: 100; padding: 20px;
+}
+.login-card {
+  background: #fff; border-radius: 14px; padding: 32px 30px; width: min(380px, 92vw);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35); display: grid; gap: 14px;
+}
+.login-brand { font-size: 1.6rem; font-weight: 700; letter-spacing: 0.02em; }
+.login-sub { margin: -8px 0 6px; color: var(--muted); font-size: 0.9rem; }
+.login-fld { display: grid; gap: 5px; }
+.login-fld span { font-size: 0.8rem; color: var(--muted); }
+.login-fld input { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 0.95rem; }
+.login-fld input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,108,223,0.12); }
+.login-btn {
+  margin-top: 4px; padding: 11px 14px; border: none; border-radius: 8px; cursor: pointer;
+  background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: 0.95rem;
+}
+.login-btn:hover { background: #285fc4; }
+.login-err { margin: 0; color: var(--err); font-size: 0.85rem; }
+.login-note { margin: 4px 0 0; color: var(--muted); font-size: 0.75rem; line-height: 1.4; }
+
+.denied-card { background: #fff; border-radius: 14px; padding: 34px 30px; width: min(420px, 92vw); text-align: center; box-shadow: 0 18px 50px rgba(0,0,0,0.35); }
+.denied-ico { font-size: 2.6rem; margin-bottom: 8px; }
+.denied-card h2 { margin: 0 0 8px; }
+.denied-card p { color: var(--muted); margin: 0 0 18px; line-height: 1.5; }

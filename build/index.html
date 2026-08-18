@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="./src/ui/styles.css" />
 </head>
 <body>
-  <header class="app-header">
+  <header class="app-header" id="app-header" hidden>
     <div class="brand">
       <h1>Perfumeries</h1>
       <span class="subtitle" id="subtitle">Contra COGS Reconciliation</span>
@@ -21,7 +21,30 @@
     </div>
   </header>
 
-  <main id="app">
+  <div id="login-screen" class="login-screen">
+    <form id="login-card" class="login-card" autocomplete="off">
+      <div class="login-brand">Perfumeries</div>
+      <p class="login-sub" id="login-sub">Contra COGS Reconciliation</p>
+      <label class="login-fld"><span id="login-user-label">User</span>
+        <input id="login-user" type="text" autocomplete="username" /></label>
+      <label class="login-fld"><span id="login-pass-label">Password</span>
+        <input id="login-pass" type="password" autocomplete="current-password" /></label>
+      <button class="login-btn" id="login-btn" type="submit">Sign in</button>
+      <p class="login-err" id="login-err" hidden></p>
+      <p class="login-note" id="login-note"></p>
+    </form>
+  </div>
+
+  <div id="denied-screen" class="denied-screen" hidden>
+    <div class="denied-card">
+      <div class="denied-ico">⛔</div>
+      <h2 id="denied-title">Access not granted</h2>
+      <p id="denied-body">Sorry, you are not granted access to this tool.</p>
+      <button class="login-btn" id="denied-back" type="button">Back to sign in</button>
+    </div>
+  </div>
+
+  <main id="app" hidden>
     <section id="scan-panel" class="panel" hidden>
       <h2 id="scan-title">Source scan</h2>
       <ul id="scan-status" class="scan-status" aria-live="polite"></ul>
@@ -63,7 +86,7 @@
     <section id="view-root" class="panel" hidden></section>
   </main>
 
-  <footer class="app-footer">
+  <footer class="app-footer" id="app-footer" hidden>
     <span id="build-status">loading…</span>
   </footer>
 

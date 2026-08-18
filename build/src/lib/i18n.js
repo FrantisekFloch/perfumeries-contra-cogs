@@ -16,6 +16,12 @@ export function t(key, vars) {
 const DICT = {
   en: {
     'app.subtitle': 'Contra COGS Reconciliation',
+    'login.user': 'User', 'login.pass': 'Password', 'login.signIn': 'Sign in',
+    'login.note': 'Authorized access only. This is a demonstration environment.',
+    'login.error': 'Incorrect user or password.',
+    'login.deniedTitle': 'Access not granted',
+    'login.deniedBody': 'Sorry, you are not granted access to this tool.',
+    'login.back': 'Back to sign in',
     'nav.home': 'Home',
     'nav.storage': 'Storage', 'nav.accounting': 'Accounting', 'nav.finance': 'Finance',
     'nav.inventory': 'Inventory', 'nav.about': 'About', 'btn.tour': 'Walk me through',
@@ -216,6 +222,12 @@ const DICT = {
   },
   sk: {
     'app.subtitle': 'Rekonciliácia Contra COGS',
+    'login.user': 'Používateľ', 'login.pass': 'Heslo', 'login.signIn': 'Prihlásiť sa',
+    'login.note': 'Len autorizovaný prístup. Toto je demonštračné prostredie.',
+    'login.error': 'Nesprávny používateľ alebo heslo.',
+    'login.deniedTitle': 'Prístup nebol udelený',
+    'login.deniedBody': 'Ľutujeme, nemáte povolený prístup k tomuto nástroju.',
+    'login.back': 'Späť na prihlásenie',
     'nav.home': 'Domov',
     'nav.storage': 'Sklad', 'nav.accounting': 'Účtovníctvo', 'nav.finance': 'Financie',
     'nav.inventory': 'Inventúra', 'nav.about': 'O nástroji', 'btn.tour': 'Preveď ma',

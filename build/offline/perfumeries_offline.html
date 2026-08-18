@@ -376,10 +376,38 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
   .modal, .modal-card { position: static; background: #fff; box-shadow: none; max-height: none; }
 }
 
+/* ---- Login gate (demo) ---- */
+.login-screen, .denied-screen {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #1a1a1a 0%, #23324a 100%); z-index: 100; padding: 20px;
+}
+.login-card {
+  background: #fff; border-radius: 14px; padding: 32px 30px; width: min(380px, 92vw);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35); display: grid; gap: 14px;
+}
+.login-brand { font-size: 1.6rem; font-weight: 700; letter-spacing: 0.02em; }
+.login-sub { margin: -8px 0 6px; color: var(--muted); font-size: 0.9rem; }
+.login-fld { display: grid; gap: 5px; }
+.login-fld span { font-size: 0.8rem; color: var(--muted); }
+.login-fld input { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 0.95rem; }
+.login-fld input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,108,223,0.12); }
+.login-btn {
+  margin-top: 4px; padding: 11px 14px; border: none; border-radius: 8px; cursor: pointer;
+  background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: 0.95rem;
+}
+.login-btn:hover { background: #285fc4; }
+.login-err { margin: 0; color: var(--err); font-size: 0.85rem; }
+.login-note { margin: 4px 0 0; color: var(--muted); font-size: 0.75rem; line-height: 1.4; }
+
+.denied-card { background: #fff; border-radius: 14px; padding: 34px 30px; width: min(420px, 92vw); text-align: center; box-shadow: 0 18px 50px rgba(0,0,0,0.35); }
+.denied-ico { font-size: 2.6rem; margin-bottom: 8px; }
+.denied-card h2 { margin: 0 0 8px; }
+.denied-card p { color: var(--muted); margin: 0 0 18px; line-height: 1.5; }
+
 </style>
 </head>
 <body>
-  <header class="app-header">
+  <header class="app-header" id="app-header" hidden>
     <div class="brand">
       <h1>Perfumeries</h1>
       <span class="subtitle" id="subtitle">Contra COGS Reconciliation</span>
@@ -393,7 +421,30 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
     </div>
   </header>
 
-  <main id="app">
+  <div id="login-screen" class="login-screen">
+    <form id="login-card" class="login-card" autocomplete="off">
+      <div class="login-brand">Perfumeries</div>
+      <p class="login-sub" id="login-sub">Contra COGS Reconciliation</p>
+      <label class="login-fld"><span id="login-user-label">User</span>
+        <input id="login-user" type="text" autocomplete="username" /></label>
+      <label class="login-fld"><span id="login-pass-label">Password</span>
+        <input id="login-pass" type="password" autocomplete="current-password" /></label>
+      <button class="login-btn" id="login-btn" type="submit">Sign in</button>
+      <p class="login-err" id="login-err" hidden></p>
+      <p class="login-note" id="login-note"></p>
+    </form>
+  </div>
+
+  <div id="denied-screen" class="denied-screen" hidden>
+    <div class="denied-card">
+      <div class="denied-ico">⛔</div>
+      <h2 id="denied-title">Access not granted</h2>
+      <p id="denied-body">Sorry, you are not granted access to this tool.</p>
+      <button class="login-btn" id="denied-back" type="button">Back to sign in</button>
+    </div>
+  </div>
+
+  <main id="app" hidden>
     <section id="scan-panel" class="panel" hidden>
       <h2 id="scan-title">Source scan</h2>
       <ul id="scan-status" class="scan-status" aria-live="polite"></ul>
@@ -435,7 +486,7 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
     <section id="view-root" class="panel" hidden></section>
   </main>
 
-  <footer class="app-footer">
+  <footer class="app-footer" id="app-footer" hidden>
     <span id="build-status">loading…</span>
   </footer>
 
@@ -462,6 +513,12 @@ let LANG = 'en';function setLang(l) { if (DICT[l]) LANG = l; return LANG; }fun
 const DICT = {
   en: {
     'app.subtitle': 'Contra COGS Reconciliation',
+    'login.user': 'User', 'login.pass': 'Password', 'login.signIn': 'Sign in',
+    'login.note': 'Authorized access only. This is a demonstration environment.',
+    'login.error': 'Incorrect user or password.',
+    'login.deniedTitle': 'Access not granted',
+    'login.deniedBody': 'Sorry, you are not granted access to this tool.',
+    'login.back': 'Back to sign in',
     'nav.home': 'Home',
     'nav.storage': 'Storage', 'nav.accounting': 'Accounting', 'nav.finance': 'Finance',
     'nav.inventory': 'Inventory', 'nav.about': 'About', 'btn.tour': 'Walk me through',
@@ -662,6 +719,12 @@ const DICT = {
   },
   sk: {
     'app.subtitle': 'Rekonciliácia Contra COGS',
+    'login.user': 'Používateľ', 'login.pass': 'Heslo', 'login.signIn': 'Prihlásiť sa',
+    'login.note': 'Len autorizovaný prístup. Toto je demonštračné prostredie.',
+    'login.error': 'Nesprávny používateľ alebo heslo.',
+    'login.deniedTitle': 'Prístup nebol udelený',
+    'login.deniedBody': 'Ľutujeme, nemáte povolený prístup k tomuto nástroju.',
+    'login.back': 'Späť na prihlásenie',
     'nav.home': 'Domov',
     'nav.storage': 'Sklad', 'nav.accounting': 'Účtovníctvo', 'nav.finance': 'Financie',
     'nav.inventory': 'Inventúra', 'nav.about': 'O nástroji', 'btn.tour': 'Preveď ma',
@@ -3980,7 +4043,69 @@ function boot() {
   runConnect();
 }
 
-document.addEventListener('DOMContentLoaded', boot);
+// ---- login gate (demo-only, hardcoded credentials) ----
+// NOTE: client-side hardcoded credentials are visible in the source and provide no
+// real security. This is a demonstration gate only.
+const DEMO_CREDS = { user: 'Finance', pass: 'Pegasus' };
+
+function enterApp() {
+  $('login-screen').hidden = true;
+  $('denied-screen').hidden = true;
+  $('app-header').hidden = false;
+  $('app').hidden = false;
+  $('app-footer').hidden = false;
+  boot();
+}
+
+function showDenied() {
+  $('login-screen').hidden = true;
+  $('app-header').hidden = true;
+  $('app').hidden = true;
+  $('app-footer').hidden = true;
+  $('denied-screen').hidden = false;
+}
+
+function applyLoginI18n() {
+  if ($('login-sub')) $('login-sub').textContent = t('app.subtitle');
+  if ($('login-user-label')) $('login-user-label').textContent = t('login.user');
+  if ($('login-pass-label')) $('login-pass-label').textContent = t('login.pass');
+  if ($('login-btn')) $('login-btn').textContent = t('login.signIn');
+  if ($('login-note')) $('login-note').textContent = t('login.note');
+  if ($('denied-title')) $('denied-title').textContent = t('login.deniedTitle');
+  if ($('denied-body')) $('denied-body').textContent = t('login.deniedBody');
+  if ($('denied-back')) $('denied-back').textContent = t('login.back');
+}
+
+function wireLogin() {
+  setLang(session.getLang());
+  applyLoginI18n();
+  const form = $('login-card');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const u = $('login-user').value.trim();
+    const p = $('login-pass').value;
+    if (u === DEMO_CREDS.user && p === DEMO_CREDS.pass) {
+      enterApp();
+    } else {
+      const err = $('login-err');
+      err.textContent = t('login.error');
+      err.hidden = false;
+      // After a clearly wrong attempt, route to the "not granted" page.
+      setTimeout(showDenied, 700);
+    }
+  });
+  const back = $('denied-back');
+  if (back) back.addEventListener('click', () => {
+    $('denied-screen').hidden = true;
+    $('login-screen').hidden = false;
+    $('login-err').hidden = true;
+    $('login-pass').value = '';
+    try { $('login-user').focus(); } catch { /* ignore */ }
+  });
+  try { $('login-user').focus(); } catch { /* ignore */ }
+}
+
+document.addEventListener('DOMContentLoaded', wireLogin);
 
 </script>
 </body>
