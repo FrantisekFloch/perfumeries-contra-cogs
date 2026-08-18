@@ -451,6 +451,14 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
 
 /* inventory action buttons */
 .inv-actions { display: flex; gap: 8px; margin: 8px 0; }
+/* Draft-chase / What-if contra — highlighted with a red-light background so they stand out
+   on invoices that need action. Overrides the .btn.ghost neutral styling. */
+.inv-actions .chase-btn, .inv-actions .whatif-btn {
+  background: #fdecea; color: #a01d12; border: 1px solid #f2b6b0; font-weight: 600;
+}
+.inv-actions .chase-btn:hover, .inv-actions .whatif-btn:hover {
+  background: #fbdcd8; border-color: var(--err); color: #a01d12;
+}
 
 /* SLA timers */
 .sla-list { display: grid; gap: 6px; margin-bottom: 8px; }
