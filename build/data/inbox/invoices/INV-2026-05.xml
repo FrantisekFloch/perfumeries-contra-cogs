@@ -16,14 +16,14 @@
       <tier minQty="2000" maxQty="4999" pct="1.5"/>
       <tier minQty="5000" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>3780.00</totalValueStandard>
+    <totalValueStandard>3960.00</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>SKU-1004</stockId>
       <description>Body Mist 200ml</description>
       <qtyInvoiced>3600</qtyInvoiced>
-      <unitPriceStandard>1.05</unitPriceStandard>
+      <unitPriceStandard>1.10</unitPriceStandard>
       <unitPriceNet></unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>

@@ -16,31 +16,31 @@
       <tier minQty="2000" maxQty="4999" pct="1.5"/>
       <tier minQty="5000" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>20580.00</totalValueStandard>
+    <totalValueStandard>21626.00</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>SKU-1002</stockId>
       <description>Eau de Toilette 100ml</description>
       <qtyInvoiced>2600</qtyInvoiced>
-      <unitPriceStandard>1.75</unitPriceStandard>
-      <unitPriceNet>1.7200</unitPriceNet>
+      <unitPriceStandard>1.84</unitPriceStandard>
+      <unitPriceNet>1.8000</unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
     <line>
       <stockId>SKU-1006</stockId>
       <description>Travel Spray 15ml</description>
       <qtyInvoiced>2100</qtyInvoiced>
-      <unitPriceStandard>1.30</unitPriceStandard>
-      <unitPriceNet>1.2700</unitPriceNet>
+      <unitPriceStandard>1.37</unitPriceStandard>
+      <unitPriceNet>1.3400</unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
     <line>
       <stockId>SKU-1003</stockId>
       <description>Perfume Oil 30ml</description>
       <qtyInvoiced>3500</qtyInvoiced>
-      <unitPriceStandard>3.80</unitPriceStandard>
-      <unitPriceNet>3.7200</unitPriceNet>
+      <unitPriceStandard>3.99</unitPriceStandard>
+      <unitPriceNet>3.9100</unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
   </lines>

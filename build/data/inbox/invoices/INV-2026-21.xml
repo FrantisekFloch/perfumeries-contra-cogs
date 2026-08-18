@@ -16,14 +16,14 @@
       <tier minQty="2000" maxQty="4999" pct="1.5"/>
       <tier minQty="5000" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>19865.00</totalValueStandard>
+    <totalValueStandard>20876.00</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>SKU-1002</stockId>
       <description>Eau de Toilette 100ml</description>
       <qtyInvoiced>900</qtyInvoiced>
-      <unitPriceStandard>1.75</unitPriceStandard>
+      <unitPriceStandard>1.84</unitPriceStandard>
       <unitPriceNet></unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
@@ -31,7 +31,7 @@
       <stockId>SKU-1005</stockId>
       <description>Gift Set</description>
       <qtyInvoiced>3100</qtyInvoiced>
-      <unitPriceStandard>5.90</unitPriceStandard>
+      <unitPriceStandard>6.20</unitPriceStandard>
       <unitPriceNet></unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>

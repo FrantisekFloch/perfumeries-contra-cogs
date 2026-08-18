@@ -16,15 +16,15 @@
       <tier minQty="2000" maxQty="4999" pct="1.5"/>
       <tier minQty="5000" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>2080.00</totalValueStandard>
+    <totalValueStandard>2192.00</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>SKU-1006</stockId>
       <description>Travel Spray 15ml</description>
       <qtyInvoiced>1600</qtyInvoiced>
-      <unitPriceStandard>1.30</unitPriceStandard>
-      <unitPriceNet>1.2900</unitPriceNet>
+      <unitPriceStandard>1.37</unitPriceStandard>
+      <unitPriceNet>1.3600</unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
   </lines>

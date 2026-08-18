@@ -88,6 +88,60 @@ export function contraWaterfall(portfolio) {
   };
 }
 
+/**
+ * Contra COGS "missing opportunity" — the material cost of a one-month recognition slip.
+ *
+ * Business case: Contra COGS earned on goods that ARRIVE ON TIME this month can be
+ * recognized / invoiced THIS month. If the delivery slips past the month-end, that same
+ * contra is pushed into NEXT month. Recognizing money a month later is worth less today —
+ * the classic time-value-of-money / cost-of-capital effect. So the material loss of the
+ * slip is the deferred contra carried for one month at the company's cost of capital:
+ *
+ *     materialLoss = deferrableContra × (annualCostOfCapital / 12)
+ *
+ * where `deferrableContra` is the at-risk contra (full tier contra not yet recognized
+ * because goods are still missing) on OPEN invoices whose delivery deadline falls in the
+ * current month — i.e. the contra we could still book this month if the goods land in time.
+ * `annualCostOfCapital` defaults to 8% (a common corporate WACC proxy) and is adjustable.
+ */
+export function contraMissedOpportunity(portfolio, {
+  asOf = new Date().toISOString(), slaDays = 21, annualCostOfCapital = 0.08,
+} = {}) {
+  const now = new Date(asOf);
+  const curPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const monthlyRate = annualCostOfCapital / 12;
+  const items = [];
+  let deferrable = 0;
+  portfolio.forEach((v) => {
+    if (CLOSED_I.has(v.status)) return;
+    const atRiskContra = Math.max(0, (v.contra.headerDiscountTotal || 0) - (v.contra.recognizedContra || 0));
+    if (atRiskContra <= 0) return;
+    // Delivery deadline = invoice date + SLA. If that deadline lands in the CURRENT month,
+    // the contra is bookable this month provided goods arrive in time → it's deferrable.
+    const inv = new Date(v.invoiceDate || asOf);
+    const deadline = new Date(inv.getTime() + slaDays * DAY_I);
+    const deadlinePeriod = `${deadline.getFullYear()}-${String(deadline.getMonth() + 1).padStart(2, '0')}`;
+    if (deadlinePeriod !== curPeriod) return; // deadline not this month → not a this-month opportunity
+    deferrable += atRiskContra;
+    items.push({
+      invoiceNumber: v.invoiceNumber, distributorId: v.distributorId,
+      atRiskContra: r2i(atRiskContra), missingQty: v.missingQty || 0,
+      deadline: deadline.toISOString().slice(0, 10),
+      loss: r2i(atRiskContra * monthlyRate),
+    });
+  });
+  deferrable = r2i(deferrable);
+  const materialLoss = r2i(deferrable * monthlyRate);
+  items.sort((a, b) => b.atRiskContra - a.atRiskContra);
+  return {
+    period: curPeriod, slaDays,
+    annualCostOfCapital, monthlyRate: r2i(monthlyRate * 100) / 100,
+    deferrableContra: deferrable, // contra bookable this month if goods land on time
+    materialLoss,                 // one-month carrying cost if it slips to next month
+    items,
+  };
+}
+
 /** #8 DPO / working-capital proxy tile. */
 export function workingCapital(portfolio, { asOf = new Date().toISOString(), termsDays = 30 } = {}) {
   const tot = portfolioTotals(portfolio);

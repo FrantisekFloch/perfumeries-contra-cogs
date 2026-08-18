@@ -16,14 +16,14 @@
       <tier minQty="2000" maxQty="4999" pct="1.5"/>
       <tier minQty="5000" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>12165.00</totalValueStandard>
+    <totalValueStandard>12788.00</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>SKU-1001</stockId>
       <description>Eau de Parfum 50ml</description>
       <qtyInvoiced>1800</qtyInvoiced>
-      <unitPriceStandard>2.35</unitPriceStandard>
+      <unitPriceStandard>2.47</unitPriceStandard>
       <unitPriceNet></unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
@@ -31,7 +31,7 @@
       <stockId>SKU-1004</stockId>
       <description>Body Mist 200ml</description>
       <qtyInvoiced>3100</qtyInvoiced>
-      <unitPriceStandard>1.05</unitPriceStandard>
+      <unitPriceStandard>1.10</unitPriceStandard>
       <unitPriceNet></unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
@@ -39,7 +39,7 @@
       <stockId>SKU-1006</stockId>
       <description>Travel Spray 15ml</description>
       <qtyInvoiced>3600</qtyInvoiced>
-      <unitPriceStandard>1.30</unitPriceStandard>
+      <unitPriceStandard>1.37</unitPriceStandard>
       <unitPriceNet></unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>

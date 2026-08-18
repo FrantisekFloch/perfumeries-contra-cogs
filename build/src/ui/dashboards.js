@@ -10,7 +10,7 @@ import { t } from '../lib/i18n.js';
 import { BUYER, supplierFor, productName } from '../lib/companies.js';
 import {
   exceptionFeed, slaTimers, contraWaterfall, workingCapital,
-  marginErosion, tierProgress, rebateAtRisk, homeDigest,
+  marginErosion, tierProgress, rebateAtRisk, homeDigest, contraMissedOpportunity,
 } from '../lib/insights.js';
 
 const money = (n) => '€' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -214,6 +214,30 @@ function issueIndicators(pf) {
     </div>`;
 }
 
+// Contra COGS missing opportunity — the material cost of a one-month recognition slip.
+function missedOpportunityHtml(opp) {
+  const cocPct = (opp.annualCostOfCapital * 100).toFixed(1);
+  const cards = `
+    <div class="cards opp-cards">
+      <div class="card"><span class="k">${t('fin.oppEarnable')}</span><span class="v">${money(opp.deferrableContra)}</span></div>
+      <div class="card opp-loss"><span class="k">${t('fin.oppLoss')}</span><span class="v">${money(opp.materialLoss)}</span></div>
+    </div>`;
+  const formula = `<p class="muted small opp-formula">${t('fin.oppFormula', {
+    deferrable: money(opp.deferrableContra), coc: cocPct,
+    monthly: (opp.annualCostOfCapital / 12 * 100).toFixed(3), loss: money(opp.materialLoss),
+  })}</p>`;
+  const list = opp.items.length
+    ? tbl([t('th.invoice'), t('th.distributor'), t('fin.oppDeadline'), t('fin.contraAtRisk'), t('fin.oppItemLoss')],
+      opp.items.slice(0, 12).map((i) => [i.invoiceNumber, i.distributorId, i.deadline, money(i.atRiskContra), money(i.loss)]))
+    : `<p class="muted">${t('fin.oppNone')}</p>`;
+  return `<div class="opp-block">
+    <p class="opp-intro">${t('fin.oppIntro', { period: opp.period })}</p>
+    ${cards}
+    ${formula}
+    ${list}
+  </div>`;
+}
+
 function financeHtml(pf) {
   const tot = portfolioTotals(pf);
   const pl = plView(pf);
@@ -244,6 +268,7 @@ function financeHtml(pf) {
   ];
   const plTable = `<table class="grid pl"><tbody>${plRows.map(([k, v], i) => `<tr class="${i === 4 ? 'pl-strong' : ''}"><td>${k}</td><td class="num">${v}</td></tr>`).join('')}</tbody></table>`;
   const wf = wf0;
+  const opp = contraMissedOpportunity(pf);
   const ero = marginErosion(pf);
   const rar = rebateAtRisk(pf);
   const wfMax = Math.max(1, wf.full);
@@ -286,6 +311,9 @@ function financeHtml(pf) {
         <p class="muted small">${t('fin.waterfallNote')}</p>
       </div>
     </div>
+
+    <h4>${t('fin.oppTitle')}</h4>
+    ${missedOpportunityHtml(opp)}
 
     <h4>${t('fin.distTitle')}</h4>
     ${distTable}

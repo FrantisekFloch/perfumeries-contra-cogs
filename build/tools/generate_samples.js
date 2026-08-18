@@ -30,14 +30,15 @@ const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
 const shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
 
 // Unit prices inflated ~15%+ over the original baseline so portfolio values read
-// more substantial (e.g. 2.00 -> 2.35, 1.50 -> 1.75, 3.25 -> 3.80, ...).
+// more substantial. Unit prices raised a further +5% so the Contra COGS values grow
+// (2.35 -> 2.47, 1.75 -> 1.84, 3.80 -> 3.99, 1.05 -> 1.10, 5.90 -> 6.20, 1.30 -> 1.37).
 const PRODUCTS = [
-  { sku: 'SKU-1001', name: 'Eau de Parfum 50ml', price: 2.35 },
-  { sku: 'SKU-1002', name: 'Eau de Toilette 100ml', price: 1.75 },
-  { sku: 'SKU-1003', name: 'Perfume Oil 30ml', price: 3.80 },
-  { sku: 'SKU-1004', name: 'Body Mist 200ml', price: 1.05 },
-  { sku: 'SKU-1005', name: 'Gift Set', price: 5.90 },
-  { sku: 'SKU-1006', name: 'Travel Spray 15ml', price: 1.30 },
+  { sku: 'SKU-1001', name: 'Eau de Parfum 50ml', price: 2.47 },
+  { sku: 'SKU-1002', name: 'Eau de Toilette 100ml', price: 1.84 },
+  { sku: 'SKU-1003', name: 'Perfume Oil 30ml', price: 3.99 },
+  { sku: 'SKU-1004', name: 'Body Mist 200ml', price: 1.10 },
+  { sku: 'SKU-1005', name: 'Gift Set', price: 6.20 },
+  { sku: 'SKU-1006', name: 'Travel Spray 15ml', price: 1.37 },
 ];
 const STORAGES = ['WH-CENTRAL', 'WH-BA', 'WH-KE', 'WH-ZA', 'WH-PO'];
 // Contra COGS tiers (volume → discount): 1000u→1%, 2000u→1.5%, 5000u→2%. Below 1000u = 0%.

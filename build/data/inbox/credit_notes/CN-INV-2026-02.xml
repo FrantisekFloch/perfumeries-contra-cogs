@@ -5,8 +5,8 @@
   <period>2026-01</period>
   <invoiceRef>INV-2026-02</invoiceRef>
   <basisQty>4935</basisQty>
-  <basisValueStandard>11361.00</basisValueStandard>
+  <basisValueStandard>11942.70</basisValueStandard>
   <tierApplied>1.5</tierApplied>
-  <amount>170.42</amount>
+  <amount>179.14</amount>
   <status>Cleared</status>
 </creditNote>
