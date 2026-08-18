@@ -336,6 +336,9 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
 /* ---- Connect a new source (task 4) ---- */
 .connect-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); }
 .connect-label { font-size: 0.85rem; color: var(--muted); font-weight: 600; margin-right: 4px; }
+/* Push the "Download all data" button to the right edge of the connect bar. */
+.connect-spacer { flex: 1 1 auto; }
+@media (max-width: 640px) { .connect-spacer { flex-basis: 100%; } }
 
 .modal { position: fixed; inset: 0; background: rgba(20,20,20,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; }
 .modal[hidden] { display: none; }

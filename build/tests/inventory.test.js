@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
   contraStatus, invoiceMonths, inventoryMonths, invoiceDetail, monthlyInventory, exportInventory,
+  exportInvoicesCsv, exportDeliveryNotesCsv,
 } from '../src/lib/inventory.js';
 import { parseInvoiceXml, parseRecadvCsv, parseDeliveryNoteXml, parseCreditNoteXml } from '../src/lib/parsers.js';
 import { InvoiceStatus } from '../src/lib/enums.js';
@@ -75,4 +76,21 @@ test('exportInventory returns parseable JSON', () => {
   const json = exportInventory(list);
   const parsed = JSON.parse(json);
   assert.equal(parsed[0].invoiceNumber, 'INV-2026-0001');
+});
+
+test('exportInvoicesCsv writes one row per invoice line with header', () => {
+  const inv = invoiceWith(InvoiceStatus.PARTIALLY_RECEIVED); // canonical has 1 line
+  const csv = exportInvoicesCsv([inv]);
+  const lines = csv.trim().split('\n');
+  assert.equal(lines[0], 'invoice_number,invoice_date,ship_date,type,distributor,contra_model,incoterms,status,sku,description,qty_invoiced,unit_price_standard,unit_price_net');
+  assert.equal(lines.length, 1 + inv.lines.length);
+  assert.ok(lines[1].startsWith('INV-2026-0001,'));
+});
+
+test('exportDeliveryNotesCsv writes one row per delivery-note line with header', () => {
+  const dn = parseDeliveryNoteXml(read(inbox('delivery_notes', 'DN-2026-0001-01.xml')), 'DN.xml');
+  const csv = exportDeliveryNotesCsv([dn]);
+  const lines = csv.trim().split('\n');
+  assert.equal(lines[0], 'delivery_note_id,invoice_number,target_storage,ship_date,delivery_status,expected_date,sku,qty_shipped');
+  assert.equal(lines.length, 1 + dn.lines.length);
 });

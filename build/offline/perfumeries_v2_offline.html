@@ -343,6 +343,9 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
 /* ---- Connect a new source (task 4) ---- */
 .connect-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); }
 .connect-label { font-size: 0.85rem; color: var(--muted); font-weight: 600; margin-right: 4px; }
+/* Push the "Download all data" button to the right edge of the connect bar. */
+.connect-spacer { flex: 1 1 auto; }
+@media (max-width: 640px) { .connect-spacer { flex-basis: 100%; } }
 
 .modal { position: fixed; inset: 0; background: rgba(20,20,20,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; }
 .modal[hidden] { display: none; }
@@ -617,6 +620,8 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
         <button class="chip-btn" id="connect-folder" data-kind="folder">+ Folder</button>
         <button class="chip-btn" id="connect-upload">⬆ <span id="connect-upload-label">Upload documents</span></button>
         <input type="file" id="upload-input" accept=".xml,.csv" multiple hidden />
+        <span class="connect-spacer"></span>
+        <button class="chip-btn" id="download-all" type="button">⬇ <span id="download-all-label">Download all invoices and delivery notes</span></button>
       </div>
     </section>
 
@@ -767,6 +772,8 @@ const DICT = {
     'scan.database': 'Database', 'scan.api': 'API', 'scan.warehouses': 'Warehouses (EDI)',
     'scan.invoices': '{n} invoices', 'scan.creditNotes': '{n} credit notes',
     'scan.whSummary': '{w} connected · {r} delivery updates',
+    'scan.downloadAll': 'Download all invoices and delivery notes',
+    'scan.downloadedAll': 'Downloaded {inv} invoices and {dn} delivery notes as CSV.',
     'boot.title': 'Connecting to systems…',
     'boot.db': 'Connecting to database…',
     'boot.checkInv': 'Checking for new invoices…',
@@ -1039,6 +1046,8 @@ const DICT = {
     'scan.database': 'Databáza', 'scan.api': 'API', 'scan.warehouses': 'Sklady (EDI)',
     'scan.invoices': '{n} faktúr', 'scan.creditNotes': '{n} dobropisov',
     'scan.whSummary': '{w} pripojených · {r} aktualizácií dodávok',
+    'scan.downloadAll': 'Stiahnuť všetky faktúry a dodacie listy',
+    'scan.downloadedAll': 'Stiahnutých {inv} faktúr a {dn} dodacích listov ako CSV.',
     'boot.title': 'Pripájam sa k systémom…',
     'boot.db': 'Pripájam sa k databáze…',
     'boot.checkInv': 'Kontrolujem nové faktúry…',
@@ -3203,6 +3212,54 @@ const daysBetweenI = (a, b) => {
   return [headers.join(','), ...rows].join('\n') + '\n';
 }
 
+// Shared safe-CSV cell quoting.
+const csvCell = (v) => {
+  const s = v === null || v === undefined ? '' : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+/**
+ * CSV export of ALL raw invoices — one row per invoice LINE so every line detail is kept
+ * (quantities and prices). Used by the "Download all data" control in Connected sources.
+ */function exportInvoicesCsv(invoices) {
+  const headers = [
+    'invoice_number', 'invoice_date', 'ship_date', 'type', 'distributor', 'contra_model',
+    'incoterms', 'status', 'sku', 'description', 'qty_invoiced', 'unit_price_standard', 'unit_price_net',
+  ];
+  const rows = [];
+  (invoices || []).forEach((inv) => {
+    (inv.lines || []).forEach((l) => {
+      rows.push([
+        inv.invoiceNumber, inv.invoiceDate || '', inv.shipDate || '', inv.type || '',
+        inv.distributorId, inv.contraCogsModel, inv.incoterms || '', inv.status,
+        l.stockId, l.description || '', l.qtyInvoiced, l.unitPriceStandard,
+        l.unitPriceNet === null || l.unitPriceNet === undefined ? '' : l.unitPriceNet,
+      ].map(csvCell).join(','));
+    });
+  });
+  return [headers.join(','), ...rows].join('\n') + '\n';
+}
+
+/**
+ * CSV export of ALL raw delivery notes — one row per delivery-note LINE (per storage/SKU),
+ * including logistics status and ETA. Used by the "Download all data" control.
+ */function exportDeliveryNotesCsv(deliveryNotes) {
+  const headers = [
+    'delivery_note_id', 'invoice_number', 'target_storage', 'ship_date',
+    'delivery_status', 'expected_date', 'sku', 'qty_shipped',
+  ];
+  const rows = [];
+  (deliveryNotes || []).forEach((dn) => {
+    (dn.lines || []).forEach((l) => {
+      rows.push([
+        dn.deliveryNoteId, dn.invoiceNumber || '', dn.targetStorageId, dn.shipDate || '',
+        dn.deliveryStatus || '', dn.expectedDate || '', l.stockId, l.qtyShipped,
+      ].map(csvCell).join(','));
+    });
+  });
+  return [headers.join(','), ...rows].join('\n') + '\n';
+}
+
 
 // ===== src/lib/archive.js =====
 // Archival. A fully matched & Paid invoice is moved to the archive: status set to
@@ -4588,6 +4645,7 @@ function applyI18n() {
   $('scan-title').textContent = t('scan.title');
   if ($('connect-label')) $('connect-label').textContent = t('connect.label');
   if ($('connect-upload-label')) $('connect-upload-label').textContent = t('connect.upload');
+  if ($('download-all-label')) $('download-all-label').textContent = t('scan.downloadAll');
   document.querySelectorAll('#lang-switch .flag').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
 }
 
@@ -5000,6 +5058,25 @@ function wireConnectButtons() {
   if (upBtn && upInput) {
     upBtn.addEventListener('click', () => upInput.click());
     upInput.addEventListener('change', (e) => { handleUpload(e.target.files); e.target.value = ''; });
+  }
+  const dl = $('download-all');
+  if (dl) dl.addEventListener('click', downloadAllData);
+}
+
+// Download every connected invoice + delivery note as CSV (two files, one click). The tool
+// is fully client-side with no filesystem/zip access, so CSV is the portable choice.
+function downloadAllData() {
+  const invoices = store.all('invoices');
+  const deliveryNotes = store.all('deliveryNotes');
+  const stamp = new Date().toISOString().slice(0, 10);
+  downloadText(`perfumeries_invoices_${stamp}.csv`, exportInvoicesCsv(invoices), 'text/csv');
+  // Small stagger so browsers reliably fire both downloads.
+  setTimeout(() => downloadText(`perfumeries_delivery_notes_${stamp}.csv`, exportDeliveryNotesCsv(deliveryNotes), 'text/csv'), 150);
+  const status = $('scan-status');
+  if (status) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="src"></span><span class="state found">${t('scan.downloadedAll', { inv: invoices.length, dn: deliveryNotes.length })}</span>`;
+    status.appendChild(li);
   }
 }
 

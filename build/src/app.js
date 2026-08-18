@@ -13,7 +13,7 @@ import { runPipeline } from './lib/pipeline.js';
 import { ingestFiles, persistIngest } from './lib/ingest.js';
 import { matchInvoice } from './lib/matching.js';
 import { applyMatchStatus } from './lib/lifecycle.js';
-import { exportInventoryCsv, invoiceDetail } from './lib/inventory.js';
+import { exportInventoryCsv, exportInvoicesCsv, exportDeliveryNotesCsv, invoiceDetail } from './lib/inventory.js';
 import { archiveInvoice, exportArchive } from './lib/archive.js';
 import { renderDashboard, renderInventory, connectForm, invoiceDocHtml, deliveryNoteDocHtml, homeHtml, boardSummaryHtml, chaseEmailText } from './ui/dashboards.js';
 import { whatIfContra } from './lib/insights.js';
@@ -62,6 +62,7 @@ function applyI18n() {
   $('scan-title').textContent = t('scan.title');
   if ($('connect-label')) $('connect-label').textContent = t('connect.label');
   if ($('connect-upload-label')) $('connect-upload-label').textContent = t('connect.upload');
+  if ($('download-all-label')) $('download-all-label').textContent = t('scan.downloadAll');
   document.querySelectorAll('#lang-switch .flag').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
 }
 
@@ -474,6 +475,25 @@ function wireConnectButtons() {
   if (upBtn && upInput) {
     upBtn.addEventListener('click', () => upInput.click());
     upInput.addEventListener('change', (e) => { handleUpload(e.target.files); e.target.value = ''; });
+  }
+  const dl = $('download-all');
+  if (dl) dl.addEventListener('click', downloadAllData);
+}
+
+// Download every connected invoice + delivery note as CSV (two files, one click). The tool
+// is fully client-side with no filesystem/zip access, so CSV is the portable choice.
+function downloadAllData() {
+  const invoices = store.all('invoices');
+  const deliveryNotes = store.all('deliveryNotes');
+  const stamp = new Date().toISOString().slice(0, 10);
+  downloadText(`perfumeries_invoices_${stamp}.csv`, exportInvoicesCsv(invoices), 'text/csv');
+  // Small stagger so browsers reliably fire both downloads.
+  setTimeout(() => downloadText(`perfumeries_delivery_notes_${stamp}.csv`, exportDeliveryNotesCsv(deliveryNotes), 'text/csv'), 150);
+  const status = $('scan-status');
+  if (status) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="src"></span><span class="state found">${t('scan.downloadedAll', { inv: invoices.length, dn: deliveryNotes.length })}</span>`;
+    status.appendChild(li);
   }
 }
 

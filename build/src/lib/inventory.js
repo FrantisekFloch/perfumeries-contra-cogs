@@ -180,3 +180,53 @@ export function exportInventoryCsv(list) {
   ].map(cell).join(','));
   return [headers.join(','), ...rows].join('\n') + '\n';
 }
+
+// Shared safe-CSV cell quoting.
+const csvCell = (v) => {
+  const s = v === null || v === undefined ? '' : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+/**
+ * CSV export of ALL raw invoices — one row per invoice LINE so every line detail is kept
+ * (quantities and prices). Used by the "Download all data" control in Connected sources.
+ */
+export function exportInvoicesCsv(invoices) {
+  const headers = [
+    'invoice_number', 'invoice_date', 'ship_date', 'type', 'distributor', 'contra_model',
+    'incoterms', 'status', 'sku', 'description', 'qty_invoiced', 'unit_price_standard', 'unit_price_net',
+  ];
+  const rows = [];
+  (invoices || []).forEach((inv) => {
+    (inv.lines || []).forEach((l) => {
+      rows.push([
+        inv.invoiceNumber, inv.invoiceDate || '', inv.shipDate || '', inv.type || '',
+        inv.distributorId, inv.contraCogsModel, inv.incoterms || '', inv.status,
+        l.stockId, l.description || '', l.qtyInvoiced, l.unitPriceStandard,
+        l.unitPriceNet === null || l.unitPriceNet === undefined ? '' : l.unitPriceNet,
+      ].map(csvCell).join(','));
+    });
+  });
+  return [headers.join(','), ...rows].join('\n') + '\n';
+}
+
+/**
+ * CSV export of ALL raw delivery notes — one row per delivery-note LINE (per storage/SKU),
+ * including logistics status and ETA. Used by the "Download all data" control.
+ */
+export function exportDeliveryNotesCsv(deliveryNotes) {
+  const headers = [
+    'delivery_note_id', 'invoice_number', 'target_storage', 'ship_date',
+    'delivery_status', 'expected_date', 'sku', 'qty_shipped',
+  ];
+  const rows = [];
+  (deliveryNotes || []).forEach((dn) => {
+    (dn.lines || []).forEach((l) => {
+      rows.push([
+        dn.deliveryNoteId, dn.invoiceNumber || '', dn.targetStorageId, dn.shipDate || '',
+        dn.deliveryStatus || '', dn.expectedDate || '', l.stockId, l.qtyShipped,
+      ].map(csvCell).join(','));
+    });
+  });
+  return [headers.join(','), ...rows].join('\n') + '\n';
+}
