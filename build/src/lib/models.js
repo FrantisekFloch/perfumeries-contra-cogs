@@ -8,6 +8,7 @@ import {
   FulfilmentStatus, FULFILMENT_STATUS_VALUES,
   ResolutionOption, RESOLUTION_OPTION_VALUES,
   CreditNoteStatus, CREDIT_NOTE_STATUS_VALUES,
+  DeliveryStatus, DELIVERY_STATUS_VALUES,
   isEnumValue,
 } from './enums.js';
 
@@ -92,6 +93,12 @@ export function createDeliveryNote(input) {
     invoiceNumber: input.invoiceNumber ?? null,
     targetStorageId: req(input, 'targetStorageId', ctx),
     shipDate: input.shipDate ?? null,
+    // Optional logistics status for this leg (OnTime | Delayed | Rerouted | Lost).
+    // Defaults to OnTime; expectedDate is the ETA for a delayed/rerouted leg.
+    deliveryStatus: input.deliveryStatus
+      ? oneOf(input, 'deliveryStatus', DELIVERY_STATUS_VALUES, ctx)
+      : DeliveryStatus.ON_TIME,
+    expectedDate: input.expectedDate ?? null,
     sourceFile: input.sourceFile ?? null,
     lines,
   });

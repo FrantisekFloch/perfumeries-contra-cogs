@@ -127,6 +127,8 @@ export function parseDeliveryNoteXml(xmlStr, sourceFile = null) {
     invoiceNumber: childText(root, 'invoiceNumber') || null,
     targetStorageId: childText(root, 'targetStorageId'),
     shipDate: childText(root, 'shipDate') || null,
+    deliveryStatus: childText(root, 'deliveryStatus') || undefined,
+    expectedDate: childText(root, 'expectedDate') || null,
     sourceFile,
     lines,
   });
@@ -142,6 +144,8 @@ export function serializeDeliveryNoteXml(dn) {
   <invoiceNumber>${encodeXml(dn.invoiceNumber ?? '')}</invoiceNumber>
   <targetStorageId>${encodeXml(dn.targetStorageId)}</targetStorageId>
   <shipDate>${encodeXml(dn.shipDate ?? '')}</shipDate>
+  <deliveryStatus>${encodeXml(dn.deliveryStatus ?? '')}</deliveryStatus>
+  <expectedDate>${encodeXml(dn.expectedDate ?? '')}</expectedDate>
   <lines>
 ${lines}
   </lines>

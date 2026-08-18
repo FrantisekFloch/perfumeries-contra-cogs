@@ -6,39 +6,39 @@
     <distributor id="DIST-EU-02" name="Nordic Scents AB"/>
     <contraCogsModel>A</contraCogsModel>
     <poReference>PO-1019</poReference>
-    <invoiceDate>2026-08-04</invoiceDate>
-    <shipDate>2026-08-02</shipDate>
+    <invoiceDate>2026-07-18</invoiceDate>
+    <shipDate>2026-07-16</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
       <tier minQty="1" maxQty="3000" pct="0.5"/>
       <tier minQty="3001" maxQty="" pct="1"/>
     </discount>
-    <totalValueStandard>20675.00</totalValueStandard>
+    <totalValueStandard>23985.00</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>SKU-1001</stockId>
-      <description>Eau de Parfum 50ml</description>
-      <qtyInvoiced>1900</qtyInvoiced>
-      <unitPriceStandard>2.00</unitPriceStandard>
-      <unitPriceNet>1.9800</unitPriceNet>
-      <targetStorage>MULTI</targetStorage>
-    </line>
-    <line>
-      <stockId>SKU-1003</stockId>
-      <description>Perfume Oil 30ml</description>
-      <qtyInvoiced>1500</qtyInvoiced>
-      <unitPriceStandard>3.25</unitPriceStandard>
-      <unitPriceNet>3.2200</unitPriceNet>
-      <targetStorage>MULTI</targetStorage>
-    </line>
-    <line>
       <stockId>SKU-1005</stockId>
       <description>Gift Set</description>
-      <qtyInvoiced>2400</qtyInvoiced>
-      <unitPriceStandard>5.00</unitPriceStandard>
-      <unitPriceNet>4.9500</unitPriceNet>
+      <qtyInvoiced>2200</qtyInvoiced>
+      <unitPriceStandard>5.90</unitPriceStandard>
+      <unitPriceNet>5.8400</unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+    <line>
+      <stockId>SKU-1001</stockId>
+      <description>Eau de Parfum 50ml</description>
+      <qtyInvoiced>3700</qtyInvoiced>
+      <unitPriceStandard>2.35</unitPriceStandard>
+      <unitPriceNet>2.3300</unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+    <line>
+      <stockId>SKU-1004</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>2200</qtyInvoiced>
+      <unitPriceStandard>1.05</unitPriceStandard>
+      <unitPriceNet>1.0400</unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
   </lines>

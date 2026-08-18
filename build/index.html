@@ -13,10 +13,6 @@
       <span class="subtitle" id="subtitle">Contra COGS Reconciliation</span>
     </div>
     <div class="header-controls">
-      <label class="hc-model">
-        <span id="model-filter-label">Model</span>
-        <select id="model-filter"></select>
-      </label>
       <button id="tour-btn" class="hc-btn">Walk me through</button>
       <div class="lang" id="lang-switch">
         <button data-lang="en" class="flag">🇬🇧 EN</button>
@@ -30,7 +26,39 @@
       <h2 id="scan-title">Source scan</h2>
       <ul id="scan-status" class="scan-status" aria-live="polite"></ul>
       <div id="ingest-summary"></div>
+      <div class="connect-bar">
+        <span class="connect-label" id="connect-label">Connect a new source</span>
+        <button class="chip-btn" id="connect-edi" data-kind="edi">+ EDI</button>
+        <button class="chip-btn" id="connect-api" data-kind="api">+ API</button>
+        <button class="chip-btn" id="connect-folder" data-kind="folder">+ Folder</button>
+        <button class="chip-btn" id="connect-upload">⬆ <span id="connect-upload-label">Upload documents</span></button>
+        <input type="file" id="upload-input" accept=".xml,.csv" multiple hidden />
+      </div>
     </section>
+
+    <div id="doc-modal" class="modal" hidden>
+      <div class="modal-card doc-modal-card" role="dialog" aria-modal="true" aria-labelledby="doc-modal-title">
+        <div class="modal-head"><h3 id="doc-modal-title">Invoice</h3>
+          <div class="doc-modal-actions">
+            <button class="btn ghost" id="doc-print" type="button">Print / PDF</button>
+            <button class="modal-x" id="doc-close" aria-label="Close">✕</button>
+          </div>
+        </div>
+        <div class="modal-body" id="doc-modal-body"></div>
+      </div>
+    </div>
+
+    <div id="connect-modal" class="modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="connect-title">
+        <div class="modal-head"><h3 id="connect-title">Connect source</h3>
+          <button class="modal-x" id="connect-close" aria-label="Close">✕</button></div>
+        <form id="connect-form" class="modal-body"></form>
+        <div class="modal-foot">
+          <button class="btn ghost" id="connect-cancel" type="button">Cancel</button>
+          <button class="btn" id="connect-save" type="button">Connect</button>
+        </div>
+      </div>
+    </div>
     <nav id="role-bar" class="role-bar" hidden></nav>
     <section id="view-root" class="panel" hidden></section>
   </main>

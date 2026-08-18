@@ -24,7 +24,8 @@ export function groupedBars(labels, a, b, opts = {}) {
   });
   const axis = `<line x1="${pad.l}" y1="${pad.t + ih}" x2="${width - pad.r}" y2="${pad.t + ih}" stroke="#e5e5e5"/><text x="2" y="${pad.t + 8}" font-size="9" fill="#6b6b6b">${max.toLocaleString()}</text>`;
   const legend = `<rect x="${pad.l}" y="2" width="10" height="10" fill="${colorA}"/><text x="${pad.l + 14}" y="11" font-size="10" fill="#1a1a1a">${labelA}</text><rect x="${pad.l + 120}" y="2" width="10" height="10" fill="${colorB}"/><text x="${pad.l + 134}" y="11" font-size="10" fill="#1a1a1a">${labelB}</text>`;
-  return `<svg viewBox="0 0 ${width} ${height}" class="chart" preserveAspectRatio="xMidYMid meet">${axis}${bars}${legend}</svg>`;
+  const desc = opts.ariaLabel || `Grouped bar chart: ${labelA} vs ${labelB} across ${labels.length} months.`;
+  return `<svg viewBox="0 0 ${width} ${height}" class="chart" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${desc}">${axis}${bars}${legend}</svg>`;
 }
 
 /** Line chart with a dashed forecast tail. */
@@ -50,5 +51,6 @@ export function lineForecast(labels, actual, fLabels, fValues, opts = {}) {
     + fValues.map((v, i) => `<circle cx="${x(actual.length + i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.5" fill="${fcolor}"/>`).join('');
   const xlabels = allLabels.map((lab, i) => `<text x="${x(i).toFixed(1)}" y="${height - 10}" font-size="9" text-anchor="middle" fill="#6b6b6b">${short(lab)}</text>`).join('');
   const axis = `<line x1="${pad.l}" y1="${pad.t + ih}" x2="${width - pad.r}" y2="${pad.t + ih}" stroke="#e5e5e5"/><text x="2" y="${pad.t + 8}" font-size="9" fill="#6b6b6b">${max.toLocaleString()}</text>`;
-  return `<svg viewBox="0 0 ${width} ${height}" class="chart" preserveAspectRatio="xMidYMid meet">${axis}${shade}${sep}${actualLine}${fLine}${dots}${xlabels}</svg>`;
+  const desc = opts.ariaLabel || `Line chart with a dashed forecast tail over ${allLabels.length} months.`;
+  return `<svg viewBox="0 0 ${width} ${height}" class="chart" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${desc}">${axis}${shade}${sep}${actualLine}${fLine}${dots}${xlabels}</svg>`;
 }

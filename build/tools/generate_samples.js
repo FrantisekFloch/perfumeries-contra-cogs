@@ -6,7 +6,7 @@
 //
 // Run: node tools/generate_samples.js
 
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -26,14 +26,18 @@ function mulberry32(seed) {
 const rnd = mulberry32(42);
 const randInt = (min, max) => Math.floor(rnd() * (max - min + 1)) + min;
 const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
+// Deterministic Fisher-Yates using the shared PRNG (so runs stay reproducible).
+const shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
 
+// Unit prices inflated ~15%+ over the original baseline so portfolio values read
+// more substantial (e.g. 2.00 -> 2.35, 1.50 -> 1.75, 3.25 -> 3.80, ...).
 const PRODUCTS = [
-  { sku: 'SKU-1001', name: 'Eau de Parfum 50ml', price: 2.00 },
-  { sku: 'SKU-1002', name: 'Eau de Toilette 100ml', price: 1.50 },
-  { sku: 'SKU-1003', name: 'Perfume Oil 30ml', price: 3.25 },
-  { sku: 'SKU-1004', name: 'Body Mist 200ml', price: 0.90 },
-  { sku: 'SKU-1005', name: 'Gift Set', price: 5.00 },
-  { sku: 'SKU-1006', name: 'Travel Spray 15ml', price: 1.10 },
+  { sku: 'SKU-1001', name: 'Eau de Parfum 50ml', price: 2.35 },
+  { sku: 'SKU-1002', name: 'Eau de Toilette 100ml', price: 1.75 },
+  { sku: 'SKU-1003', name: 'Perfume Oil 30ml', price: 3.80 },
+  { sku: 'SKU-1004', name: 'Body Mist 200ml', price: 1.05 },
+  { sku: 'SKU-1005', name: 'Gift Set', price: 5.90 },
+  { sku: 'SKU-1006', name: 'Travel Spray 15ml', price: 1.30 },
 ];
 const STORAGES = ['WH-CENTRAL', 'WH-BA', 'WH-KE', 'WH-ZA', 'WH-PO'];
 const DISTRIBUTORS = [
@@ -47,12 +51,14 @@ const tierPct = (tiers, qty) => { for (const [min, max, pct] of tiers) if (qty >
 const round2 = (n) => Math.round(n * 100) / 100;
 
 function distributeAcross(total, storages) {
-  // split `total` into len(storages) roughly-even integer chunks
+  // Split `total` into UNEVEN integer chunks so per-storage quantities vary (no two
+  // storages end up identical). Weights are deterministic via the shared PRNG.
   const n = storages.length;
-  const base = Math.floor(total / n);
-  const parts = Array(n).fill(base);
-  let rem = total - base * n;
-  for (let i = 0; rem > 0; i = (i + 1) % n, rem--) parts[i] += 1;
+  const weights = storages.map(() => 0.5 + rnd()); // 0.5..1.5
+  const sumW = weights.reduce((s, w) => s + w, 0);
+  const parts = weights.map((w) => Math.floor((total * w) / sumW));
+  let rem = total - parts.reduce((s, p) => s + p, 0);
+  for (let i = 0; rem > 0; i = (i + 1) % n, rem--) parts[i] += 1; // hand out the remainder
   return storages.map((s, i) => ({ storageId: s, qty: parts[i] })).filter((p) => p.qty > 0);
 }
 
@@ -98,6 +104,8 @@ function buildDeliveryNoteXml(dn) {
   <invoiceNumber>${dn.invoiceNumber}</invoiceNumber>
   <targetStorageId>${dn.targetStorageId}</targetStorageId>
   <shipDate>${dn.shipDate}</shipDate>
+  <deliveryStatus>${dn.deliveryStatus || 'OnTime'}</deliveryStatus>
+  <expectedDate>${dn.expectedDate || ''}</expectedDate>
   <lines>
 ${lines}
   </lines>
@@ -128,8 +136,19 @@ function buildCreditNoteXml(cn) {
 }
 
 // --- generate ---
+// Canonical files kept across regenerations (referenced by tests). Everything else in
+// the inbox is cleared first so stale files from previous runs don't accumulate.
+const KEEP = {
+  invoices: ['INV-2026-0001.xml'],
+  delivery_notes: ['DN-2026-0001-01.xml', 'DN-2026-0001-02.xml', 'DN-2026-0001-03.xml', 'DN-2026-0001-04.xml', 'DN-2026-0001-05.xml'],
+  storage_reports: ['recadv_2026-01_02.csv'],
+  credit_notes: ['CN-2026-01-DIST-EU-01.xml'],
+};
 for (const sub of ['invoices', 'delivery_notes', 'storage_reports', 'credit_notes']) {
   mkdirSync(join(INBOX, sub), { recursive: true });
+  for (const f of readdirSync(join(INBOX, sub))) {
+    if (!KEEP[sub].includes(f)) unlinkSync(join(INBOX, sub, f));
+  }
 }
 
 const manifest = {
@@ -137,21 +156,36 @@ const manifest = {
   generatedFor: 'demo',
   inbox: {
     invoices: ['INV-2026-0001.xml'],
-    delivery_notes: ['DN-2026-0001-01.xml'],
+    delivery_notes: ['DN-2026-0001-01.xml', 'DN-2026-0001-02.xml', 'DN-2026-0001-03.xml', 'DN-2026-0001-04.xml', 'DN-2026-0001-05.xml'],
     storage_reports: ['recadv_2026-01_02.csv'],
     credit_notes: ['CN-2026-01-DIST-EU-01.xml'],
   },
   archive: [],
 };
 
+// Anchor to "today" so the dataset is year-to-date with no future dates.
+const now = new Date();
+const CUR_Y = now.getFullYear();
+const CUR_M = now.getMonth() + 1;
+const CUR_D = now.getDate();
+const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const isoDT = (d) => `${iso(d)}T09:00:00`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+
 let seq = 1; // canonical INV-2026-0001 preserved; generated start at 0002
-for (let month = 1; month <= 12; month++) {
-  const perMonth = randInt(2, 3);
+for (let month = 1; month <= CUR_M; month++) {
+  const isCurrent = month === CUR_M;
+  const perMonth = isCurrent ? randInt(1, 2) : randInt(2, 3);
   for (let k = 0; k < perMonth; k++) {
     seq += 1;
-    const num = `INV-2026-${pad(seq === 1 ? 2 : seq)}`; // never 0001
+    const num = `INV-${CUR_Y}-${pad(seq)}`;
     const dist = pick(DISTRIBUTORS);
-    const scenario = pick(SCENARIOS);
+    // Recency-weighted scenarios: recent invoices are more likely in-transit / partial.
+    const scenarioPool = isCurrent
+      ? ['intransit', 'intransit', 'short', 'straddle', 'full']
+      : (month >= CUR_M - 1 ? ['full', 'short', 'straddle', 'over', 'intransit'] : ['full', 'full', 'full', 'short', 'over']);
+    const scenario = pick(scenarioPool);
+
     const nLines = randInt(1, 3);
     const chosen = [];
     const usedSku = new Set();
@@ -159,14 +193,21 @@ for (let month = 1; month <= 12; month++) {
       let p = pick(PRODUCTS);
       while (usedSku.has(p.sku)) p = pick(PRODUCTS);
       usedSku.add(p.sku);
-      chosen.push({ ...p, qty: randInt(5, 40) * 100 }); // 500..4000
+      chosen.push({ ...p, qty: randInt(5, 40) * 100 });
     }
     const totalQty = chosen.reduce((s, l) => s + l.qty, 0);
     const pct = tierPct(dist.tiers, totalQty);
     const lines = chosen.map((l) => ({ sku: l.sku, name: l.name, qty: l.qty, price: l.price, net: dist.model === 'A' ? round2(l.price * (1 - pct / 100)) : null }));
     const totalValue = round2(lines.reduce((s, l) => s + l.price * l.qty, 0));
-    const invoiceDate = `2026-${pad(month)}-${pad(randInt(3, 9))}`;
-    const shipDate = `2026-${pad(month)}-${pad(2)}`;
+
+    // Invoice date: past months anywhere; current month within the last ~week (never future).
+    let invDay;
+    if (isCurrent) { const lo = Math.max(1, CUR_D - 6); const hi = Math.max(1, CUR_D - 1); invDay = hi <= lo ? lo : randInt(lo, hi); }
+    else invDay = randInt(3, 25);
+    const invoiceDateObj = new Date(CUR_Y, month - 1, invDay);
+    const shipDateObj = addDays(invoiceDateObj, -randInt(1, 3));
+    const invoiceDate = iso(invoiceDateObj);
+    const shipDate = iso(shipDateObj);
 
     const inv = {
       invoiceNumber: num, type: dist.model === 'B' ? 'proforma' : 'final',
@@ -176,47 +217,64 @@ for (let month = 1; month <= 12; month++) {
     writeFileSync(join(INBOX, 'invoices', `${num}.xml`), buildInvoiceXml(inv));
     manifest.inbox.invoices.push(`${num}.xml`);
 
-    // receipts per scenario
+    // Plan delivery across a RANDOM subset of storages (each included independently,
+    // min 2) so no two storages end up with identical invoice counts/values. Receive
+    // per scenario, skipping any portion whose receipt date is still in the future.
+    let intended = shuffle([...STORAGES]).filter(() => rnd() < 0.55);
+    if (intended.length < 2) intended = shuffle([...STORAGES]).slice(0, randInt(2, 3));
+    const factor = scenario === 'short' ? 0.9 : scenario === 'over' ? 1.05 : scenario === 'intransit' ? 0 : 1.0;
     const rows = [];
-    let deliveredQty = 0;
-    let deliveredValue = 0;
-    const firstStorages = STORAGES.slice(0, randInt(2, 4));
+    const plannedByStorage = {};
+    let deliveredQty = 0; let deliveredValue = 0;
     for (const l of lines) {
-      let target = l.qty;
-      if (scenario === 'short') target = Math.round(l.qty * 0.9);
-      else if (scenario === 'over') target = Math.round(l.qty * 1.05);
-      else if (scenario === 'intransit') target = 0;
-      if (target > 0) {
-        const parts = distributeAcross(target, firstStorages);
-        parts.forEach((pt, idx) => {
-          // straddle: push some receipts into the next month
-          const m2 = scenario === 'straddle' && idx % 2 === 1 ? month + 1 : month;
-          const mm = m2 > 12 ? 12 : m2;
-          const day = pad(randInt(10, 26));
-          rows.push({ invoiceNumber: num, sku: l.sku, storageId: pt.storageId, qty: pt.qty, datetime: `2026-${pad(mm)}-${day}T09:00:00`, ref: `RECADV-${num}-${idx}` });
-          deliveredQty += pt.qty;
-          deliveredValue += pt.qty * l.price;
-        });
-      }
+      distributeAcross(l.qty, intended).forEach((pt, idx) => {
+        (plannedByStorage[pt.storageId] ||= []).push({ sku: l.sku, qty: pt.qty });
+        const actual = Math.round(pt.qty * factor);
+        if (actual > 0) {
+          const extra = scenario === 'straddle' && idx % 2 === 1 ? randInt(30, 45) : randInt(3, 14);
+          const rdate = addDays(shipDateObj, extra);
+          if (rdate <= now) {
+            rows.push({ invoiceNumber: num, sku: l.sku, storageId: pt.storageId, qty: actual, datetime: isoDT(rdate), ref: `RECADV-${num}-${idx}` });
+            deliveredQty += actual; deliveredValue += actual * l.price;
+          }
+        }
+      });
     }
     if (rows.length) {
       writeFileSync(join(INBOX, 'storage_reports', `recadv_${num}.csv`), buildRecadvCsv(rows));
       manifest.inbox.storage_reports.push(`recadv_${num}.csv`);
     }
 
-    // delivery note (one, intended)
-    const dnId = `DN-${num}`;
-    writeFileSync(join(INBOX, 'delivery_notes', `${dnId}.xml`), buildDeliveryNoteXml({
-      id: dnId, invoiceNumber: num, targetStorageId: firstStorages[0], shipDate, lines: lines.map((l) => ({ sku: l.sku, qty: l.qty })),
-    }));
-    manifest.inbox.delivery_notes.push(`${dnId}.xml`);
+    // Which storages actually got goods (used to flag logistics status on unreceived legs).
+    const receivedStorages = new Set(rows.map((r) => r.storageId));
+    const etaDate = iso(addDays(now, randInt(2, 9))); // future ETA for delayed/rerouted legs
 
-    // credit note for Model B distributors (back-edge settlement)
+    // One delivery note per intended storage (defines the invoice's target storages).
+    Object.entries(plannedByStorage).forEach(([storageId, dlines], di) => {
+      const dnId = `DN-${num}-${pad(di + 1)}`;
+      // Assign a logistics status. Received legs are OnTime. Unreceived legs get a
+      // realistic problem status, weighted by recency (recent invoices more troubled).
+      let deliveryStatus = 'OnTime'; let expectedDate = '';
+      if (!receivedStorages.has(storageId)) {
+        const pool = isCurrent
+          ? ['Delayed', 'Delayed', 'Rerouted', 'Lost', 'OnTime']
+          : (month >= CUR_M - 1 ? ['Delayed', 'Rerouted', 'OnTime', 'OnTime'] : ['OnTime', 'OnTime', 'OnTime', 'Delayed']);
+        deliveryStatus = pick(pool);
+        if (deliveryStatus === 'Delayed' || deliveryStatus === 'Rerouted') expectedDate = etaDate;
+      }
+      writeFileSync(join(INBOX, 'delivery_notes', `${dnId}.xml`), buildDeliveryNoteXml({
+        id: dnId, invoiceNumber: num, targetStorageId: storageId, shipDate, lines: dlines,
+        deliveryStatus, expectedDate,
+      }));
+      manifest.inbox.delivery_notes.push(`${dnId}.xml`);
+    });
+
+    // Credit note for Model B distributors (back-edge settlement).
     if (dist.model === 'B' && deliveredQty > 0) {
       const cnId = `CN-${num}`;
       const fully = deliveredQty >= totalQty;
       writeFileSync(join(INBOX, 'credit_notes', `${cnId}.xml`), buildCreditNoteXml({
-        id: cnId, distributorId: dist.id, period: `2026-${pad(month)}`, invoiceRef: num,
+        id: cnId, distributorId: dist.id, period: `${CUR_Y}-${pad(month)}`, invoiceRef: num,
         basisQty: deliveredQty, basisValue: round2(deliveredValue), tier: pct,
         amount: round2(deliveredValue * pct / 100), status: fully ? 'Cleared' : 'Pending',
       }));

@@ -2,11 +2,11 @@
 <creditNote>
   <creditNoteId>CN-INV-2026-17</creditNoteId>
   <distributor id="DIST-EU-01"/>
-  <period>2026-07</period>
+  <period>2026-06</period>
   <invoiceRef>INV-2026-17</invoiceRef>
-  <basisQty>6600</basisQty>
-  <basisValueStandard>18175.00</basisValueStandard>
+  <basisQty>6301</basisQty>
+  <basisValueStandard>11606.55</basisValueStandard>
   <tierApplied>1.5</tierApplied>
-  <amount>272.63</amount>
-  <status>Cleared</status>
+  <amount>174.10</amount>
+  <status>Pending</status>
 </creditNote>

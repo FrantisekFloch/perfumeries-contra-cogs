@@ -46,7 +46,8 @@ test('invoiceDetail: full audit detail with receipts by storage, notes, provenan
   const central = d.receiptsByStorage.find((r) => r.storageId === 'WH-CENTRAL');
   assert.equal(central.qty, 1000);
   assert.ok(central.receipts[0].datetime.startsWith('2026-01-30'));
-  assert.equal(d.deliveryNotes.length, 1);
+  // Delivery notes are now folded into the per-storage rows (no separate section).
+  assert.ok(central.deliverySource); // source XML shown as FYI on the storage row
   assert.equal(d.creditNotes.length, 1);
   assert.equal(d.creditNotes[0].status, 'Pending');
   assert.equal(d.provenance.invoiceSourceFile, 'INV-2026-0001.xml');

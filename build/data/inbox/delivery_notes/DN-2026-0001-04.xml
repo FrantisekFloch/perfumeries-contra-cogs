@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deliveryNote>
+  <deliveryNoteId>DN-2026-0001-04</deliveryNoteId>
+  <invoiceNumber>INV-2026-0001</invoiceNumber>
+  <targetStorageId>WH-ZA</targetStorageId>
+  <shipDate>2026-01-27</shipDate>
+  <deliveryStatus>OnTime</deliveryStatus>
+  <expectedDate></expectedDate>
+  <lines>
+    <line><stockId>SKU-1001</stockId><qtyShipped>1000</qtyShipped></line>
+  </lines>
+</deliveryNote>

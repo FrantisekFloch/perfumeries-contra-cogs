@@ -45,6 +45,17 @@ export const SCAN_STATUS_VALUES = Object.freeze(Object.values(ScanStatus));
 export const CreditNoteStatus = Object.freeze({ PENDING: 'Pending', CLEARED: 'Cleared' });
 export const CREDIT_NOTE_STATUS_VALUES = Object.freeze(Object.values(CreditNoteStatus));
 
+// Per-delivery (per storage) logistics status. Optional on a delivery note; defaults
+// to ON_TIME when not supplied. Drives the Inventory received-situation chips and the
+// Finance issue indicators.
+export const DeliveryStatus = Object.freeze({
+  ON_TIME: 'OnTime',       // moving/received normally
+  DELAYED: 'Delayed',      // on the way, but late (has expectedDate)
+  REROUTED: 'Rerouted',    // sent to wrong storage, now re-routed to the correct one
+  LOST: 'Lost',            // no signal — potential loss in transit, needs investigation
+});
+export const DELIVERY_STATUS_VALUES = Object.freeze(Object.values(DeliveryStatus));
+
 /** True if `value` is a member of the given *_VALUES array. */
 export function isEnumValue(values, value) {
   return values.includes(value);

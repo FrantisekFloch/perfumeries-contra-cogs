@@ -4,9 +4,9 @@
   <distributor id="DIST-EU-01"/>
   <period>2026-04</period>
   <invoiceRef>INV-2026-10</invoiceRef>
-  <basisQty>5040</basisQty>
-  <basisValueStandard>19372.50</basisValueStandard>
-  <tierApplied>1.5</tierApplied>
-  <amount>290.59</amount>
-  <status>Pending</status>
+  <basisQty>526</basisQty>
+  <basisValueStandard>1998.80</basisValueStandard>
+  <tierApplied>1</tierApplied>
+  <amount>19.99</amount>
+  <status>Cleared</status>
 </creditNote>

@@ -24,7 +24,7 @@ for (const [cat, files] of Object.entries(manifest.inbox)) {
 
 // 2) Bundle modules in dependency order (strip import/export).
 const MODULES = [
-  'src/lib/version.js', 'src/lib/i18n.js', 'src/lib/enums.js', 'src/lib/models.js', 'src/lib/xml.js',
+  'src/lib/version.js', 'src/lib/i18n.js', 'src/lib/companies.js', 'src/lib/enums.js', 'src/lib/models.js', 'src/lib/xml.js',
   'src/lib/csv.js', 'src/lib/parsers.js', 'src/lib/store.js', 'src/lib/source.js',
   'src/lib/ingest.js', 'src/lib/matching.js', 'src/lib/gap.js', 'src/lib/timing.js',
   'src/lib/governance.js', 'src/lib/lifecycle.js', 'src/lib/analytics.js',

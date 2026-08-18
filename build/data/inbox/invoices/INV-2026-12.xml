@@ -6,8 +6,8 @@
     <distributor id="DIST-EU-01" name="Maison Aroma s.r.o."/>
     <contraCogsModel>B</contraCogsModel>
     <poReference>PO-1012</poReference>
-    <invoiceDate>2026-05-09</invoiceDate>
-    <shipDate>2026-05-02</shipDate>
+    <invoiceDate>2026-05-18</invoiceDate>
+    <shipDate>2026-05-15</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
@@ -15,22 +15,14 @@
       <tier minQty="5001" maxQty="10000" pct="1.5"/>
       <tier minQty="10001" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>21750.00</totalValueStandard>
+    <totalValueStandard>3290.00</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>SKU-1005</stockId>
-      <description>Gift Set</description>
-      <qtyInvoiced>3700</qtyInvoiced>
-      <unitPriceStandard>5.00</unitPriceStandard>
-      <unitPriceNet></unitPriceNet>
-      <targetStorage>MULTI</targetStorage>
-    </line>
-    <line>
-      <stockId>SKU-1003</stockId>
-      <description>Perfume Oil 30ml</description>
-      <qtyInvoiced>1000</qtyInvoiced>
-      <unitPriceStandard>3.25</unitPriceStandard>
+      <stockId>SKU-1001</stockId>
+      <description>Eau de Parfum 50ml</description>
+      <qtyInvoiced>1400</qtyInvoiced>
+      <unitPriceStandard>2.35</unitPriceStandard>
       <unitPriceNet></unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
