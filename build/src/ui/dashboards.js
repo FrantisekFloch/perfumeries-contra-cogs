@@ -27,6 +27,12 @@ function tbl(headers, rows) {
 }
 
 // ---- Home (page 0) ----
+// The period covered by the portfolio (earliest → latest invoice month), for "This period".
+function periodRange(pf) {
+  const months = pf.map((v) => v.month).filter(Boolean).sort();
+  if (!months.length) return '—';
+  return months[0] === months[months.length - 1] ? months[0] : `${months[0]} – ${months[months.length - 1]}`;
+}
 const EXC_CLS = { likelyLost: 'bad', lost: 'bad', over: 'warn', short: 'warn', delayed: 'info', aged: 'warn' };
 export function exceptionFeedTeaserHtml(pf, limit = 6) {
   const feed = exceptionFeed(pf).slice(0, limit);
@@ -52,7 +58,7 @@ export function homeHtml(pf, quality = null) {
   const over = pf.filter((v) => (v.receivedQty || 0) > (v.invoicedQty || 0)).length;
   const storages = new Set(pf.flatMap((v) => v.storages)).size;
 
-  const kpi = (v, k, cls = '') => `<div class="home-kpi ${cls}"><span class="v">${v}</span><span class="k">${k}</span></div>`;
+  const kpi = (v, k, help, cls = '') => `<div class="home-kpi ${cls}" title="${help}"><span class="v">${v}</span><span class="k">${k} <span class="help sm">?</span></span></div>`;
   const quick = (go, title, desc) => `<button class="home-card" data-go="${go}"><span class="hc-t">${title}</span><span class="hc-d">${desc}</span></button>`;
 
   return `
@@ -69,19 +75,20 @@ export function homeHtml(pf, quality = null) {
       ${exceptionFeedTeaserHtml(pf)}
 
       <section class="home-metrics">
-        <h3 class="home-h">${t('home.metricsTitle')}</h3>
+        <h3 class="home-h">${t('home.metricsTitle')} <span class="home-period">· ${t('home.periodLabel', { period: periodRange(pf) })}</span></h3>
+        <p class="muted small">${t('home.metricsNote')}</p>
         <div class="home-kpis">
-          ${kpi(tot.invoices, t('home.k.invoices'))}
-          ${kpi(money(tot.openValueAtRisk), t('home.k.risk'), 'accent')}
-          ${kpi(money(tot.pendingContra), t('home.k.pending'), 'warn')}
-          ${kpi(tot.fillRate + '%', t('home.k.fill'), 'ok')}
-          ${kpi(open, t('home.k.open'))}
-          ${kpi(storages, t('home.k.storages'))}
+          ${kpi(tot.invoices, t('home.k.invoices'), t('home.kh.invoices'))}
+          ${kpi(money(tot.openValueAtRisk), t('home.k.risk'), t('home.kh.risk'), 'accent')}
+          ${kpi(money(tot.pendingContra), t('home.k.pending'), t('home.kh.pending'), 'warn')}
+          ${kpi(tot.fillRate + '%', t('home.k.fill'), t('home.kh.fill'), 'ok')}
+          ${kpi(open, t('home.k.open'), t('home.kh.open'))}
+          ${kpi(storages, t('home.k.storages'), t('home.kh.storages'))}
         </div>
         <div class="home-alerts">
           <span class="home-alert warn">${partial} ${t('home.a.partial')}</span>
           <span class="home-alert info">${inTransit} ${t('home.a.transit')}</span>
-          <span class="home-alert warn">${over} ${t('home.a.over')}</span>
+          <span class="home-alert warn">${over} ${t('home.a.surplus')}</span>
           <span class="home-alert ok">${money(tot.recognizedContra)} ${t('home.a.recognized')}</span>
         </div>
       </section>
@@ -176,21 +183,18 @@ function slaTimersHtml(pf) {
     return `<div class="sla-row">
       <span class="sla-inv">${s.invoiceNumber}</span>
       <span class="sla-bar"><span class="sla-fill ${cls}" style="width:${s.pct}%"></span></span>
-      <span class="sla-meta ${cls}">${s.used}/${s.sla}d · ${rem}</span>
+      <span class="sla-meta ${cls}">${rem}</span>
       <span class="sla-risk">${money(s.valueAtRisk)}</span>
     </div>`;
   }).join('');
 }
 
-function operationsHtml(pf, storageId) {
-  const sv = storageView(pf, { storageId });
+function operationsHtml(pf) {
+  const sv = storageView(pf, {});
   const av = accountingView(pf);
-  const storages = [...new Set(pf.flatMap((v) => v.storages))].sort();
-  const options = [`<option value="">${t('model.all')}</option>`]
-    .concat(storages.map((s) => `<option value="${s}"${s === storageId ? ' selected' : ''}>${s}</option>`)).join('');
   const atRisk = sv.pendingDelivery.reduce((s, v) => s + (v.valueAtRisk || 0), 0);
   const situation = t('ops.situation', {
-    scope: storageId || t('storage.allStorages'), total: sv.count,
+    scope: t('storage.allStorages'), total: sv.count,
     onway: sv.onWay.length, pending: sv.pendingDelivery.length, aged: sv.agedPending.length, risk: money(atRisk),
   });
 
@@ -203,8 +207,7 @@ function operationsHtml(pf, storageId) {
 
   return `
    <div class="ops-view">
-    <div class="dash-head"><h3>${t('ops.title')}</h3>
-      <label class="filter">${t('storage.filter')} <select id="storage-filter">${options}</select></label></div>
+    <div class="dash-head"><h3>${t('ops.title')}</h3></div>
     <p class="situation-line">📦 ${situation}</p>
 
     <h4>${t('ops.slaTitle')}</h4>
@@ -217,10 +220,10 @@ function operationsHtml(pf, storageId) {
     ${tbl([t('th.invoice'), t('th.distributor'), t('th.invoiced'), t('th.received')], sv.onWay.map((v) => [v.invoiceNumber, v.distributorId, qty(v.invoicedQty), qty(v.received)]))}
 
     <h4>${t('storage.pending')} (${sv.pendingDelivery.length})</h4>
-    ${tbl([t('th.invoice'), t('th.missing'), t('th.valueAtRisk'), t('th.storages')], sv.pendingDelivery.map((v) => [v.invoiceNumber, qty(v.missingQty), money(v.valueAtRisk), v.storages.join(', ')]))}
+    ${tbl([t('th.invoice'), t('th.distributor'), t('th.notDelivered'), t('th.valueAtRisk'), t('th.storages')], sv.pendingDelivery.map((v) => [v.invoiceNumber, v.distributorId, qty(v.missingQty), money(v.valueAtRisk), v.storages.join(', ')]))}
 
     <h4>${t('acc.open')} (${av.open.length})</h4>
-    ${tbl([t('th.invoice'), t('th.status'), t('th.missing'), t('th.valueAtRisk')], av.open.map((v) => [v.invoiceNumber, label(v.status), qty(v.missingQty), money(v.valueAtRisk)]))}
+    ${tbl([t('th.invoice'), t('th.distributor'), t('th.status'), t('th.notDelivered'), t('th.valueAtRisk')], av.open.map((v) => [v.invoiceNumber, v.distributorId, label(v.status), qty(v.missingQty), money(v.valueAtRisk)]))}
 
     <div class="bulk-head"><h4>${t('acc.closed')} (${av.closed.length})</h4>
       <button class="btn ghost" id="bulk-pay" disabled>${t('ops.bulkPay')}</button></div>
@@ -232,17 +235,16 @@ function operationsHtml(pf, storageId) {
 function issueIndicators(pf) {
   const closed = pf.filter((v) => ['FullyMatched', 'Paid', 'Archived'].includes(v.status)).length;
   const partial = pf.filter((v) => v.status === 'PartiallyReceived').length;
-  const coming = pf.filter((v) => v.status === 'InTransitPending').length;
-  // "Potential loss" = open invoices still missing quantity that are not simply in transit.
-  const lost = pf.filter((v) => v.missingQty > 0 && v.status === 'UnderInvestigation').length;
+  const transit = pf.filter((v) => v.status === 'InTransitPending').length;
+  const surplus = pf.filter((v) => (v.receivedQty || 0) > (v.invoicedQty || 0)).length;
   const cell = (n, key, cls) => `<div class="issue ${cls}"><span class="v">${n}</span><span class="k">${t(key)}</span></div>`;
   return `
     <h4>${t('fin.issues')}</h4>
     <div class="issues">
       ${cell(closed, 'fin.iss.closed', 'ok')}
       ${cell(partial, 'fin.iss.partial', 'warn')}
-      ${cell(coming, 'fin.iss.coming', 'info')}
-      ${cell(lost, 'fin.iss.lost', 'bad')}
+      ${cell(transit, 'fin.iss.transit', 'info')}
+      ${cell(surplus, 'fin.iss.surplus', 'warn')}
     </div>`;
 }
 
@@ -257,7 +259,6 @@ function financeHtml(pf) {
   const tot = portfolioTotals(pf);
   const pl = plView(pf);
   const dist = distributorView(pf);
-  const sb = storageBreakdown(pf);
   const kpi2 = `
     <div class="cards">
       <div class="card"><span class="k">${t('fin.deliveredValue')}</span><span class="v">${money(tot.deliveredValue)}</span></div>
@@ -308,7 +309,23 @@ function financeHtml(pf) {
     <h4>${t('fin.wcTitle')}</h4>
     ${wcTile}
     <h4>${t('fin.tierTitle')} <span class="help" title="${t('fin.tierHelp')}">?</span></h4>
-    <div class="tier-list">${tierRows || `<p class="muted">—</p>`}</div>
+    <div class="tier-penalty">
+      <div class="tier-col">
+        <h5 class="sub-h">${t('fin.tierProgressSub')}</h5>
+        <div class="tier-list">${tierRows || `<p class="muted">—</p>`}</div>
+      </div>
+      <div class="penalty-col">
+        <h5 class="sub-h">${t('fin.penaltyTitle')} <span class="help" title="${t('fin.penaltyHelp')}">?</span></h5>
+        ${dist.map((d) => `<div class="penalty-row" data-base="${d.openValueAtRisk}">
+          <div class="penalty-top"><span class="pen-d">${d.distributorId}</span><span class="pen-base">${t('fin.penaltyBase')}: ${money(d.openValueAtRisk)}</span></div>
+          <label class="penalty-ctl">
+            <input type="range" class="penalty-range" min="0" max="5" step="0.5" value="0"/>
+            <output class="penalty-pct">0.0%</output>
+            <span class="penalty-amt">${money(0)}</span>
+          </label>
+        </div>`).join('')}
+      </div>
+    </div>
     <h4>${t('fin.rebateRiskTitle')} (${money(ero.total)})</h4>
     ${tbl([t('th.invoice'), t('th.distributor'), t('fin.reason'), t('th.valueAtRisk')], rar.slice(0, 12).map((r) => [r.invoiceNumber, r.distributorId, t('reason.' + r.reason), money(r.atRisk)]))}
     <h4>${t('fin.plTitle')}</h4>
@@ -317,9 +334,6 @@ function financeHtml(pf) {
     <h4>${t('fin.distTitle')}</h4>
     ${tbl([t('th.distributor'), t('th.type'), t('fin.invoices'), t('fin.deliveredValue'), t('fin.contraRecognized'), t('fin.pendingCredit'), t('fin.fillRate')],
       dist.map((d) => [d.distributorId, modelType(d.model), d.invoices, money(d.deliveredValue), money(d.recognizedContra), money(d.pendingContra), d.fillRate + '%']))}
-    <h4>${t('fin.storageTitle')}</h4>
-    ${tbl([t('th.storage'), t('fin.invoices'), t('th.openInvoices'), t('th.valueAtRisk'), ''],
-      sb.map((s) => [s.storageId, s.invoices, s.openInvoices, money(s.openValueAtRisk), `<button class="link drill" data-storage="${s.storageId}">${t('fin.view')}</button>`]))}
     <h4>${t('fin.byStatus')}</h4>
     ${tbl([t('th.status'), t('th.count')], Object.entries(fv.byStatus).sort(([a], [b]) => STATUS_ORDER.indexOf(a) - STATUS_ORDER.indexOf(b)).map(([s, c]) => [label(s), c]))}
     <h4>${t('fin.trendTitle')}</h4>
@@ -473,16 +487,17 @@ function detailBody(d) {
       <h4 class="anchor-situation">${t('inv.situation')}</h4>
       <div class="sit-full">${situationChips(d) || `<span class="muted">—</span>`}</div>
       <h4 class="anchor-receipts">${t('inv.receipts')}</h4>
-      ${tbl([t('th.storage'), t('th.expected'), t('th.received'), t('th.missing'), t('th.receivedOn')], d.receiptsByStorage.map((s) => {
+      ${tbl([t('th.storage'), t('th.expected'), t('th.received'), t('th.notDelivered'), t('th.disputed'), t('th.receivedOn')], d.receiptsByStorage.map((s) => {
         const short = (s.missing || 0) > 0;
         const over = (s.over || 0) > 0;
         const recCell = short ? `<span class="qty-short">${qty(s.qty)}</span>`
           : over ? `<span class="qty-over">${qty(s.qty)}</span>` : qty(s.qty);
         const missCell = short ? `<span class="qty-short">${qty(s.missing)}</span>`
           : over ? `<span class="qty-over">+${qty(s.over)}</span>` : '0';
+        const dispCell = (s.disputed || 0) > 0 ? `<span class="qty-disputed">${qty(s.disputed)}</span>` : '0';
         const dates = s.receipts.map((r) => fmtDate(r.datetime)).join('<br>') || '—';
         const src = s.deliverySource ? `<span class="src-fyi">${s.deliverySource}</span>` : '';
-        return [s.storageId, qty(s.expected || 0), recCell, missCell, `${dates}${src ? '<br>' + src : ''}`];
+        return [s.storageId, qty(s.expected || 0), recCell, missCell, dispCell, `${dates}${src ? '<br>' + src : ''}`];
       }))}
       <h4>${t('inv.creditNotes')}</h4>
       ${tbl([t('th.note'), t('th.period'), t('th.amount'), t('th.status'), t('th.source')], d.creditNotes.map((n) => [n.creditNoteId, n.period, money(n.amount), n.status, n.sourceFile || '—']))}
@@ -504,6 +519,7 @@ function detailCard(d, collapsed) {
         ${(d.missingQty || 0) > 0 ? `<span class="row-flag flag-short" title="${t('inv.missing')}: ${qty(d.missingQty)}">${t('inv.missing')} ${qty(d.missingQty)}</span>` : ''}
         <span class="chips-inline">${situationChips(d)}</span>
         <button class="btn ghost inv-doc-btn inv-doc-sm" data-inv="${d.invoiceNumber}">📄 ${t('inv.viewDoc')}</button>
+        <button class="btn ghost inv-dn-btn inv-doc-sm" data-inv="${d.invoiceNumber}">🚚 ${t('inv.viewDeliveryNote')}</button>
       </div>
       <div class="inv-card-body">${detailBody(d)}</div>
     </div>`;
@@ -626,6 +642,11 @@ export function renderInventory(container, invoices, ctx, handlers = {}) {
     const inv = invoices.find((iv) => iv.invoiceNumber === b.dataset.inv);
     if (inv && handlers.onViewDoc) handlers.onViewDoc(inv);
   }));
+  container.querySelectorAll('.inv-dn-btn').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const inv = invoices.find((iv) => iv.invoiceNumber === b.dataset.inv);
+    if (inv && handlers.onViewDeliveryNote) handlers.onViewDeliveryNote(inv);
+  }));
   // #18 chase-email · #16 what-if
   container.querySelectorAll('.chase-btn').forEach((b) => b.addEventListener('click', (e) => {
     e.stopPropagation(); if (handlers.onChase) handlers.onChase(b.dataset.inv);
@@ -681,6 +702,50 @@ function addDaysIso(dateStr, days) {
   if (Number.isNaN(d.getTime())) return dateStr || '';
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+// Consolidated delivery note — merges all warehouse delivery notes for one invoice.
+export function deliveryNoteDocHtml(invoice, deliveryNotes = [], goodsReceipts = []) {
+  const sup = supplierFor(invoice.distributorId);
+  const notes = deliveryNotes.filter((d) => d.invoiceNumber === invoice.invoiceNumber);
+  // Received keyed by storage + product, so each line shows its own received qty
+  // (not the storage's all-product total).
+  const recByKey = {};
+  goodsReceipts.filter((g) => g.invoiceNumber === invoice.invoiceNumber)
+    .forEach((g) => { const k = `${g.storageId}|${g.stockId}`; recByKey[k] = (recByKey[k] || 0) + g.qtyReceived; });
+  const rows = notes.flatMap((n) => n.lines.map((l) => {
+    const rec = recByKey[`${n.targetStorageId}|${l.stockId}`] || 0;
+    return `<tr>
+      <td>${n.deliveryNoteId}</td><td>${n.targetStorageId}</td>
+      <td>${productName(l.stockId, l.stockId)}</td>
+      <td class="num">${qty(l.qtyShipped)}</td>
+      <td class="num">${rec ? qty(rec) : '—'}</td>
+      <td>${t('status.' + statusForDeliveryStatus(n.deliveryStatus))}${n.expectedDate ? ` · ${t('inv.eta')} ${n.expectedDate}` : ''}</td>
+    </tr>`;
+  })).join('');
+  const totalShipped = notes.reduce((s, n) => s + n.lines.reduce((a, l) => a + (l.qtyShipped || 0), 0), 0);
+  return `
+  <article class="invoice-doc">
+    <header class="doc-head"><div class="doc-brand">Perfumeries</div>
+      <div class="doc-title">${t('dn.title')}</div></header>
+    <div class="doc-meta">
+      <div><span>${t('inv.doc.number')}</span><strong>${invoice.invoiceNumber}</strong></div>
+      <div><span>${t('inv.doc.supplier')}</span><strong>${sup.name}</strong></div>
+      <div><span>${t('dn.shipDate')}</span><strong>${invoice.shipDate || invoice.invoiceDate || '—'}</strong></div>
+      <div><span>${t('dn.storages')}</span><strong>${new Set(notes.map((n) => n.targetStorageId)).size}</strong></div>
+      <div><span>${t('dn.totalShipped')}</span><strong>${qty(totalShipped)}</strong></div>
+    </div>
+    <p class="muted small">${t('dn.note')}</p>
+    <table class="doc-lines"><thead><tr>
+      <th>${t('dn.col.note')}</th><th>${t('th.storage')}</th><th>${t('inv.doc.col.desc')}</th>
+      <th class="num">${t('dn.col.shipped')}</th><th class="num">${t('th.received')}</th><th>${t('th.status')}</th>
+    </tr></thead><tbody>${rows || `<tr><td colspan="6" class="muted">—</td></tr>`}</tbody></table>
+  </article>`;
+}
+function statusForDeliveryStatus(s) {
+  if (s === 'Lost') return 'InTransitPending';
+  if (s === 'Delayed' || s === 'Rerouted') return 'InTransitPending';
+  return 'Received';
 }
 
 /** Line-item × storage distribution (from delivery notes) for the doc's second page. */
@@ -795,6 +860,19 @@ export function renderDashboard(container, role, pf, handlers = {}) {
   container.querySelectorAll('.drill').forEach((b) => { if (handlers.onDrill) b.addEventListener('click', () => handlers.onDrill(b.dataset.storage)); });
   const board = container.querySelector('#board-export');
   if (board && handlers.onBoardExport) board.addEventListener('click', () => handlers.onBoardExport());
+
+  // Penalty calculator sliders — live penalty = outstanding value × %.
+  container.querySelectorAll('.penalty-row').forEach((row) => {
+    const base = Number(row.dataset.base) || 0;
+    const range = row.querySelector('.penalty-range');
+    const pctOut = row.querySelector('.penalty-pct');
+    const amtOut = row.querySelector('.penalty-amt');
+    if (range) range.addEventListener('input', () => {
+      const p = Number(range.value);
+      pctOut.textContent = p.toFixed(1) + '%';
+      amtOut.textContent = money(base * p / 100);
+    });
+  });
   container.querySelectorAll('.act-pay').forEach((b) => { if (handlers.onMarkPaid) b.addEventListener('click', () => handlers.onMarkPaid(b.dataset.inv)); });
   container.querySelectorAll('.act-archive').forEach((b) => { if (handlers.onArchive) b.addEventListener('click', () => handlers.onArchive(b.dataset.inv)); });
 

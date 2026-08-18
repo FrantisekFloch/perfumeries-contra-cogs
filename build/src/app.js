@@ -15,7 +15,7 @@ import { matchInvoice } from './lib/matching.js';
 import { applyMatchStatus } from './lib/lifecycle.js';
 import { exportInventory, invoiceDetail } from './lib/inventory.js';
 import { archiveInvoice, exportArchive } from './lib/archive.js';
-import { renderDashboard, renderInventory, connectForm, invoiceDocHtml, homeHtml, boardSummaryHtml, chaseEmailText } from './ui/dashboards.js';
+import { renderDashboard, renderInventory, connectForm, invoiceDocHtml, deliveryNoteDocHtml, homeHtml, boardSummaryHtml, chaseEmailText } from './ui/dashboards.js';
 import { whatIfContra, dataQuality } from './lib/insights.js';
 import { t, setLang, getLang } from './lib/i18n.js';
 import { startTour } from './ui/tour.js';
@@ -151,6 +151,7 @@ function renderInventoryView() {
     onSort: (s) => { invSort = s; renderInventoryView(); },
     onExport: (month, list) => downloadText(`inventory_${month || 'all'}.json`, exportInventory(list)),
     onViewDoc: (invoice) => openDoc(invoice),
+    onViewDeliveryNote: (invoice) => openDeliveryNote(invoice),
     onChase: (invNum) => openChase(invNum),
     onWhatIf: (invNum) => openWhatIf(invNum),
   });
@@ -217,6 +218,14 @@ function openDoc(invoice) {
   $('doc-modal').hidden = false;
   try { $('doc-close').focus(); } catch { /* ignore */ }
 }
+function openDeliveryNote(invoice) {
+  $('doc-modal-title').textContent = `${invoice.invoiceNumber} — ${t('inv.viewDeliveryNote')}`;
+  $('doc-print').textContent = t('inv.doc.print');
+  $('doc-print').onclick = printDoc;
+  $('doc-modal-body').innerHTML = deliveryNoteDocHtml(invoice, store.all('deliveryNotes'), store.all('goodsReceipts'));
+  $('doc-modal').hidden = false;
+  try { $('doc-close').focus(); } catch { /* ignore */ }
+}
 function closeDoc() { $('doc-modal').hidden = true; }
 function printDoc() {
   const html = $('doc-modal-body').innerHTML;
@@ -227,7 +236,9 @@ function printDoc() {
 }
 function wireDocModal() {
   const close = $('doc-close'); if (close) close.addEventListener('click', closeDoc);
-  const print = $('doc-print'); if (print) print.addEventListener('click', printDoc);
+  // NOTE: the action button (#doc-print) is driven per-open via .onclick (print / copy /
+  // close), so we do NOT attach a permanent listener here — that caused every modal's
+  // action button to also trigger print (opening a new tab).
   const modal = $('doc-modal');
   if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeDoc(); });
 }

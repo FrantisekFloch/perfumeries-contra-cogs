@@ -189,7 +189,7 @@ export function serializeCreditNoteXml(cn) {
 }
 
 // ---- Goods Receipt / RECADV (CSV, row-level) ------------------------------
-const RECADV_HEADERS = ['invoice_number', 'stock_id', 'storage_id', 'qty_received', 'receipt_datetime', 'recadv_ref'];
+const RECADV_HEADERS = ['invoice_number', 'stock_id', 'storage_id', 'qty_received', 'qty_disputed', 'receipt_datetime', 'recadv_ref'];
 
 export function parseRecadvCsv(csvStr, sourceFile = null) {
   const { rows } = parseCsv(csvStr);
@@ -198,6 +198,7 @@ export function parseRecadvCsv(csvStr, sourceFile = null) {
     stockId: r.stock_id,
     storageId: r.storage_id,
     qtyReceived: toNum(r.qty_received),
+    qtyDisputed: toNum(r.qty_disputed), // optional column; older files without it → 0
     receiptDatetime: r.receipt_datetime,
     recadvRef: r.recadv_ref || null,
     sourceFile,
@@ -210,6 +211,7 @@ export function serializeRecadvCsv(receipts) {
     stock_id: g.stockId,
     storage_id: g.storageId,
     qty_received: g.qtyReceived,
+    qty_disputed: g.qtyDisputed ?? 0,
     receipt_datetime: g.receiptDatetime,
     recadv_ref: g.recadvRef ?? '',
   }));

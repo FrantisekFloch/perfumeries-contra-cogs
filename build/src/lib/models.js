@@ -111,6 +111,7 @@ export function createGoodsReceipt(input) {
     stockId: req(input, 'stockId', ctx),
     storageId: req(input, 'storageId', ctx),
     qtyReceived: num(input, 'qtyReceived', ctx, { min: 0 }),
+    qtyDisputed: optNum(input, 'qtyDisputed', ctx, { min: 0 }) ?? 0, // damaged / disputed goods
     receiptDatetime: req(input, 'receiptDatetime', ctx),
     recadvRef: input.recadvRef ?? null,
     sourceFile: input.sourceFile ?? null,

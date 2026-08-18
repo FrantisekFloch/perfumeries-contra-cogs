@@ -20,6 +20,21 @@ export function buildInvoiceView(invoice, goodsReceipts, deliveryNotes = [], opt
     (l.expectedStorages || []).forEach((s) => storages.add(s));
   });
 
+  // Per-storage shortfall value (only storages genuinely short) — used by the aging
+  // heatmap so at-risk value lands on the right storage, not spread across all of them.
+  const netUnit = (invoice.totalValueStandard || 0) / Math.max(1, invoice.lines.reduce((s, l) => s + l.qtyInvoiced, 0));
+  const shortByStorage = {};
+  match.lines.forEach((l) => {
+    const notes = deliveryNotes.filter((d) => d.invoiceNumber === invoice.invoiceNumber);
+    const expBy = {};
+    notes.forEach((d) => d.lines.forEach((dl) => { if (dl.stockId === l.stockId) expBy[d.targetStorageId] = (expBy[d.targetStorageId] || 0) + (dl.qtyShipped || 0); }));
+    Object.entries(expBy).forEach(([sid, exp]) => {
+      const rec = (l.byStorage && l.byStorage[sid]) || 0;
+      const missing = Math.max(0, exp - rec);
+      if (missing > 0) shortByStorage[sid] = (shortByStorage[sid] || 0) + missing * netUnit;
+    });
+  });
+
   return {
     invoiceNumber: invoice.invoiceNumber,
     distributorId: invoice.distributorId,
@@ -34,6 +49,7 @@ export function buildInvoiceView(invoice, goodsReceipts, deliveryNotes = [], opt
     missingQty: match.lines.reduce((s, l) => s + l.missingQty, 0),
     valueAtRisk: Number(gaps.reduce((s, g) => s + g.valueAtRisk, 0).toFixed(2)),
     storages: [...storages],
+    shortByStorage,
     contra,
     timing,
     gaps,

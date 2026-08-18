@@ -95,9 +95,10 @@ export function invoiceDetail(invoice, { goodsReceipts, deliveryNotes = [], cred
     byStorage[s.storageId] = { storageId: s.storageId, expected: s.expected, qty: 0, missing: s.missing, receipts: [] };
   });
   mine.forEach((g) => {
-    if (!byStorage[g.storageId]) byStorage[g.storageId] = { storageId: g.storageId, expected: expectedByStorage[g.storageId] || 0, qty: 0, missing: 0, over: 0, receipts: [] };
+    if (!byStorage[g.storageId]) byStorage[g.storageId] = { storageId: g.storageId, expected: expectedByStorage[g.storageId] || 0, qty: 0, missing: 0, over: 0, disputed: 0, receipts: [] };
     byStorage[g.storageId].qty += g.qtyReceived;
-    byStorage[g.storageId].receipts.push({ qty: g.qtyReceived, datetime: g.receiptDatetime, recadvRef: g.recadvRef, sourceFile: g.sourceFile });
+    byStorage[g.storageId].disputed += (g.qtyDisputed || 0);
+    byStorage[g.storageId].receipts.push({ qty: g.qtyReceived, disputed: g.qtyDisputed || 0, datetime: g.receiptDatetime, recadvRef: g.recadvRef, sourceFile: g.sourceFile });
   });
   // Recompute missing / over per storage after folding receipts in.
   Object.values(byStorage).forEach((b) => {
@@ -129,6 +130,7 @@ export function invoiceDetail(invoice, { goodsReceipts, deliveryNotes = [], cred
     receivedQty: view.receivedQty,
     missingQty: view.missingQty,
     overQty: Math.max(0, view.receivedQty - view.invoicedQty),
+    disputedQty: mine.reduce((s, g) => s + (g.qtyDisputed || 0), 0),
     contraStatus: contraStatus(view),
     recognizedContra: view.contra.recognizedContra,
     pendingCredit: view.contra.pendingCredit,

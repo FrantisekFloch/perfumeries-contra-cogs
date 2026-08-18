@@ -5,13 +5,13 @@ import { setLang, getLang, t, LANGS } from '../src/lib/i18n.js';
 test('default language is en', () => {
   setLang('en');
   assert.equal(getLang(), 'en');
-  assert.equal(t('nav.finance'), 'Finance');
+  assert.equal(t('nav.finance'), 'Finance dashboard');
 });
 
 test('switching to sk returns Slovak strings', () => {
   setLang('sk');
   assert.equal(getLang(), 'sk');
-  assert.equal(t('nav.finance'), 'Financie');
+  assert.equal(t('nav.finance'), 'Finančný dashboard');
   assert.equal(t('status.PartiallyReceived'), 'Čiastočne prijaté');
   setLang('en');
 });

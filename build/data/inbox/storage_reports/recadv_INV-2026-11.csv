@@ -1,3 +1,3 @@
-invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref
-INV-2026-11,SKU-1003,WH-ZA,764,2026-04-11T09:00:00,RECADV-INV-2026-11-0
-INV-2026-11,SKU-1003,WH-BA,936,2026-04-13T09:00:00,RECADV-INV-2026-11-1
+invoice_number,stock_id,storage_id,qty_received,qty_disputed,receipt_datetime,recadv_ref
+INV-2026-11,SKU-1003,WH-ZA,764,0,2026-04-11T09:00:00,RECADV-INV-2026-11-0
+INV-2026-11,SKU-1003,WH-BA,936,0,2026-04-13T09:00:00,RECADV-INV-2026-11-1

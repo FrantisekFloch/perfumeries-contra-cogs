@@ -116,8 +116,8 @@ ${lines}
 }
 
 function buildRecadvCsv(rows) {
-  const header = 'invoice_number,stock_id,storage_id,qty_received,receipt_datetime,recadv_ref';
-  const body = rows.map((r) => `${r.invoiceNumber},${r.sku},${r.storageId},${r.qty},${r.datetime},${r.ref}`).join('\n');
+  const header = 'invoice_number,stock_id,storage_id,qty_received,qty_disputed,receipt_datetime,recadv_ref';
+  const body = rows.map((r) => `${r.invoiceNumber},${r.sku},${r.storageId},${r.qty},${r.disputed || 0},${r.datetime},${r.ref}`).join('\n');
   return `${header}\n${body}\n`;
 }
 
@@ -326,6 +326,39 @@ for (let n = 0; n < 2; n++) {
     }));
     manifest.inbox.delivery_notes.push(`${dnId}.xml`);
   });
+}
+
+// --- Guaranteed DISPUTE invoice: small, one warehouse, 200 received of which 50 damaged ---
+{
+  seq += 1;
+  const num = `INV-${CUR_Y}-${pad(seq)}`;
+  const dist = DISTRIBUTORS[0]; const p = PRODUCTS[2];
+  const qtyLine = 200;
+  const pct = tierPct(dist.tiers, qtyLine);
+  const line = { sku: p.sku, name: p.name, qty: qtyLine, price: p.price, net: dist.model === 'A' ? round2(p.price * (1 - pct / 100)) : null };
+  const totalValue = round2(p.price * qtyLine);
+  const invDay = Math.max(1, CUR_D - 5);
+  const invoiceDateObj = new Date(CUR_Y, CUR_M - 1, invDay);
+  const shipDateObj = addDays(invoiceDateObj, -1);
+  const invoiceDate = iso(invoiceDateObj); const shipDate = iso(shipDateObj);
+  const store = STORAGES[0];
+  writeFileSync(join(INBOX, 'invoices', `${num}.xml`), buildInvoiceXml({
+    invoiceNumber: num, type: dist.model === 'B' ? 'proforma' : 'final',
+    distributorId: dist.id, distributorName: dist.name, model: dist.model,
+    po: `PO-${1000 + seq}`, invoiceDate, shipDate, tiers: dist.tiers, totalValue, lines: [line],
+  }));
+  manifest.inbox.invoices.push(`${num}.xml`);
+  const dnId = `DN-${num}-01`;
+  writeFileSync(join(INBOX, 'delivery_notes', `${dnId}.xml`), buildDeliveryNoteXml({
+    id: dnId, invoiceNumber: num, targetStorageId: store, shipDate, lines: [{ sku: p.sku, qty: qtyLine }], deliveryStatus: 'OnTime', expectedDate: '',
+  }));
+  manifest.inbox.delivery_notes.push(`${dnId}.xml`);
+  // All 200 received, but 50 flagged damaged/disputed.
+  const rdate = addDays(shipDateObj, 3);
+  writeFileSync(join(INBOX, 'storage_reports', `recadv_${num}.csv`), buildRecadvCsv([
+    { invoiceNumber: num, sku: p.sku, storageId: store, qty: qtyLine, disputed: 50, datetime: isoDT(rdate), ref: `RECADV-${num}-0` },
+  ]));
+  manifest.inbox.storage_reports.push(`recadv_${num}.csv`);
 }
 
 writeFileSync(join(DATA, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');

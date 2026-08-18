@@ -64,7 +64,11 @@ export function agingHeatmap(portfolio, { asOf = new Date().toISOString() } = {}
     const age = daysBetweenI(v.invoiceDate || asOf, asOf);
     const bi = AGE_BUCKETS.findIndex(([lo, hi]) => age >= lo && age <= hi);
     if (bi < 0) return;
-    v.storages.forEach((s) => { grid[s][bi] += v.valueAtRisk || 0; });
+    // Credit at-risk value to the specific short storages (not spread across all).
+    const short = v.shortByStorage || {};
+    const keys = Object.keys(short);
+    if (keys.length) keys.forEach((s) => { if (grid[s]) grid[s][bi] += short[s]; });
+    else v.storages.forEach((s) => { if (grid[s]) grid[s][bi] += (v.valueAtRisk || 0) / Math.max(1, v.storages.length); });
   });
   const rows = storages.map((s) => ({ storageId: s, buckets: grid[s].map(r2i), total: r2i(grid[s].reduce((a, b) => a + b, 0)) }))
     .filter((row) => row.total > 0)

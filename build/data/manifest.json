@@ -28,7 +28,8 @@
       "INV-2026-23.xml",
       "INV-2026-24.xml",
       "INV-2026-25.xml",
-      "INV-2026-26.xml"
+      "INV-2026-26.xml",
+      "INV-2026-27.xml"
     ],
     "delivery_notes": [
       "DN-2026-0001-01.xml",
@@ -106,7 +107,8 @@
       "DN-INV-2026-25-01.xml",
       "DN-INV-2026-25-02.xml",
       "DN-INV-2026-26-01.xml",
-      "DN-INV-2026-26-02.xml"
+      "DN-INV-2026-26-02.xml",
+      "DN-INV-2026-27-01.xml"
     ],
     "storage_reports": [
       "recadv_2026-01_02.csv",
@@ -132,7 +134,8 @@
       "recadv_INV-2026-21.csv",
       "recadv_INV-2026-22.csv",
       "recadv_INV-2026-23.csv",
-      "recadv_INV-2026-24.csv"
+      "recadv_INV-2026-24.csv",
+      "recadv_INV-2026-27.csv"
     ],
     "credit_notes": [
       "CN-2026-01-DIST-EU-01.xml",
