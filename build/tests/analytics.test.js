@@ -70,5 +70,5 @@ test('session role: set/get/validate', () => {
   assert.equal(s.getRole(), 'finance');
   assert.ok(s.isRoleSelected());
   assert.throws(() => s.setRole('ceo'), /invalid role/);
-  assert.deepEqual(ROLES, ['storage', 'accounting', 'finance']);
+  assert.deepEqual(ROLES, ['operations', 'finance']);
 });

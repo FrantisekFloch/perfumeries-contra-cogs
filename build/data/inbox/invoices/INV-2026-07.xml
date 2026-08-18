@@ -6,23 +6,40 @@
     <distributor id="DIST-EU-01" name="Maison Aroma s.r.o."/>
     <contraCogsModel>B</contraCogsModel>
     <poReference>PO-1007</poReference>
-    <invoiceDate>2026-03-25</invoiceDate>
-    <shipDate>2026-03-24</shipDate>
+    <invoiceDate>2026-02-03</invoiceDate>
+    <shipDate>2026-02-01</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="5000" pct="1"/>
-      <tier minQty="5001" maxQty="10000" pct="1.5"/>
-      <tier minQty="10001" maxQty="" pct="2"/>
+      <tier minQty="1" maxQty="999" pct="0"/>
+      <tier minQty="1000" maxQty="1999" pct="1"/>
+      <tier minQty="2000" maxQty="4999" pct="1.5"/>
+      <tier minQty="5000" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>3250.00</totalValueStandard>
+    <totalValueStandard>15125.00</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>SKU-1006</stockId>
-      <description>Travel Spray 15ml</description>
-      <qtyInvoiced>2500</qtyInvoiced>
-      <unitPriceStandard>1.30</unitPriceStandard>
+      <stockId>SKU-1002</stockId>
+      <description>Eau de Toilette 100ml</description>
+      <qtyInvoiced>1100</qtyInvoiced>
+      <unitPriceStandard>1.75</unitPriceStandard>
+      <unitPriceNet></unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+    <line>
+      <stockId>SKU-1005</stockId>
+      <description>Gift Set</description>
+      <qtyInvoiced>1600</qtyInvoiced>
+      <unitPriceStandard>5.90</unitPriceStandard>
+      <unitPriceNet></unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+    <line>
+      <stockId>SKU-1001</stockId>
+      <description>Eau de Parfum 50ml</description>
+      <qtyInvoiced>1600</qtyInvoiced>
+      <unitPriceStandard>2.35</unitPriceStandard>
       <unitPriceNet></unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>

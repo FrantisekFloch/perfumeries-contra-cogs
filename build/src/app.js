@@ -13,18 +13,24 @@ import { runPipeline } from './lib/pipeline.js';
 import { ingestFiles, persistIngest } from './lib/ingest.js';
 import { matchInvoice } from './lib/matching.js';
 import { applyMatchStatus } from './lib/lifecycle.js';
-import { exportInventory } from './lib/inventory.js';
+import { exportInventory, invoiceDetail } from './lib/inventory.js';
 import { archiveInvoice, exportArchive } from './lib/archive.js';
-import { renderDashboard, renderInventory, connectForm, invoiceDocHtml, homeHtml } from './ui/dashboards.js';
+import { renderDashboard, renderInventory, connectForm, invoiceDocHtml, homeHtml, boardSummaryHtml, chaseEmailText } from './ui/dashboards.js';
+import { whatIfContra, dataQuality } from './lib/insights.js';
 import { t, setLang, getLang } from './lib/i18n.js';
 import { startTour } from './ui/tour.js';
 import { createBootLoader } from './ui/boot.js';
 
-const BOOT_STEP_MS = 700; // per-step delay for the "connecting" sequence
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+// Varied, natural-feeling boot pacing: quick "checks" vs. longer "downloads", with a
+// little jitter so it never feels like a fixed-interval animation.
+const jitter = (base, spread) => base + Math.round((Math.random() - 0.5) * 2 * spread);
 
 const $ = (id) => document.getElementById(id);
 const show = (el) => { if (el) el.hidden = false; };
+// App-local formatters (renamed to avoid clashing with dashboards.js in the offline bundle).
+const fmtMoney = (n) => '€' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtQty = (n) => (Number(n) || 0).toLocaleString();
 
 const store = new StateStore(getLocalStorageBackend() || createMemoryBackend(), 'perfumeries');
 const session = new Session(getSessionBackend() || createMemoryKV());
@@ -35,6 +41,8 @@ let storageFilter = null;
 let invMonth = null;
 let invAllMonths = true; // default: show all months
 let invStatusFilter = 'all';
+let invSort = 'default';
+let invFreshOpen = false; // set true when a tab opens the inventory, to collapse all once
 
 function downloadText(filename, text, type = 'application/json') {
   const blob = new Blob([text], { type });
@@ -113,29 +121,98 @@ function renderDash() {
     onDrill: (sid) => { storageFilter = sid; selectRole('storage'); },
     onMarkPaid: (inv) => { transition(store, inv, InvoiceStatus.PAID, { actor: 'accounting' }); rebuildPortfolio(); renderDash(); },
     onArchive: (inv) => { const rec = archiveInvoice(store, inv, { actor: 'accounting' }); downloadText(`archive_${inv}.json`, exportArchive(rec)); rebuildPortfolio(); renderDash(); },
+    onBulkPay: (ids) => { ids.forEach((inv) => transition(store, inv, InvoiceStatus.PAID, { actor: 'accounting' })); rebuildPortfolio(); renderDash(); },
+    onBoardExport: () => openBoard(),
   });
+}
+function openBoard() {
+  $('doc-modal-title').textContent = t('board.title');
+  $('doc-print').textContent = t('inv.doc.print');
+  $('doc-print').onclick = printDoc;
+  $('doc-modal-body').innerHTML = boardSummaryHtml(filteredPortfolio());
+  $('doc-modal').hidden = false;
+  try { $('doc-close').focus(); } catch { /* ignore */ }
 }
 function renderInventoryView() {
   const root = $('view-root'); show(root);
   const ctx = { goodsReceipts: store.all('goodsReceipts'), deliveryNotes: store.all('deliveryNotes'), creditNotes: store.all('creditNotes'), auditLog: store.auditLog() };
   const partialOnly = currentView === 'inventoryPartial';
+  const collapseAllDefault = invFreshOpen; invFreshOpen = false; // collapse once, on open
   renderInventory(root, store.all('invoices'), ctx, {
     month: invMonth,
     allMonths: invAllMonths,
     statusFilter: partialOnly ? 'partial' : invStatusFilter,
+    sort: invSort,
     partialOnly,
+    collapseAllDefault,
     onMonth: (m) => { invMonth = m; invAllMonths = false; renderInventoryView(); },
     onAllMonths: (on) => { invAllMonths = on; renderInventoryView(); },
     onStatusFilter: (f) => { invStatusFilter = f; renderInventoryView(); },
+    onSort: (s) => { invSort = s; renderInventoryView(); },
     onExport: (month, list) => downloadText(`inventory_${month || 'all'}.json`, exportInventory(list)),
     onViewDoc: (invoice) => openDoc(invoice),
+    onChase: (invNum) => openChase(invNum),
+    onWhatIf: (invNum) => openWhatIf(invNum),
   });
+}
+
+function openChase(invNum) {
+  const ctx = { goodsReceipts: store.all('goodsReceipts'), deliveryNotes: store.all('deliveryNotes'), creditNotes: store.all('creditNotes'), auditLog: store.auditLog() };
+  const inv = store.all('invoices').find((i) => i.invoiceNumber === invNum);
+  if (!inv) return;
+  const d = invoiceDetail(inv, ctx);
+  const text = chaseEmailText(d);
+  $('doc-modal-title').textContent = t('inv.chase');
+  $('doc-print').textContent = t('chase.copy');
+  $('doc-modal-body').innerHTML = `<pre class="chase-pre" id="chase-text">${text}</pre>`;
+  $('doc-modal').hidden = false;
+  const printBtn = $('doc-print');
+  printBtn.onclick = () => { try { navigator.clipboard && navigator.clipboard.writeText(text); } catch { /* ignore */ } printBtn.textContent = t('chase.copied'); };
+}
+
+function openWhatIf(invNum) {
+  const view = ALL_PORTFOLIO.find((v) => v.invoiceNumber === invNum);
+  const inv = store.all('invoices').find((i) => i.invoiceNumber === invNum);
+  if (!view) return;
+  const missing = view.missingQty || 0;
+  const step = Math.max(1, Math.round(missing / 100));
+  const render = (extra) => {
+    const r = whatIfContra(view, extra, inv);
+    return `<div class="whatif-result">
+      <div class="cards">
+        <div class="card"><span class="k">${t('whatif.before')}</span><span class="v">${fmtMoney(r.before)}</span></div>
+        <div class="card"><span class="k">${t('whatif.after')}</span><span class="v">${fmtMoney(r.after)}</span></div>
+        <div class="card"><span class="k">${t('whatif.delta')}</span><span class="v">+${fmtMoney(r.delta)}</span></div>
+      </div>
+      <p class="muted small">${r.clears ? t('whatif.clears') : t('whatif.stillOpen', { n: fmtQty(r.invoicedQty - r.newReceived) })}</p>
+    </div>`;
+  };
+  $('doc-modal-title').textContent = `${t('inv.whatif')} — ${invNum}`;
+  $('doc-print').textContent = t('inv.doc.close');
+  $('doc-modal-body').innerHTML = `
+    <div class="whatif">
+      <p class="muted small">${t('whatif.intro', { missing: fmtQty(missing) })}</p>
+      <label class="whatif-ctl">${t('whatif.extra')}
+        <input type="range" id="whatif-range" min="0" max="${missing}" value="${missing}" step="${step}"/>
+        <output id="whatif-out">${fmtQty(missing)}</output>
+      </label>
+      <div id="whatif-slot">${render(missing)}</div>
+    </div>`;
+  $('doc-modal').hidden = false;
+  const range = $('whatif-range');
+  range.addEventListener('input', () => {
+    const v = Number(range.value);
+    $('whatif-out').textContent = fmtQty(v);
+    $('whatif-slot').innerHTML = render(v);
+  });
+  $('doc-print').onclick = () => closeDoc();
 }
 
 // ---- invoice document modal ----
 function openDoc(invoice) {
   $('doc-modal-title').textContent = `${invoice.invoiceNumber}`;
   $('doc-print').textContent = t('inv.doc.print');
+  $('doc-print').onclick = printDoc;
   $('doc-modal-body').innerHTML = invoiceDocHtml(invoice, store.all('deliveryNotes'));
   $('doc-modal').hidden = false;
   try { $('doc-close').focus(); } catch { /* ignore */ }
@@ -156,7 +233,12 @@ function wireDocModal() {
 }
 function renderHome() {
   const root = $('view-root'); show(root);
-  root.innerHTML = homeHtml(filteredPortfolio());
+  const quality = dataQuality({
+    invoices: store.all('invoices'), goodsReceipts: store.all('goodsReceipts'),
+    deliveryNotes: store.all('deliveryNotes'), creditNotes: store.all('creditNotes'),
+    incomplete: (lastIngest && lastIngest.incomplete) || [],
+  });
+  root.innerHTML = homeHtml(filteredPortfolio(), quality);
   root.querySelectorAll('.home-card').forEach((b) => b.addEventListener('click', () => {
     const go = b.dataset.go;
     if (go === 'inventory') openInventory(false);
@@ -164,6 +246,22 @@ function renderHome() {
     else if (go === 'about') showAbout();
     else selectRole(go);
   }));
+  // Clickable exception → jump to that invoice in Inventory (all months, expanded).
+  root.querySelectorAll('.exc-link').forEach((b) => b.addEventListener('click', () => focusInvoiceInInventory(b.dataset.inv)));
+}
+
+// Open Inventory (all months, unfiltered) and expand + scroll to a specific invoice.
+function focusInvoiceInInventory(invNum) {
+  invAllMonths = true; invStatusFilter = 'all';
+  openInventory(false);
+  setTimeout(() => {
+    const card = document.querySelector(`.inv-card[data-inv="${invNum}"]`);
+    if (!card) return;
+    if (card.classList.contains('collapsed')) { const tgl = card.querySelector('.inv-toggle'); if (tgl) tgl.click(); }
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.add('inv-flash');
+    setTimeout(() => card.classList.remove('inv-flash'), 1600);
+  }, 60);
 }
 function renderAbout() {
   const root = $('view-root'); show(root);
@@ -172,9 +270,9 @@ function renderAbout() {
     { id: 'overview', h: t('about.h.overview'), body: `<p>${t('about.p.overview')}</p>` },
     { id: 'data', h: t('about.h.data'), body: `<p>${t('about.p.data')}</p>` },
     { id: 'tabs', h: t('about.h.tabs'), body: `<ul class="manual">
+        <li>${t('about.tab.home')}</li>
         <li>${t('about.tab.inventory')}</li>
-        <li>${t('about.tab.storage')}</li>
-        <li>${t('about.tab.accounting')}</li>
+        <li>${t('about.tab.operations')}</li>
         <li>${t('about.tab.finance')}</li>
         <li>${t('about.tab.about')}</li></ul>` },
     { id: 'inventory', h: t('about.h.inv'), body: `<p>${t('about.p.inv')}</p>
@@ -237,6 +335,7 @@ function showHome() { currentView = 'home'; renderRoleBar(); renderHome(); }
 function selectRole(role) { currentView = 'role'; session.setRole(role); renderRoleBar(); renderDash(); }
 function openInventory(partial = false) {
   currentView = partial ? 'inventoryPartial' : 'inventory';
+  invFreshOpen = true; // collapse all invoices on this fresh open
   renderRoleBar(); renderInventoryView();
 }
 function showAbout() { currentView = 'about'; renderRoleBar(); renderAbout(); }
@@ -283,8 +382,7 @@ function launchTour() {
         { selector: '.chart-wrap', text: t('tour.sat.charts'), dir: 'up' },
       ],
     },
-    { selector: '.role-tab[data-role="storage"]', text: t('tour.storage'), before: () => selectRole('storage') },
-    { selector: '.role-tab[data-role="accounting"]', text: t('tour.accounting'), before: () => selectRole('accounting') },
+    { selector: '.role-tab[data-role="operations"]', text: t('tour.operations'), before: () => selectRole('operations') },
     { selector: '.connect-bar', text: t('tour.connect') },
     { selector: '.role-tab[data-about]', text: t('tour.about'), before: () => showAbout() },
   ];
@@ -405,7 +503,7 @@ async function runConnect() {
   loader.step(t('boot.db'));
   const pipelinePromise = runPipeline(store, defaultSources());
 
-  await delay(BOOT_STEP_MS);
+  await delay(jitter(650, 200)); // connecting to database — a moment to establish
   loader.step(t('boot.checkInv'));
 
   let ingest; let portfolio;
@@ -419,18 +517,19 @@ async function runConnect() {
   }
   lastIngest = ingest; ALL_PORTFOLIO = portfolio;
 
-  await delay(BOOT_STEP_MS); loader.step(t('boot.invLoaded', { n: ingest.invoices.length }));
-  await delay(BOOT_STEP_MS); loader.step(t('boot.api'));
-  await delay(BOOT_STEP_MS); loader.step(t('boot.cnLoaded', { n: ingest.creditNotes.length }));
+  await delay(jitter(1100, 300)); loader.step(t('boot.invLoaded', { n: ingest.invoices.length })); // "downloading" invoices — longer
+  await delay(jitter(500, 150)); loader.step(t('boot.api'));                                        // quick handshake
+  await delay(jitter(900, 250)); loader.step(t('boot.cnLoaded', { n: ingest.creditNotes.length })); // pulling credit notes
 
   const whEntries = Object.entries(warehouseCounts(ingest)).sort(([a], [b]) => a.localeCompare(b));
   for (const [whId, n] of whEntries) {
-    await delay(BOOT_STEP_MS);
+    await delay(jitter(420, 220)); // connect to each warehouse — snappy but uneven
     loader.step(t('boot.whConnect', { wh: whId }));
+    await delay(jitter(520, 260)); // receiving its delivery update — varies by volume
     loader.markDone(t('boot.whDone', { wh: whId, n }));
   }
-  await delay(BOOT_STEP_MS); loader.step(t('boot.finalizing'));
-  await delay(BOOT_STEP_MS); await loader.finish();
+  await delay(jitter(1300, 300)); loader.step(t('boot.finalizing')); // reconciling — the heavy step
+  await delay(jitter(700, 200)); await loader.finish();
 
   show($('scan-panel'));
   renderTopScan();

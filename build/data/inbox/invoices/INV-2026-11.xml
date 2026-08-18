@@ -2,36 +2,29 @@
 <invoice>
   <header>
     <invoiceNumber>INV-2026-11</invoiceNumber>
-    <type>proforma</type>
-    <distributor id="DIST-EU-01" name="Maison Aroma s.r.o."/>
-    <contraCogsModel>B</contraCogsModel>
+    <type>final</type>
+    <distributor id="DIST-EU-02" name="Nordic Scents AB"/>
+    <contraCogsModel>A</contraCogsModel>
     <poReference>PO-1011</poReference>
-    <invoiceDate>2026-04-14</invoiceDate>
-    <shipDate>2026-04-13</shipDate>
+    <invoiceDate>2026-04-09</invoiceDate>
+    <shipDate>2026-04-06</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="5000" pct="1"/>
-      <tier minQty="5001" maxQty="10000" pct="1.5"/>
-      <tier minQty="10001" maxQty="" pct="2"/>
+      <tier minQty="1" maxQty="999" pct="0"/>
+      <tier minQty="1000" maxQty="1999" pct="1"/>
+      <tier minQty="2000" maxQty="4999" pct="1.5"/>
+      <tier minQty="5000" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>7830.00</totalValueStandard>
+    <totalValueStandard>6460.00</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>SKU-1003</stockId>
       <description>Perfume Oil 30ml</description>
-      <qtyInvoiced>1600</qtyInvoiced>
+      <qtyInvoiced>1700</qtyInvoiced>
       <unitPriceStandard>3.80</unitPriceStandard>
-      <unitPriceNet></unitPriceNet>
-      <targetStorage>MULTI</targetStorage>
-    </line>
-    <line>
-      <stockId>SKU-1002</stockId>
-      <description>Eau de Toilette 100ml</description>
-      <qtyInvoiced>1000</qtyInvoiced>
-      <unitPriceStandard>1.75</unitPriceStandard>
-      <unitPriceNet></unitPriceNet>
+      <unitPriceNet>3.7600</unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
   </lines>

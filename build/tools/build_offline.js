@@ -27,7 +27,7 @@ const MODULES = [
   'src/lib/version.js', 'src/lib/i18n.js', 'src/lib/companies.js', 'src/lib/enums.js', 'src/lib/models.js', 'src/lib/xml.js',
   'src/lib/csv.js', 'src/lib/parsers.js', 'src/lib/store.js', 'src/lib/source.js',
   'src/lib/ingest.js', 'src/lib/matching.js', 'src/lib/gap.js', 'src/lib/timing.js',
-  'src/lib/governance.js', 'src/lib/lifecycle.js', 'src/lib/analytics.js',
+  'src/lib/governance.js', 'src/lib/lifecycle.js', 'src/lib/analytics.js', 'src/lib/insights.js',
   'src/lib/inventory.js', 'src/lib/archive.js', 'src/lib/session.js', 'src/lib/forecast.js',
   'src/lib/pipeline.js', 'src/ui/charts.js', 'src/ui/dashboards.js', 'src/ui/tour.js',
   'src/ui/boot.js', 'src/app.js',
@@ -55,6 +55,8 @@ html = html.replace(/<script type="module" src="\.\/src\/app\.js"><\/script>/, `
 html = html.replace('scaffold ready', 'offline build');
 
 mkdirSync(join(BUILD, 'offline'), { recursive: true });
-const out = join(BUILD, 'offline', 'perfumeries_offline.html');
+// Output name can be overridden (e.g. `node tools/build_offline.js perfumeries_v2_offline.html`).
+const outName = process.argv[2] || 'perfumeries_offline.html';
+const out = join(BUILD, 'offline', outName);
 writeFileSync(out, html);
 console.log(`Wrote ${out} (${(html.length / 1024).toFixed(0)} KB, ${Object.keys(DATA).length} embedded files)`);

@@ -3,12 +3,12 @@
   <deliveryNoteId>DN-INV-2026-13-01</deliveryNoteId>
   <invoiceNumber>INV-2026-13</invoiceNumber>
   <targetStorageId>WH-CENTRAL</targetStorageId>
-  <shipDate>2026-05-14</shipDate>
+  <shipDate>2026-04-04</shipDate>
   <deliveryStatus>OnTime</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>SKU-1004</stockId><qtyShipped>882</qtyShipped></line>
-    <line><stockId>SKU-1006</stockId><qtyShipped>1365</qtyShipped></line>
-    <line><stockId>SKU-1005</stockId><qtyShipped>320</qtyShipped></line>
+    <line><stockId>SKU-1003</stockId><qtyShipped>514</qtyShipped></line>
+    <line><stockId>SKU-1004</stockId><qtyShipped>787</qtyShipped></line>
+    <line><stockId>SKU-1001</stockId><qtyShipped>313</qtyShipped></line>
   </lines>
 </deliveryNote>

@@ -2,11 +2,12 @@
 <deliveryNote>
   <deliveryNoteId>DN-INV-2026-10-02</deliveryNoteId>
   <invoiceNumber>INV-2026-10</invoiceNumber>
-  <targetStorageId>WH-KE</targetStorageId>
-  <shipDate>2026-04-02</shipDate>
+  <targetStorageId>WH-BA</targetStorageId>
+  <shipDate>2026-03-03</shipDate>
   <deliveryStatus>OnTime</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>SKU-1003</stockId><qtyShipped>117</qtyShipped></line>
+    <line><stockId>SKU-1004</stockId><qtyShipped>492</qtyShipped></line>
+    <line><stockId>SKU-1001</stockId><qtyShipped>144</qtyShipped></line>
   </lines>
 </deliveryNote>

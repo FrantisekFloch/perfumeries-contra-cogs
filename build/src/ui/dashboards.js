@@ -8,6 +8,10 @@ import { monthlySeries, forecast } from '../lib/forecast.js';
 import { groupedBars, lineForecast } from './charts.js';
 import { t } from '../lib/i18n.js';
 import { BUYER, supplierFor, productName } from '../lib/companies.js';
+import {
+  exceptionFeed, agingHeatmap, slaTimers, contraWaterfall, workingCapital,
+  marginErosion, tierProgress, rebateAtRisk, homeDigest,
+} from '../lib/insights.js';
 
 const money = (n) => '€' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const qty = (n) => (Number(n) || 0).toLocaleString();
@@ -23,7 +27,23 @@ function tbl(headers, rows) {
 }
 
 // ---- Home (page 0) ----
-export function homeHtml(pf) {
+const EXC_CLS = { likelyLost: 'bad', lost: 'bad', over: 'warn', short: 'warn', delayed: 'info', aged: 'warn' };
+export function exceptionFeedTeaserHtml(pf, limit = 6) {
+  const feed = exceptionFeed(pf).slice(0, limit);
+  if (!feed.length) return '';
+  const rows = feed.map((e) => `<li class="exc-row exc-${EXC_CLS[e.type] || 'info'}">
+    <span class="exc-type">${t('exc.' + e.type)}</span>
+    <button class="exc-inv exc-link" data-inv="${e.invoiceNumber}" title="${t('exc.open')}">${e.invoiceNumber}</button>
+    <span class="exc-meta">${e.distributorId} · ${qty(e.missingQty)} ${t('inv.missing').toLowerCase()} · ${e.ageDays}d</span>
+    <span class="exc-risk">${money(e.valueAtRisk)}</span>
+  </li>`).join('');
+  return `<section class="home-exceptions">
+    <h3 class="home-h">${t('home.exceptions')}</h3>
+    <ul class="exc-list">${rows}</ul>
+  </section>`;
+}
+
+export function homeHtml(pf, quality = null) {
   const tot = portfolioTotals(pf);
   const CLOSED = ['FullyMatched', 'Paid', 'Archived'];
   const open = pf.filter((v) => !CLOSED.includes(v.status)).length;
@@ -44,6 +64,10 @@ export function homeHtml(pf) {
         <p class="home-sub">${t('home.data')}</p>
       </header>
 
+      <div class="home-digest">${t('home.digest', homeDigest(pf))}</div>
+
+      ${exceptionFeedTeaserHtml(pf)}
+
       <section class="home-metrics">
         <h3 class="home-h">${t('home.metricsTitle')}</h3>
         <div class="home-kpis">
@@ -62,6 +86,13 @@ export function homeHtml(pf) {
         </div>
       </section>
 
+      ${quality ? `<section class="home-dq">
+        <h3 class="home-h">${t('dq.title')}</h3>
+        ${quality.clean
+          ? `<p class="dq-ok">✓ ${t('dq.clean', { n: quality.checked })}</p>`
+          : `<ul class="dq-list">${quality.issues.map((i) => `<li class="dq-issue">${t('dq.' + i.type, { n: i.count })}</li>`).join('')}</ul>`}
+      </section>` : ''}
+
       <section class="home-nav">
         <h3 class="home-h">${t('home.explore')}</h3>
         <p class="home-navtext">${t('home.navText')}</p>
@@ -69,8 +100,7 @@ export function homeHtml(pf) {
           ${quick('inventory', t('nav.inventoryAll'), t('home.c.inventory'))}
           ${quick('inventoryPartial', t('nav.inventoryPartial'), t('home.c.partial'))}
           ${quick('finance', t('nav.finance'), t('home.c.finance'))}
-          ${quick('storage', t('nav.storage'), t('home.c.storage'))}
-          ${quick('accounting', t('nav.accounting'), t('home.c.accounting'))}
+          ${quick('operations', t('nav.operations'), t('home.c.operations'))}
           ${quick('about', t('nav.about'), t('home.c.about'))}
         </div>
       </section>
@@ -122,6 +152,82 @@ function accountingHtml(pf) {
   `;
 }
 
+// ---- Operations (merged Storage + Accounting) ----
+function agingHeatmapHtml(pf) {
+  const hm = agingHeatmap(pf);
+  if (!hm.rows.length) return `<p class="muted">${t('ops.noOpen')}</p>`;
+  const head = `<th>${t('th.storage')}</th>` + hm.labels.map((l) => `<th class="num">${l}</th>`).join('') + `<th class="num">${t('th.value')}</th>`;
+  const cell = (val) => {
+    if (val <= 0) return `<td class="num heat heat-0">–</td>`;
+    const intensity = Math.min(1, val / hm.max);
+    const bg = `rgba(231,76,60,${(0.12 + intensity * 0.6).toFixed(2)})`;
+    return `<td class="num heat" style="background:${bg}">${money(val)}</td>`;
+  };
+  const rows = hm.rows.map((r) => `<tr><td>${r.storageId}</td>${r.buckets.map(cell).join('')}<td class="num"><strong>${money(r.total)}</strong></td></tr>`).join('');
+  return `<table class="grid heatmap"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function slaTimersHtml(pf) {
+  const timers = slaTimers(pf).slice(0, 12);
+  if (!timers.length) return `<p class="muted">${t('ops.noOpen')}</p>`;
+  return timers.map((s) => {
+    const cls = s.breached ? 'bad' : s.pct > 75 ? 'warn' : 'ok';
+    const rem = s.breached ? t('ops.overdue', { n: -s.remaining }) : t('ops.daysLeft', { n: s.remaining });
+    return `<div class="sla-row">
+      <span class="sla-inv">${s.invoiceNumber}</span>
+      <span class="sla-bar"><span class="sla-fill ${cls}" style="width:${s.pct}%"></span></span>
+      <span class="sla-meta ${cls}">${s.used}/${s.sla}d · ${rem}</span>
+      <span class="sla-risk">${money(s.valueAtRisk)}</span>
+    </div>`;
+  }).join('');
+}
+
+function operationsHtml(pf, storageId) {
+  const sv = storageView(pf, { storageId });
+  const av = accountingView(pf);
+  const storages = [...new Set(pf.flatMap((v) => v.storages))].sort();
+  const options = [`<option value="">${t('model.all')}</option>`]
+    .concat(storages.map((s) => `<option value="${s}"${s === storageId ? ' selected' : ''}>${s}</option>`)).join('');
+  const atRisk = sv.pendingDelivery.reduce((s, v) => s + (v.valueAtRisk || 0), 0);
+  const situation = t('ops.situation', {
+    scope: storageId || t('storage.allStorages'), total: sv.count,
+    onway: sv.onWay.length, pending: sv.pendingDelivery.length, aged: sv.agedPending.length, risk: money(atRisk),
+  });
+
+  // Bulk-actionable closed table: fully matched rows get a checkbox for bulk pay/archive.
+  const closedRows = av.closed.map((v) => {
+    const canPay = v.status === 'FullyMatched';
+    const cb = canPay ? `<input type="checkbox" class="bulk-cb" data-inv="${v.invoiceNumber}"/>` : '';
+    return [cb, v.invoiceNumber, label(v.status), money(v.contra.recognizedContra), closedAction(v)];
+  });
+
+  return `
+   <div class="ops-view">
+    <div class="dash-head"><h3>${t('ops.title')}</h3>
+      <label class="filter">${t('storage.filter')} <select id="storage-filter">${options}</select></label></div>
+    <p class="situation-line">📦 ${situation}</p>
+
+    <h4>${t('ops.slaTitle')}</h4>
+    <div class="sla-list">${slaTimersHtml(pf)}</div>
+
+    <h4>${t('ops.agingTitle')}</h4>
+    ${agingHeatmapHtml(pf)}
+
+    <h4>${t('storage.onway')} (${sv.onWay.length})</h4>
+    ${tbl([t('th.invoice'), t('th.distributor'), t('th.invoiced'), t('th.received')], sv.onWay.map((v) => [v.invoiceNumber, v.distributorId, qty(v.invoicedQty), qty(v.received)]))}
+
+    <h4>${t('storage.pending')} (${sv.pendingDelivery.length})</h4>
+    ${tbl([t('th.invoice'), t('th.missing'), t('th.valueAtRisk'), t('th.storages')], sv.pendingDelivery.map((v) => [v.invoiceNumber, qty(v.missingQty), money(v.valueAtRisk), v.storages.join(', ')]))}
+
+    <h4>${t('acc.open')} (${av.open.length})</h4>
+    ${tbl([t('th.invoice'), t('th.status'), t('th.missing'), t('th.valueAtRisk')], av.open.map((v) => [v.invoiceNumber, label(v.status), qty(v.missingQty), money(v.valueAtRisk)]))}
+
+    <div class="bulk-head"><h4>${t('acc.closed')} (${av.closed.length})</h4>
+      <button class="btn ghost" id="bulk-pay" disabled>${t('ops.bulkPay')}</button></div>
+    ${tbl(['<span class="cbh"></span>', t('th.invoice'), t('th.status'), t('th.contraRecognized'), t('th.actions')], closedRows)}
+   </div>`;
+}
+
 // ---- Finance (with charts + forecast) ----
 function issueIndicators(pf) {
   const closed = pf.filter((v) => ['FullyMatched', 'Paid', 'Archived'].includes(v.status)).length;
@@ -168,11 +274,43 @@ function financeHtml(pf) {
     [t('fin.pl.pending'), money(pl.pendingContra)],
   ];
   const plTable = `<table class="grid pl"><tbody>${plRows.map(([k, v], i) => `<tr class="${i === 4 ? 'pl-strong' : ''}"><td>${k}</td><td class="num">${v}</td></tr>`).join('')}</tbody></table>`;
+  const wf = contraWaterfall(pf);
+  const wc = workingCapital(pf);
+  const ero = marginErosion(pf);
+  const tiers = tierProgress(pf);
+  const rar = rebateAtRisk(pf);
+  const wfMax = Math.max(1, wf.full);
+  const wfBar = (step) => {
+    const w = Math.round((step.value / wfMax) * 100);
+    return `<div class="wf-row"><span class="wf-k">${t('wf.' + step.label)}</span>
+      <span class="wf-track"><span class="wf-fill wf-${step.kind}" style="width:${w}%"></span></span>
+      <span class="wf-v">${money(step.value)}</span></div>`;
+  };
+  const wcTile = `<div class="cards">
+    <div class="card"><span class="k">${t('wc.dpo')}</span><span class="v">${wc.dpo}d</span></div>
+    <div class="card"><span class="k">${t('wc.avgAge')}</span><span class="v">${wc.avgOpenAgeDays}d</span></div>
+    <div class="card"><span class="k">${t('wc.cashLocked')}</span><span class="v">${money(wc.cashLocked)}</span></div>
+  </div>`;
+  const tierRows = tiers.map((d) => `<div class="tier-row">
+      <span class="tier-d">${d.distributorId} <span class="muted small">(${modelType(d.model)})</span></span>
+      <span class="tier-track"><span class="tier-fill" style="width:${d.pct}%"></span></span>
+      <span class="tier-meta">${d.currentPct}%${d.toNextTier > 0 ? ` → ${d.nextPct}% ${t('tier.inUnits', { n: qty(d.toNextTier) })}` : ` · ${t('tier.top')}`}${d.extraRebate > 0 ? ` · +${money(d.extraRebate)}` : ''}</span>
+    </div>`).join('');
   return `
-    <h3>${t('fin.title')}</h3>
+   <div class="fin-view">
+    <div class="fin-head"><h3>${t('fin.title')}</h3><button class="btn" id="board-export">${t('fin.boardExport')}</button></div>
     ${cards}
     ${kpi2}
     ${issueIndicators(pf)}
+    <h4>${t('fin.waterfallTitle')}</h4>
+    <div class="waterfall">${wf.steps.map(wfBar).join('')}</div>
+    <p class="muted small">${t('fin.waterfallNote')}</p>
+    <h4>${t('fin.wcTitle')}</h4>
+    ${wcTile}
+    <h4>${t('fin.tierTitle')} <span class="help" title="${t('fin.tierHelp')}">?</span></h4>
+    <div class="tier-list">${tierRows || `<p class="muted">—</p>`}</div>
+    <h4>${t('fin.rebateRiskTitle')} (${money(ero.total)})</h4>
+    ${tbl([t('th.invoice'), t('th.distributor'), t('fin.reason'), t('th.valueAtRisk')], rar.slice(0, 12).map((r) => [r.invoiceNumber, r.distributorId, t('reason.' + r.reason), money(r.atRisk)]))}
     <h4>${t('fin.plTitle')}</h4>
     ${plTable}
     <p class="muted small">${t('fin.plNote')}</p>
@@ -185,7 +323,8 @@ function financeHtml(pf) {
     <h4>${t('fin.byStatus')}</h4>
     ${tbl([t('th.status'), t('th.count')], Object.entries(fv.byStatus).sort(([a], [b]) => STATUS_ORDER.indexOf(a) - STATUS_ORDER.indexOf(b)).map(([s, c]) => [label(s), c]))}
     <h4>${t('fin.trendTitle')}</h4>
-    ${financeChartsTail(pf)}`;
+    ${financeChartsTail(pf)}
+   </div>`;
 }
 function financeChartsTail(pf) {
   const series = monthlySeries(pf);
@@ -199,6 +338,62 @@ function financeChartsTail(pf) {
     <p class="chart-legend"><span class="lg lg-actual"></span>${t('fin.legendRisk')} &nbsp;&nbsp; <span class="lg lg-forecast"></span>${t('fin.legendForecast')}</p>
     <p class="muted small">${t('fin.forecastNote')}</p>
   `;
+}
+
+// #11 Board-ready one-pager (printable summary of the whole portfolio).
+export function boardSummaryHtml(pf) {
+  const tot = portfolioTotals(pf);
+  const wf = contraWaterfall(pf);
+  const feed = exceptionFeed(pf).slice(0, 5);
+  const dist = distributorView(pf);
+  const dg = homeDigest(pf);
+  return `
+  <article class="invoice-doc board">
+    <header class="doc-head"><div class="doc-brand">Perfumeries</div>
+      <div class="doc-title">${t('board.title')}</div></header>
+    <p class="muted">${t('home.digest', dg)}</p>
+    <h4>${t('board.kpis')}</h4>
+    <div class="cards">
+      <div class="card"><span class="k">${t('fin.invoices')}</span><span class="v">${tot.invoices}</span></div>
+      <div class="card"><span class="k">${t('fin.openVar')}</span><span class="v">${money(tot.openValueAtRisk)}</span></div>
+      <div class="card"><span class="k">${t('fin.contraRecognized')}</span><span class="v">${money(tot.recognizedContra)}</span></div>
+      <div class="card"><span class="k">${t('fin.pendingCredit')}</span><span class="v">${money(tot.pendingContra)}</span></div>
+    </div>
+    <h4>${t('fin.waterfallTitle')}</h4>
+    ${tbl([t('th.detail'), t('th.amount')], wf.steps.map((s) => [t('wf.' + s.label), money(s.value)]))}
+    <h4>${t('board.topRisks')}</h4>
+    ${tbl([t('exc.header'), t('th.invoice'), t('th.distributor'), t('th.valueAtRisk')], feed.map((e) => [t('exc.' + e.type), e.invoiceNumber, e.distributorId, money(e.valueAtRisk)]))}
+    <h4>${t('fin.distTitle')}</h4>
+    ${tbl([t('th.distributor'), t('fin.deliveredValue'), t('fin.contraRecognized'), t('fin.pendingCredit')], dist.map((d) => [d.distributorId, money(d.deliveredValue), money(d.recognizedContra), money(d.pendingContra)]))}
+    <p class="doc-einv">${t('board.note')}</p>
+  </article>`;
+}
+
+// #18 Chase-email draft (SK/EN) for an invoice's missing goods, from its inventory detail.
+export function chaseEmailText(d) {
+  const sup = supplierFor(d.distributorId);
+  const shortStores = (d.receivedSituation || []).filter((s) => s.situation === 'short' || s.situation === 'pending' || s.situation === 'lost' || s.situation === 'delayed');
+  const lines = shortStores.map((s) => `  - ${s.storageId}: ${t('chase.expected')} ${qty(s.expected)}, ${t('chase.received')} ${qty(s.received)}, ${t('chase.missing')} ${qty(s.missing)}`).join('\n')
+    || `  - ${t('chase.totalMissing')}: ${qty(d.missingQty)}`;
+  return t('chase.body', {
+    supplier: sup.name, invoice: d.invoiceNumber, missing: qty(d.missingQty), lines,
+    company: BUYER.name,
+  });
+}
+
+// #16 What-if simulator UI (interactive slider inside the doc modal body).
+export function whatIfHtml(d) {
+  const missing = d.missingQty || 0;
+  return `<div class="whatif" data-inv="${d.invoiceNumber}" data-missing="${missing}"
+      data-tier="${(d.receivedSituation && 0) || ''}">
+    <h4>${t('inv.whatif')} — ${d.invoiceNumber}</h4>
+    <p class="muted small">${t('whatif.intro', { missing: qty(missing) })}</p>
+    <label class="whatif-ctl">${t('whatif.extra')}
+      <input type="range" id="whatif-range" min="0" max="${missing}" value="${missing}" step="${Math.max(1, Math.round(missing / 100))}"/>
+      <output id="whatif-out">${qty(missing)}</output>
+    </label>
+    <div id="whatif-result" class="whatif-result"></div>
+  </div>`;
 }
 
 // ---- Inventory ----
@@ -228,6 +423,34 @@ function monthlySplitLine(d) {
   return `<p class="cc-miss" title="${t('inv.ccMissTip')}">⚠ ${t('inv.ccMiss')}: ${list}</p>`;
 }
 
+// #1 Journey timeline — Invoiced → Shipped → In transit → Received.
+// Progress varies by invoice age so brand-new invoices show only "Invoiced",
+// slightly older ones "Shipped", then "In transit", then "Received" once goods arrive.
+function invoiceAgeDays(d) {
+  const t0 = new Date(d.proformaDate || Date.now()).getTime();
+  if (Number.isNaN(t0)) return 99;
+  return Math.max(0, Math.round((Date.now() - t0) / 86400000));
+}
+function journeyHtml(d) {
+  const age = invoiceAgeDays(d);
+  const allReceived = d.missingQty <= 0 && d.invoicedQty > 0;
+  const anyReceived = (d.receivedQty || 0) > 0;
+  // Age gates for the pre-receipt legs (only when nothing has been received yet).
+  const shipped = anyReceived || allReceived || age >= 1; // shipped ~a day after invoicing
+  const transit = anyReceived || allReceived || age >= 3; // in transit a few days out
+  const steps = [
+    { key: 'invoiced', done: true },
+    { key: 'shipped', done: shipped },
+    { key: 'transit', done: transit },
+    { key: 'received', done: allReceived },
+  ];
+  const dots = steps.map((s, i) => `
+    <span class="jn-step ${s.done ? 'done' : ''}">
+      <span class="jn-dot"></span><span class="jn-lbl">${t('journey.' + s.key)}</span>
+    </span>${i < steps.length - 1 ? `<span class="jn-line ${s.done ? 'done' : ''}"></span>` : ''}`).join('');
+  return `<div class="journey">${dots}</div>`;
+}
+
 function detailBody(d) {
   const cs = d.contraStatus === 'Applied'
     ? `${t('inv.contra')} ${t('contra.applied')}: ${money(d.recognizedContra)}`
@@ -240,8 +463,13 @@ function detailBody(d) {
         <li><span>${t('inv.missing')}</span><strong>${qty(d.missingQty)}</strong></li>
         <li><span>${t('inv.contra')}</span><strong>${cs}</strong></li>
       </ul>
+      ${journeyHtml(d)}
       ${monthlySplitLine(d)}
       ${(d.overQty || 0) > 0 ? `<p class="over-warn" title="${t('inv.overTip')}">⚠ ${t('inv.overWarn', { n: qty(d.overQty) })}</p>` : ''}
+      ${d.missingQty > 0 ? `<div class="inv-actions">
+        <button class="btn ghost chase-btn" data-inv="${d.invoiceNumber}">✉ ${t('inv.chase')}</button>
+        <button class="btn ghost whatif-btn" data-inv="${d.invoiceNumber}">${t('inv.whatif')}</button>
+      </div>` : ''}
       <h4 class="anchor-situation">${t('inv.situation')}</h4>
       <div class="sit-full">${situationChips(d) || `<span class="muted">—</span>`}</div>
       <h4 class="anchor-receipts">${t('inv.receipts')}</h4>
@@ -269,10 +497,13 @@ function detailCard(d, collapsed) {
       <div class="inv-card-head">
         <button class="inv-toggle" data-inv="${d.invoiceNumber}" aria-expanded="${!collapsed}" title="${collapsed ? t('inv.expand') : t('inv.collapse')}">${collapsed ? '▸' : '▾'}</button>
         <strong>${d.invoiceNumber}</strong>
+        <span class="row-date">${d.proformaDate || ''}</span>
         <span class="tag">${label(d.status)}</span>
-        <span class="muted small">${d.distributorId} · ${modelType(d.model)}</span>
+        <span class="muted small row-dist">${d.distributorId} · ${modelType(d.model)}</span>
+        ${(d.overQty || 0) > 0 ? `<span class="row-flag flag-over" title="${t('inv.overWarn', { n: qty(d.overQty) })}">⚠ ${t('inv.sit.over')} +${qty(d.overQty)}</span>` : ''}
+        ${(d.missingQty || 0) > 0 ? `<span class="row-flag flag-short" title="${t('inv.missing')}: ${qty(d.missingQty)}">${t('inv.missing')} ${qty(d.missingQty)}</span>` : ''}
         <span class="chips-inline">${situationChips(d)}</span>
-        <button class="btn ghost inv-doc-btn" data-inv="${d.invoiceNumber}">📄 ${t('inv.viewDoc')}</button>
+        <button class="btn ghost inv-doc-btn inv-doc-sm" data-inv="${d.invoiceNumber}">📄 ${t('inv.viewDoc')}</button>
       </div>
       <div class="inv-card-body">${detailBody(d)}</div>
     </div>`;
@@ -307,16 +538,31 @@ export function renderInventory(container, invoices, ctx, handlers = {}) {
   list = list.filter((d) => (seen.has(d.invoiceNumber) ? false : seen.add(d.invoiceNumber)));
   list = list.filter((d) => matchesStatusFilter(d, statusFilter));
 
+  // Sort by invoice date (newest / oldest) when requested.
+  const sort = handlers.sort || 'default';
+  const dateVal = (d) => new Date(d.proformaDate || 0).getTime() || 0;
+  if (sort === 'newest') list.sort((a, b) => dateVal(b) - dateVal(a));
+  else if (sort === 'oldest') list.sort((a, b) => dateVal(a) - dateVal(b));
+
+  // On a fresh open of the view, collapse every invoice for a tidy overview.
+  if (handlers.collapseAllDefault) list.forEach((d) => collapsedSet.add(d.invoiceNumber));
+
   const monthOpts = months.map((m) => `<option value="${m}"${m === month ? ' selected' : ''}>${m}</option>`).join('');
   const filterBtn = (val, key) => `<button class="chip-btn${statusFilter === val ? ' active' : ''}" data-status="${val}">${t(key)}</button>`;
+  const sortBtn = (val, key) => `<button class="chip-btn${sort === val ? ' active' : ''}" data-sort="${val}">${t(key)}</button>`;
   const title = partialOnly ? t('nav.inventoryPartial') : t('nav.inventoryAll');
-  const filters = partialOnly ? '' : `
-      <div class="inv-filters">
+  const statusBtns = partialOnly ? '' : `
         ${filterBtn('all', 'inv.f.all')}
         ${filterBtn('partial', 'inv.f.partial')}
         ${filterBtn('intransit', 'inv.f.intransit')}
         ${filterBtn('matched', 'inv.f.matched')}
-        ${filterBtn('issues', 'inv.f.issues')}
+        ${filterBtn('issues', 'inv.f.issues')}`;
+  const filters = `
+      <div class="inv-filters">
+        ${statusBtns}
+        <span class="inv-filter-sep"></span>
+        ${sortBtn('newest', 'inv.sort.newest')}
+        ${sortBtn('oldest', 'inv.sort.oldest')}
       </div>`;
 
   container.innerHTML = `
@@ -344,6 +590,10 @@ export function renderInventory(container, invoices, ctx, handlers = {}) {
   // Status filter buttons.
   container.querySelectorAll('.chip-btn[data-status]').forEach((b) => {
     if (handlers.onStatusFilter) b.addEventListener('click', () => handlers.onStatusFilter(b.dataset.status));
+  });
+  // Sort buttons (toggle off if already active → back to default order).
+  container.querySelectorAll('.chip-btn[data-sort]').forEach((b) => {
+    if (handlers.onSort) b.addEventListener('click', () => handlers.onSort(sort === b.dataset.sort ? 'default' : b.dataset.sort));
   });
 
   // Collapse / expand (local UI state, no re-fetch).
@@ -375,6 +625,13 @@ export function renderInventory(container, invoices, ctx, handlers = {}) {
     e.stopPropagation();
     const inv = invoices.find((iv) => iv.invoiceNumber === b.dataset.inv);
     if (inv && handlers.onViewDoc) handlers.onViewDoc(inv);
+  }));
+  // #18 chase-email · #16 what-if
+  container.querySelectorAll('.chase-btn').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation(); if (handlers.onChase) handlers.onChase(b.dataset.inv);
+  }));
+  container.querySelectorAll('.whatif-btn').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation(); if (handlers.onWhatIf) handlers.onWhatIf(b.dataset.inv);
   }));
 }
 
@@ -529,14 +786,28 @@ export function invoiceDocHtml(invoice, deliveryNotes = []) {
 }
 
 export function renderDashboard(container, role, pf, handlers = {}) {
-  if (role === 'storage') container.innerHTML = storageHtml(pf, handlers.storageId || null);
-  else if (role === 'accounting') container.innerHTML = accountingHtml(pf);
+  if (role === 'operations') container.innerHTML = operationsHtml(pf, handlers.storageId || null);
   else if (role === 'finance') container.innerHTML = financeHtml(pf);
-  else container.innerHTML = `<p class="muted">${t('inv.none')}</p>`;
+  else container.innerHTML = operationsHtml(pf, handlers.storageId || null);
 
   const filter = container.querySelector('#storage-filter');
   if (filter && handlers.onFilter) filter.addEventListener('change', (e) => handlers.onFilter(e.target.value || null));
   container.querySelectorAll('.drill').forEach((b) => { if (handlers.onDrill) b.addEventListener('click', () => handlers.onDrill(b.dataset.storage)); });
+  const board = container.querySelector('#board-export');
+  if (board && handlers.onBoardExport) board.addEventListener('click', () => handlers.onBoardExport());
   container.querySelectorAll('.act-pay').forEach((b) => { if (handlers.onMarkPaid) b.addEventListener('click', () => handlers.onMarkPaid(b.dataset.inv)); });
   container.querySelectorAll('.act-archive').forEach((b) => { if (handlers.onArchive) b.addEventListener('click', () => handlers.onArchive(b.dataset.inv)); });
+
+  // Bulk actions (#21): enable the bulk button when any checkbox is ticked.
+  const cbs = [...container.querySelectorAll('.bulk-cb')];
+  const bulkBtn = container.querySelector('#bulk-pay');
+  if (bulkBtn) {
+    const sync = () => { bulkBtn.disabled = !cbs.some((c) => c.checked); };
+    cbs.forEach((c) => c.addEventListener('change', sync));
+    bulkBtn.addEventListener('click', () => {
+      const ids = cbs.filter((c) => c.checked).map((c) => c.dataset.inv);
+      if (handlers.onBulkPay && ids.length) handlers.onBulkPay(ids);
+    });
+    sync();
+  }
 }

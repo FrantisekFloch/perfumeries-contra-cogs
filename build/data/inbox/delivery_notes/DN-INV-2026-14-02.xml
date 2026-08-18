@@ -2,12 +2,13 @@
 <deliveryNote>
   <deliveryNoteId>DN-INV-2026-14-02</deliveryNoteId>
   <invoiceNumber>INV-2026-14</invoiceNumber>
-  <targetStorageId>WH-PO</targetStorageId>
-  <shipDate>2026-05-02</shipDate>
+  <targetStorageId>WH-CENTRAL</targetStorageId>
+  <shipDate>2026-05-04</shipDate>
   <deliveryStatus>OnTime</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>SKU-1003</stockId><qtyShipped>625</qtyShipped></line>
-    <line><stockId>SKU-1005</stockId><qtyShipped>537</qtyShipped></line>
+    <line><stockId>SKU-1003</stockId><qtyShipped>1368</qtyShipped></line>
+    <line><stockId>SKU-1001</stockId><qtyShipped>1991</qtyShipped></line>
+    <line><stockId>SKU-1005</stockId><qtyShipped>877</qtyShipped></line>
   </lines>
 </deliveryNote>

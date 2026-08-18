@@ -55,4 +55,5 @@ export class Session {
   clear() { ['model', 'role', 'lang', 'modelFilter'].forEach((k) => this.backend.removeItem(this._k(k))); }
 }
 
-export const ROLES = Object.freeze(['storage', 'accounting', 'finance']);
+// v2: Storage + Accounting merged into a single "Operations" view; Finance stays.
+export const ROLES = Object.freeze(['operations', 'finance']);

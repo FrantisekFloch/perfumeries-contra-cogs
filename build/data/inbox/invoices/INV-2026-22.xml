@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-2026-22</invoiceNumber>
+    <type>final</type>
+    <distributor id="DIST-EU-02" name="Nordic Scents AB"/>
+    <contraCogsModel>A</contraCogsModel>
+    <poReference>PO-1022</poReference>
+    <invoiceDate>2026-07-14</invoiceDate>
+    <shipDate>2026-07-12</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="999" pct="0"/>
+      <tier minQty="1000" maxQty="1999" pct="1"/>
+      <tier minQty="2000" maxQty="4999" pct="1.5"/>
+      <tier minQty="5000" maxQty="" pct="2"/>
+    </discount>
+    <totalValueStandard>2080.00</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>SKU-1006</stockId>
+      <description>Travel Spray 15ml</description>
+      <qtyInvoiced>1600</qtyInvoiced>
+      <unitPriceStandard>1.30</unitPriceStandard>
+      <unitPriceNet>1.2900</unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+  </lines>
+</invoice>

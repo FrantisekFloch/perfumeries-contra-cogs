@@ -40,9 +40,11 @@ const PRODUCTS = [
   { sku: 'SKU-1006', name: 'Travel Spray 15ml', price: 1.30 },
 ];
 const STORAGES = ['WH-CENTRAL', 'WH-BA', 'WH-KE', 'WH-ZA', 'WH-PO'];
+// Contra COGS tiers (volume → discount): 1000u→1%, 2000u→1.5%, 5000u→2%. Below 1000u = 0%.
+const CONTRA_TIERS = [[1, 999, 0], [1000, 1999, 1], [2000, 4999, 1.5], [5000, null, 2]];
 const DISTRIBUTORS = [
-  { id: 'DIST-EU-01', name: 'Maison Aroma s.r.o.', model: 'B', tiers: [[1, 5000, 1], [5001, 10000, 1.5], [10001, null, 2]] },
-  { id: 'DIST-EU-02', name: 'Nordic Scents AB', model: 'A', tiers: [[1, 3000, 0.5], [3001, null, 1]] },
+  { id: 'DIST-EU-01', name: 'Maison Aroma s.r.o.', model: 'B', tiers: CONTRA_TIERS },
+  { id: 'DIST-EU-02', name: 'Nordic Scents AB', model: 'A', tiers: CONTRA_TIERS },
 ];
 const SCENARIOS = ['full', 'full', 'full', 'short', 'short', 'over', 'intransit', 'straddle'];
 
@@ -180,11 +182,18 @@ for (let month = 1; month <= CUR_M; month++) {
     seq += 1;
     const num = `INV-${CUR_Y}-${pad(seq)}`;
     const dist = pick(DISTRIBUTORS);
-    // Recency-weighted scenarios: recent invoices are more likely in-transit / partial.
-    const scenarioPool = isCurrent
-      ? ['intransit', 'intransit', 'short', 'straddle', 'full']
-      : (month >= CUR_M - 1 ? ['full', 'short', 'straddle', 'over', 'intransit'] : ['full', 'full', 'full', 'short', 'over']);
-    const scenario = pick(scenarioPool);
+    // Recency-weighted scenarios. Only the current + previous month carry OPEN items
+    // (short / in-transit) so open-item aging stays realistic (~0–40 days). Older
+    // months are fully resolved (full / over), which close the invoice — no stale aging.
+    // Only the CURRENT month leaves invoices open (short / in-transit); every earlier
+    // month is fully resolved. Bias toward MISSING goods (short/in-transit) so several
+    // open invoices show shortfalls; over-delivery is rare (mostly resolved as 'full').
+    // Current month → open items (short / in-transit). Past months resolve fully, except
+    // exactly ONE over-delivery example kept for the demo (the first generated invoice).
+    let scenario;
+    if (isCurrent) scenario = pick(['short', 'short', 'short', 'intransit', 'intransit']);
+    else if (seq === 2) scenario = 'over'; // the single over-delivery demo case
+    else scenario = 'full';
 
     const nLines = randInt(1, 3);
     const chosen = [];
@@ -231,7 +240,8 @@ for (let month = 1; month <= CUR_M; month++) {
         (plannedByStorage[pt.storageId] ||= []).push({ sku: l.sku, qty: pt.qty });
         const actual = Math.round(pt.qty * factor);
         if (actual > 0) {
-          const extra = scenario === 'straddle' && idx % 2 === 1 ? randInt(30, 45) : randInt(3, 14);
+          // Realistic delivery lead time: mostly 2–12 days; straddle legs a bit longer (14–20).
+          const extra = scenario === 'straddle' && idx % 2 === 1 ? randInt(14, 20) : randInt(2, 12);
           const rdate = addDays(shipDateObj, extra);
           if (rdate <= now) {
             rows.push({ invoiceNumber: num, sku: l.sku, storageId: pt.storageId, qty: actual, datetime: isoDT(rdate), ref: `RECADV-${num}-${idx}` });
@@ -281,6 +291,41 @@ for (let month = 1; month <= CUR_M; month++) {
       manifest.inbox.credit_notes.push(`${cnId}.xml`);
     }
   }
+}
+
+// --- Guaranteed brand-new IN-TRANSIT invoices (1–3 days ago, nothing received yet) ---
+// These always exist so the "In transit" filter has content. No receipt rows are written,
+// so the lifecycle marks them InTransitPending; delivery notes carry an ETA a few days out.
+for (let n = 0; n < 2; n++) {
+  seq += 1;
+  const num = `INV-${CUR_Y}-${pad(seq)}`;
+  const dist = DISTRIBUTORS[n % DISTRIBUTORS.length];
+  const p = PRODUCTS[n % PRODUCTS.length];
+  const qtyLine = randInt(12, 30) * 100;
+  const pct = tierPct(dist.tiers, qtyLine);
+  const line = { sku: p.sku, name: p.name, qty: qtyLine, price: p.price, net: dist.model === 'A' ? round2(p.price * (1 - pct / 100)) : null };
+  const totalValue = round2(p.price * qtyLine);
+  const invDay = Math.max(1, CUR_D - (n === 0 ? 1 : 4)); // one ~1 day ago (just shipped), one ~4 days ago (in transit)
+  const invoiceDateObj = new Date(CUR_Y, CUR_M - 1, invDay);
+  const shipDateObj = addDays(invoiceDateObj, -1);
+  const invoiceDate = iso(invoiceDateObj); const shipDate = iso(shipDateObj);
+  writeFileSync(join(INBOX, 'invoices', `${num}.xml`), buildInvoiceXml({
+    invoiceNumber: num, type: dist.model === 'B' ? 'proforma' : 'final',
+    distributorId: dist.id, distributorName: dist.name, model: dist.model,
+    po: `PO-${1000 + seq}`, invoiceDate, shipDate, tiers: dist.tiers, totalValue, lines: [line],
+  }));
+  manifest.inbox.invoices.push(`${num}.xml`);
+  // Two intended storages, both still in transit (no receipts), ETA a few days out.
+  const stores = shuffle([...STORAGES]).slice(0, 2);
+  const eta = iso(addDays(now, randInt(2, 6)));
+  distributeAcross(qtyLine, stores).forEach((pt, di) => {
+    const dnId = `DN-${num}-${pad(di + 1)}`;
+    writeFileSync(join(INBOX, 'delivery_notes', `${dnId}.xml`), buildDeliveryNoteXml({
+      id: dnId, invoiceNumber: num, targetStorageId: pt.storageId, shipDate,
+      lines: [{ sku: p.sku, qty: pt.qty }], deliveryStatus: 'Delayed', expectedDate: eta,
+    }));
+    manifest.inbox.delivery_notes.push(`${dnId}.xml`);
+  });
 }
 
 writeFileSync(join(DATA, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');

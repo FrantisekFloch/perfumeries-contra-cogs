@@ -2,27 +2,37 @@
 <invoice>
   <header>
     <invoiceNumber>INV-2026-03</invoiceNumber>
-    <type>final</type>
-    <distributor id="DIST-EU-02" name="Nordic Scents AB"/>
-    <contraCogsModel>A</contraCogsModel>
+    <type>proforma</type>
+    <distributor id="DIST-EU-01" name="Maison Aroma s.r.o."/>
+    <contraCogsModel>B</contraCogsModel>
     <poReference>PO-1003</poReference>
-    <invoiceDate>2026-01-14</invoiceDate>
-    <shipDate>2026-01-13</shipDate>
+    <invoiceDate>2026-01-08</invoiceDate>
+    <shipDate>2026-01-06</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="3000" pct="0.5"/>
-      <tier minQty="3001" maxQty="" pct="1"/>
+      <tier minQty="1" maxQty="999" pct="0"/>
+      <tier minQty="1000" maxQty="1999" pct="1"/>
+      <tier minQty="2000" maxQty="4999" pct="1.5"/>
+      <tier minQty="5000" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>20650.00</totalValueStandard>
+    <totalValueStandard>4140.00</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>SKU-1005</stockId>
-      <description>Gift Set</description>
-      <qtyInvoiced>3500</qtyInvoiced>
-      <unitPriceStandard>5.90</unitPriceStandard>
-      <unitPriceNet>5.8400</unitPriceNet>
+      <stockId>SKU-1001</stockId>
+      <description>Eau de Parfum 50ml</description>
+      <qtyInvoiced>600</qtyInvoiced>
+      <unitPriceStandard>2.35</unitPriceStandard>
+      <unitPriceNet></unitPriceNet>
+      <targetStorage>MULTI</targetStorage>
+    </line>
+    <line>
+      <stockId>SKU-1004</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>2600</qtyInvoiced>
+      <unitPriceStandard>1.05</unitPriceStandard>
+      <unitPriceNet></unitPriceNet>
       <targetStorage>MULTI</targetStorage>
     </line>
   </lines>

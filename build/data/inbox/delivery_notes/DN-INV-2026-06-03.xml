@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <deliveryNote>
-  <deliveryNoteId>DN-INV-2026-07-03</deliveryNoteId>
-  <invoiceNumber>INV-2026-07</invoiceNumber>
+  <deliveryNoteId>DN-INV-2026-06-03</deliveryNoteId>
+  <invoiceNumber>INV-2026-06</invoiceNumber>
   <targetStorageId>WH-KE</targetStorageId>
-  <shipDate>2026-03-24</shipDate>
+  <shipDate>2026-02-24</shipDate>
   <deliveryStatus>OnTime</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
