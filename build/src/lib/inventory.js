@@ -157,3 +157,26 @@ export function monthlyInventory(invoices, ctx, { month }) {
 export function exportInventory(data) {
   return JSON.stringify(data, null, 2);
 }
+
+/**
+ * CSV export of a list of invoice-detail objects — one invoice per row with the main
+ * details. Safe CSV quoting. Used by the Inventory "Export (CSV)" button.
+ */
+export function exportInventoryCsv(list) {
+  const headers = [
+    'invoice_number', 'invoice_date', 'type', 'distributor', 'model', 'status',
+    'invoiced_qty', 'received_qty', 'not_delivered_qty', 'over_qty', 'disputed_qty',
+    'contra_status', 'recognized_contra', 'pending_credit', 'storages',
+  ];
+  const cell = (v) => {
+    const s = v === null || v === undefined ? '' : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const rows = (list || []).map((d) => [
+    d.invoiceNumber, d.proformaDate || '', d.type || '', d.distributorId, d.model, d.status,
+    d.invoicedQty, d.receivedQty, d.missingQty, d.overQty || 0, d.disputedQty || 0,
+    d.contraStatus, d.recognizedContra, d.pendingCredit || 0,
+    (d.receiptsByStorage || []).map((s) => s.storageId).join(' '),
+  ].map(cell).join(','));
+  return [headers.join(','), ...rows].join('\n') + '\n';
+}

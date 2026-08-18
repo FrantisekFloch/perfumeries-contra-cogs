@@ -1,5 +1,5 @@
 // Insights layer (v2). Pure selectors that turn the portfolio into control-tower &
-// finance intelligence: exception feed, aging heatmap, SLA timers, contra waterfall,
+// finance intelligence: exception feed, SLA timers, contra waterfall,
 // DPO/working-capital, margin erosion, tier progress, rebate-at-risk, what-if, digest,
 // and data quality. No DOM. Built on the portfolio view models (analytics.js) + raw docs.
 
@@ -49,32 +49,6 @@ export function exceptionFeed(portfolio, { asOf = new Date().toISOString(), slaD
   return out
     .filter((e) => { const k = e.invoiceNumber + e.type; if (seen.has(k)) return false; seen.add(k); return true; })
     .sort((a, b) => b.severity - a.severity || b.valueAtRisk - a.valueAtRisk);
-}
-
-/** #3 Aging heatmap — storage × age-bucket grid of open value at risk.
- *  Buckets are tight: real delivery delays are typically 10–20 days, so most open
- *  items sit in the low buckets with only a small tail beyond 20 days. */
-export const AGE_BUCKETS = [[0, 5], [6, 10], [11, 20], [21, Infinity]];
-export const AGE_LABELS = ['0–5', '6–10', '11–20', '20+'];
-export function agingHeatmap(portfolio, { asOf = new Date().toISOString() } = {}) {
-  const storages = [...new Set(portfolio.flatMap((v) => v.storages))].sort();
-  const grid = {}; storages.forEach((s) => { grid[s] = AGE_BUCKETS.map(() => 0); });
-  portfolio.forEach((v) => {
-    if (CLOSED_I.has(v.status) || (v.missingQty || 0) <= 0) return;
-    const age = daysBetweenI(v.invoiceDate || asOf, asOf);
-    const bi = AGE_BUCKETS.findIndex(([lo, hi]) => age >= lo && age <= hi);
-    if (bi < 0) return;
-    // Credit at-risk value to the specific short storages (not spread across all).
-    const short = v.shortByStorage || {};
-    const keys = Object.keys(short);
-    if (keys.length) keys.forEach((s) => { if (grid[s]) grid[s][bi] += short[s]; });
-    else v.storages.forEach((s) => { if (grid[s]) grid[s][bi] += (v.valueAtRisk || 0) / Math.max(1, v.storages.length); });
-  });
-  const rows = storages.map((s) => ({ storageId: s, buckets: grid[s].map(r2i), total: r2i(grid[s].reduce((a, b) => a + b, 0)) }))
-    .filter((row) => row.total > 0)
-    .sort((a, b) => b.total - a.total);
-  const max = Math.max(1, ...rows.flatMap((row) => row.buckets));
-  return { labels: AGE_LABELS, rows, max: r2i(max) };
 }
 
 /** #5 SLA countdown — days used vs. an SLA window per open invoice (breach flagged). */

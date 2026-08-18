@@ -177,22 +177,23 @@ const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); r
 let seq = 1; // canonical INV-2026-0001 preserved; generated start at 0002
 for (let month = 1; month <= CUR_M; month++) {
   const isCurrent = month === CUR_M;
-  const perMonth = isCurrent ? randInt(1, 2) : randInt(2, 3);
+  // Slightly more current-month invoices (all open) so the delivery-SLA timers list has a
+  // fuller, ~10-item spread of open items rather than just a handful.
+  const perMonth = isCurrent ? randInt(2, 3) : randInt(2, 3);
   for (let k = 0; k < perMonth; k++) {
     seq += 1;
     const num = `INV-${CUR_Y}-${pad(seq)}`;
     const dist = pick(DISTRIBUTORS);
-    // Recency-weighted scenarios. Only the current + previous month carry OPEN items
-    // (short / in-transit) so open-item aging stays realistic (~0–40 days). Older
-    // months are fully resolved (full / over), which close the invoice — no stale aging.
-    // Only the CURRENT month leaves invoices open (short / in-transit); every earlier
-    // month is fully resolved. Bias toward MISSING goods (short/in-transit) so several
-    // open invoices show shortfalls; over-delivery is rare (mostly resolved as 'full').
-    // Current month → open items (short / in-transit). Past months resolve fully, except
-    // exactly ONE over-delivery example kept for the demo (the first generated invoice).
+    // Recency-weighted scenarios. Goods delivery is a SHORT cycle (an SLA of ~21 days),
+    // so open items must stay recent — a months-old shortfall is unrealistic. Only the
+    // current + previous month leave invoices open (short / in-transit); every earlier
+    // month is fully resolved (closed → no stale aging). Over-delivery stays a single demo
+    // case (seq === 2). This keeps the open delivery-SLA timers in a realistic window.
+    const recentOpenMonth = month >= CUR_M - 1; // current or previous month
     let scenario;
     if (isCurrent) scenario = pick(['short', 'short', 'short', 'intransit', 'intransit']);
     else if (seq === 2) scenario = 'over'; // the single over-delivery demo case
+    else if (recentOpenMonth && k <= 1) scenario = 'short'; // up to two open items last month → near-deadline aging
     else scenario = 'full';
 
     const nLines = randInt(1, 3);
@@ -209,9 +210,16 @@ for (let month = 1; month <= CUR_M; month++) {
     const lines = chosen.map((l) => ({ sku: l.sku, name: l.name, qty: l.qty, price: l.price, net: dist.model === 'A' ? round2(l.price * (1 - pct / 100)) : null }));
     const totalValue = round2(lines.reduce((s, l) => s + l.price * l.qty, 0));
 
-    // Invoice date: past months anywhere; current month within the last ~week (never future).
+    // Invoice date. Current month spreads from early in the month to a few days ago so open
+    // items land across the delivery-deadline buckets (still-time → closing-in). The single
+    // held-open PREVIOUS-month item is dated late in that month, so it ages to ~20–30 days
+    // (just breaching the 21-day SLA) — a realistic recent overdue, not a months-old outlier.
+    // All other past-month (resolved) invoices can fall anywhere in the month.
+    const daysInMonth = new Date(CUR_Y, month, 0).getDate();
     let invDay;
-    if (isCurrent) { const lo = Math.max(1, CUR_D - 6); const hi = Math.max(1, CUR_D - 1); invDay = hi <= lo ? lo : randInt(lo, hi); }
+    if (isCurrent) { const lo = 1; const hi = Math.max(1, CUR_D - 1); invDay = hi <= lo ? lo : randInt(lo, hi); }
+    else if (scenario === 'short' && k === 0) invDay = randInt(Math.max(1, daysInMonth - 6), daysInMonth); // late in the month → recent overdue
+    else if (scenario === 'short') invDay = randInt(Math.max(1, daysInMonth - 14), Math.max(1, daysInMonth - 8)); // mid-late → near deadline, not breached
     else invDay = randInt(3, 25);
     const invoiceDateObj = new Date(CUR_Y, month - 1, invDay);
     const shipDateObj = addDays(invoiceDateObj, -randInt(1, 3));
@@ -305,7 +313,10 @@ for (let n = 0; n < 2; n++) {
   const pct = tierPct(dist.tiers, qtyLine);
   const line = { sku: p.sku, name: p.name, qty: qtyLine, price: p.price, net: dist.model === 'A' ? round2(p.price * (1 - pct / 100)) : null };
   const totalValue = round2(p.price * qtyLine);
-  const invDay = Math.max(1, CUR_D - (n === 0 ? 1 : 4)); // one ~1 day ago (just shipped), one ~4 days ago (in transit)
+  // One just shipped (~1 day → plenty of SLA left), one that's been in transit a while
+  // (~15 days → only ~6 days left before the delivery deadline) so the SLA timers show a
+  // near-deadline case while both stay legitimately "in transit".
+  const invDay = Math.max(1, CUR_D - (n === 0 ? 1 : 15));
   const invoiceDateObj = new Date(CUR_Y, CUR_M - 1, invDay);
   const shipDateObj = addDays(invoiceDateObj, -1);
   const invoiceDate = iso(invoiceDateObj); const shipDate = iso(shipDateObj);

@@ -9,7 +9,7 @@ import { groupedBars, lineForecast } from './charts.js';
 import { t } from '../lib/i18n.js';
 import { BUYER, supplierFor, productName } from '../lib/companies.js';
 import {
-  exceptionFeed, agingHeatmap, slaTimers, contraWaterfall, workingCapital,
+  exceptionFeed, slaTimers, contraWaterfall, workingCapital,
   marginErosion, tierProgress, rebateAtRisk, homeDigest,
 } from '../lib/insights.js';
 
@@ -49,16 +49,9 @@ export function exceptionFeedTeaserHtml(pf, limit = 6) {
   </section>`;
 }
 
-export function homeHtml(pf, quality = null) {
-  const tot = portfolioTotals(pf);
-  const CLOSED = ['FullyMatched', 'Paid', 'Archived'];
-  const open = pf.filter((v) => !CLOSED.includes(v.status)).length;
-  const partial = pf.filter((v) => v.status === 'PartiallyReceived').length;
-  const inTransit = pf.filter((v) => v.status === 'InTransitPending').length;
-  const over = pf.filter((v) => (v.receivedQty || 0) > (v.invoicedQty || 0)).length;
-  const storages = new Set(pf.flatMap((v) => v.storages)).size;
-
-  const kpi = (v, k, help, cls = '') => `<div class="home-kpi ${cls}" title="${help}"><span class="v">${v}</span><span class="k">${k} <span class="help sm">?</span></span></div>`;
+export function homeHtml(pf) {
+  // Home is now a clean landing page: welcome + navigation only. The digest, exceptions,
+  // portfolio metrics and data-quality live in the dashboards.
   const quick = (go, title, desc) => `<button class="home-card" data-go="${go}"><span class="hc-t">${title}</span><span class="hc-d">${desc}</span></button>`;
 
   return `
@@ -70,42 +63,28 @@ export function homeHtml(pf, quality = null) {
         <p class="home-sub">${t('home.data')}</p>
       </header>
 
-      <div class="home-digest">${t('home.digest', homeDigest(pf))}</div>
-
-      ${exceptionFeedTeaserHtml(pf)}
-
-      <section class="home-metrics">
-        <h3 class="home-h">${t('home.metricsTitle')} <span class="home-period">· ${t('home.periodLabel', { period: periodRange(pf) })}</span></h3>
-        <p class="muted small">${t('home.metricsNote')}</p>
-        <div class="home-kpis">
-          ${kpi(tot.invoices, t('home.k.invoices'), t('home.kh.invoices'))}
-          ${kpi(money(tot.openValueAtRisk), t('home.k.risk'), t('home.kh.risk'), 'accent')}
-          ${kpi(money(tot.pendingContra), t('home.k.pending'), t('home.kh.pending'), 'warn')}
-          ${kpi(tot.fillRate + '%', t('home.k.fill'), t('home.kh.fill'), 'ok')}
-          ${kpi(open, t('home.k.open'), t('home.kh.open'))}
-          ${kpi(storages, t('home.k.storages'), t('home.kh.storages'))}
-        </div>
-        <div class="home-alerts">
-          <span class="home-alert warn">${partial} ${t('home.a.partial')}</span>
-          <span class="home-alert info">${inTransit} ${t('home.a.transit')}</span>
-          <span class="home-alert warn">${over} ${t('home.a.surplus')}</span>
-          <span class="home-alert ok">${money(tot.recognizedContra)} ${t('home.a.recognized')}</span>
+      <section class="home-def">
+        <h3 class="home-h">${t('home.def.title')}</h3>
+        <p class="home-navtext">${t('home.def.intro')}</p>
+        <div class="home-def-cards">
+          <div class="home-def-card">
+            <span class="hd-tag">${t('home.def.aTag')}</span>
+            <span class="hd-name">${t('home.def.aName')}</span>
+            <p class="hd-body">${t('home.def.aBody')}</p>
+          </div>
+          <div class="home-def-card">
+            <span class="hd-tag">${t('home.def.bTag')}</span>
+            <span class="hd-name">${t('home.def.bName')}</span>
+            <p class="hd-body">${t('home.def.bBody')}</p>
+          </div>
         </div>
       </section>
-
-      ${quality ? `<section class="home-dq">
-        <h3 class="home-h">${t('dq.title')}</h3>
-        ${quality.clean
-          ? `<p class="dq-ok">✓ ${t('dq.clean', { n: quality.checked })}</p>`
-          : `<ul class="dq-list">${quality.issues.map((i) => `<li class="dq-issue">${t('dq.' + i.type, { n: i.count })}</li>`).join('')}</ul>`}
-      </section>` : ''}
 
       <section class="home-nav">
         <h3 class="home-h">${t('home.explore')}</h3>
         <p class="home-navtext">${t('home.navText')}</p>
         <div class="home-cards">
           ${quick('inventory', t('nav.inventoryAll'), t('home.c.inventory'))}
-          ${quick('inventoryPartial', t('nav.inventoryPartial'), t('home.c.partial'))}
           ${quick('finance', t('nav.finance'), t('home.c.finance'))}
           ${quick('operations', t('nav.operations'), t('home.c.operations'))}
           ${quick('about', t('nav.about'), t('home.c.about'))}
@@ -160,22 +139,12 @@ function accountingHtml(pf) {
 }
 
 // ---- Operations (merged Storage + Accounting) ----
-function agingHeatmapHtml(pf) {
-  const hm = agingHeatmap(pf);
-  if (!hm.rows.length) return `<p class="muted">${t('ops.noOpen')}</p>`;
-  const head = `<th>${t('th.storage')}</th>` + hm.labels.map((l) => `<th class="num">${l}</th>`).join('') + `<th class="num">${t('th.value')}</th>`;
-  const cell = (val) => {
-    if (val <= 0) return `<td class="num heat heat-0">–</td>`;
-    const intensity = Math.min(1, val / hm.max);
-    const bg = `rgba(231,76,60,${(0.12 + intensity * 0.6).toFixed(2)})`;
-    return `<td class="num heat" style="background:${bg}">${money(val)}</td>`;
-  };
-  const rows = hm.rows.map((r) => `<tr><td>${r.storageId}</td>${r.buckets.map(cell).join('')}<td class="num"><strong>${money(r.total)}</strong></td></tr>`).join('');
-  return `<table class="grid heatmap"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
-}
-
 function slaTimersHtml(pf) {
-  const timers = slaTimers(pf).slice(0, 12);
+  const all = slaTimers(pf);
+  // Show 10 timers; but if the open total is close to 10 (within a couple), show them all
+  // rather than hiding one or two behind an arbitrary cut-off.
+  const limit = all.length <= 12 ? all.length : 10;
+  const timers = all.slice(0, limit);
   if (!timers.length) return `<p class="muted">${t('ops.noOpen')}</p>`;
   return timers.map((s) => {
     const cls = s.breached ? 'bad' : s.pct > 75 ? 'warn' : 'ok';
@@ -213,9 +182,6 @@ function operationsHtml(pf) {
     <h4>${t('ops.slaTitle')}</h4>
     <div class="sla-list">${slaTimersHtml(pf)}</div>
 
-    <h4>${t('ops.agingTitle')}</h4>
-    ${agingHeatmapHtml(pf)}
-
     <h4>${t('storage.onway')} (${sv.onWay.length})</h4>
     ${tbl([t('th.invoice'), t('th.distributor'), t('th.invoiced'), t('th.received')], sv.onWay.map((v) => [v.invoiceNumber, v.distributorId, qty(v.invoicedQty), qty(v.received)]))}
 
@@ -249,22 +215,24 @@ function issueIndicators(pf) {
 }
 
 function financeHtml(pf) {
-  const fv = financeView(pf);
-  const cards = `
-    <div class="cards">
-      <div class="card"><span class="k">${t('fin.invoices')}</span><span class="v">${fv.totals.invoices}</span></div>
-      <div class="card"><span class="k">${t('fin.openVar')}</span><span class="v">${money(fv.totals.openValueAtRisk)}</span></div>
-      <div class="card"><span class="k">${t('fin.pendingCredit')}</span><span class="v">${money(fv.totals.totalPendingCredit)}</span></div>
-    </div>`;
   const tot = portfolioTotals(pf);
   const pl = plView(pf);
   const dist = distributorView(pf);
-  const kpi2 = `
+  const wf0 = contraWaterfall(pf); // for the Contra COGS at-risk KPI
+  // Row 1 — goods / invoicing overview.
+  const cards = `
     <div class="cards">
-      <div class="card"><span class="k">${t('fin.deliveredValue')}</span><span class="v">${money(tot.deliveredValue)}</span></div>
+      <div class="card"><span class="k">${t('fin.invoicesReceived')}</span><span class="v">${tot.invoices}</span></div>
+      <div class="card"><span class="k">${t('fin.goodsVs')}</span><span class="v">${qty(tot.invoicedQty)} / ${qty(tot.receivedQty)}</span></div>
+      <div class="card"><span class="k">${t('fin.deliveredGoodsValue')}</span><span class="v">${money(tot.deliveredValue)}</span></div>
+    </div>`;
+  // Row 2 — Contra COGS: recognized · at-risk · pending.
+  const kpi2 = `
+    <h5 class="sub-h kpi-row-h">${t('fin.contraRow')}</h5>
+    <div class="cards">
       <div class="card"><span class="k">${t('fin.contraRecognized')}</span><span class="v">${money(tot.recognizedContra)}</span></div>
-      <div class="card"><span class="k">${t('fin.fillRate')}</span><span class="v">${tot.fillRate}%</span></div>
-      <div class="card"><span class="k">${t('fin.unitsMoved')}</span><span class="v">${qty(tot.receivedQty)} / ${qty(tot.invoicedQty)}</span></div>
+      <div class="card"><span class="k">${t('fin.contraAtRisk')}</span><span class="v">${money(wf0.atRisk)}</span></div>
+      <div class="card"><span class="k">${t('fin.pendingCredit')}</span><span class="v">${money(tot.pendingContra)}</span></div>
     </div>`;
   const plRows = [
     [t('fin.pl.revenue'), money(pl.revenue)],
@@ -275,10 +243,8 @@ function financeHtml(pf) {
     [t('fin.pl.pending'), money(pl.pendingContra)],
   ];
   const plTable = `<table class="grid pl"><tbody>${plRows.map(([k, v], i) => `<tr class="${i === 4 ? 'pl-strong' : ''}"><td>${k}</td><td class="num">${v}</td></tr>`).join('')}</tbody></table>`;
-  const wf = contraWaterfall(pf);
-  const wc = workingCapital(pf);
+  const wf = wf0;
   const ero = marginErosion(pf);
-  const tiers = tierProgress(pf);
   const rar = rebateAtRisk(pf);
   const wfMax = Math.max(1, wf.full);
   const wfBar = (step) => {
@@ -287,55 +253,48 @@ function financeHtml(pf) {
       <span class="wf-track"><span class="wf-fill wf-${step.kind}" style="width:${w}%"></span></span>
       <span class="wf-v">${money(step.value)}</span></div>`;
   };
-  const wcTile = `<div class="cards">
-    <div class="card"><span class="k">${t('wc.dpo')}</span><span class="v">${wc.dpo}d</span></div>
-    <div class="card"><span class="k">${t('wc.avgAge')}</span><span class="v">${wc.avgOpenAgeDays}d</span></div>
-    <div class="card"><span class="k">${t('wc.cashLocked')}</span><span class="v">${money(wc.cashLocked)}</span></div>
+  const distTable = tbl([t('th.distributor'), t('th.type'), t('fin.invoices'), t('fin.deliveredValue'), t('fin.contraRecognized'), t('fin.pendingCredit'), t('fin.fillRate')],
+    dist.map((d) => [d.distributorId, modelType(d.model), d.invoices, money(d.deliveredValue), money(d.recognizedContra), money(d.pendingContra), d.fillRate + '%']));
+  // Penalty calculator — one inline row per distributor, sliders side by side.
+  const penaltyBlock = `<div class="penalty-inline">
+    ${dist.map((d) => `<div class="penalty-row" data-base="${d.openValueAtRisk}">
+      <div class="penalty-top"><span class="pen-d">${d.distributorId}</span><span class="pen-base">${t('fin.penaltyBase')}: ${money(d.openValueAtRisk)}</span></div>
+      <label class="penalty-ctl">
+        <input type="range" class="penalty-range" min="0" max="5" step="0.5" value="0"/>
+        <output class="penalty-pct">0.0%</output>
+        <span class="penalty-amt">${money(0)}</span>
+      </label>
+    </div>`).join('')}
   </div>`;
-  const tierRows = tiers.map((d) => `<div class="tier-row">
-      <span class="tier-d">${d.distributorId} <span class="muted small">(${modelType(d.model)})</span></span>
-      <span class="tier-track"><span class="tier-fill" style="width:${d.pct}%"></span></span>
-      <span class="tier-meta">${d.currentPct}%${d.toNextTier > 0 ? ` → ${d.nextPct}% ${t('tier.inUnits', { n: qty(d.toNextTier) })}` : ` · ${t('tier.top')}`}${d.extraRebate > 0 ? ` · +${money(d.extraRebate)}` : ''}</span>
-    </div>`).join('');
   return `
    <div class="fin-view">
     <div class="fin-head"><h3>${t('fin.title')}</h3><button class="btn" id="board-export">${t('fin.boardExport')}</button></div>
     ${cards}
     ${kpi2}
     ${issueIndicators(pf)}
-    <h4>${t('fin.waterfallTitle')}</h4>
-    <div class="waterfall">${wf.steps.map(wfBar).join('')}</div>
-    <p class="muted small">${t('fin.waterfallNote')}</p>
-    <h4>${t('fin.wcTitle')}</h4>
-    ${wcTile}
-    <h4>${t('fin.tierTitle')} <span class="help" title="${t('fin.tierHelp')}">?</span></h4>
-    <div class="tier-penalty">
-      <div class="tier-col">
-        <h5 class="sub-h">${t('fin.tierProgressSub')}</h5>
-        <div class="tier-list">${tierRows || `<p class="muted">—</p>`}</div>
+
+    <h4>${t('fin.contraTitle')}</h4>
+    <div class="fin-two-col">
+      <div class="fin-col">
+        <h5 class="sub-h">${t('fin.plTitle')}</h5>
+        ${plTable}
+        <p class="muted small">${t('fin.plNote')}</p>
       </div>
-      <div class="penalty-col">
-        <h5 class="sub-h">${t('fin.penaltyTitle')} <span class="help" title="${t('fin.penaltyHelp')}">?</span></h5>
-        ${dist.map((d) => `<div class="penalty-row" data-base="${d.openValueAtRisk}">
-          <div class="penalty-top"><span class="pen-d">${d.distributorId}</span><span class="pen-base">${t('fin.penaltyBase')}: ${money(d.openValueAtRisk)}</span></div>
-          <label class="penalty-ctl">
-            <input type="range" class="penalty-range" min="0" max="5" step="0.5" value="0"/>
-            <output class="penalty-pct">0.0%</output>
-            <span class="penalty-amt">${money(0)}</span>
-          </label>
-        </div>`).join('')}
+      <div class="fin-col">
+        <h5 class="sub-h">${t('fin.waterfallTitle')}</h5>
+        <div class="waterfall">${wf.steps.map(wfBar).join('')}</div>
+        <p class="muted small">${t('fin.waterfallNote')}</p>
       </div>
     </div>
+
+    <h4>${t('fin.distTitle')}</h4>
+    ${distTable}
+    <h5 class="sub-h">${t('fin.penaltyTitle')} <span class="help" title="${t('fin.penaltyHelp')}">?</span></h5>
+    ${penaltyBlock}
+
     <h4>${t('fin.rebateRiskTitle')} (${money(ero.total)})</h4>
     ${tbl([t('th.invoice'), t('th.distributor'), t('fin.reason'), t('th.valueAtRisk')], rar.slice(0, 12).map((r) => [r.invoiceNumber, r.distributorId, t('reason.' + r.reason), money(r.atRisk)]))}
-    <h4>${t('fin.plTitle')}</h4>
-    ${plTable}
-    <p class="muted small">${t('fin.plNote')}</p>
-    <h4>${t('fin.distTitle')}</h4>
-    ${tbl([t('th.distributor'), t('th.type'), t('fin.invoices'), t('fin.deliveredValue'), t('fin.contraRecognized'), t('fin.pendingCredit'), t('fin.fillRate')],
-      dist.map((d) => [d.distributorId, modelType(d.model), d.invoices, money(d.deliveredValue), money(d.recognizedContra), money(d.pendingContra), d.fillRate + '%']))}
-    <h4>${t('fin.byStatus')}</h4>
-    ${tbl([t('th.status'), t('th.count')], Object.entries(fv.byStatus).sort(([a], [b]) => STATUS_ORDER.indexOf(a) - STATUS_ORDER.indexOf(b)).map(([s, c]) => [label(s), c]))}
+
     <h4>${t('fin.trendTitle')}</h4>
     ${financeChartsTail(pf)}
    </div>`;
@@ -368,9 +327,14 @@ export function boardSummaryHtml(pf) {
     <p class="muted">${t('home.digest', dg)}</p>
     <h4>${t('board.kpis')}</h4>
     <div class="cards">
-      <div class="card"><span class="k">${t('fin.invoices')}</span><span class="v">${tot.invoices}</span></div>
-      <div class="card"><span class="k">${t('fin.openVar')}</span><span class="v">${money(tot.openValueAtRisk)}</span></div>
+      <div class="card"><span class="k">${t('fin.invoicesReceived')}</span><span class="v">${tot.invoices}</span></div>
+      <div class="card"><span class="k">${t('fin.goodsVs')}</span><span class="v">${qty(tot.invoicedQty)} / ${qty(tot.receivedQty)}</span></div>
+      <div class="card"><span class="k">${t('fin.deliveredGoodsValue')}</span><span class="v">${money(tot.deliveredValue)}</span></div>
+    </div>
+    <h5 class="sub-h">${t('fin.contraRow')}</h5>
+    <div class="cards">
       <div class="card"><span class="k">${t('fin.contraRecognized')}</span><span class="v">${money(tot.recognizedContra)}</span></div>
+      <div class="card"><span class="k">${t('fin.contraAtRisk')}</span><span class="v">${money(wf.atRisk)}</span></div>
       <div class="card"><span class="k">${t('fin.pendingCredit')}</span><span class="v">${money(tot.pendingContra)}</span></div>
     </div>
     <h4>${t('fin.waterfallTitle')}</h4>
@@ -540,9 +504,8 @@ const collapsedSet = new Set(); // remembers collapsed invoices across re-render
 
 export function renderInventory(container, invoices, ctx, handlers = {}) {
   const months = inventoryMonths(invoices, ctx.goodsReceipts);
-  const partialOnly = handlers.partialOnly === true;
   const allMonths = handlers.allMonths === true;
-  const statusFilter = handlers.statusFilter || (partialOnly ? 'partial' : 'all');
+  const statusFilter = handlers.statusFilter || 'all';
   const month = allMonths ? '' : (handlers.month || months[months.length - 1] || '');
 
   // Build the list: all months (union) or a single month.
@@ -566,8 +529,8 @@ export function renderInventory(container, invoices, ctx, handlers = {}) {
   const monthOpts = months.map((m) => `<option value="${m}"${m === month ? ' selected' : ''}>${m}</option>`).join('');
   const filterBtn = (val, key) => `<button class="chip-btn${statusFilter === val ? ' active' : ''}" data-status="${val}">${t(key)}</button>`;
   const sortBtn = (val, key) => `<button class="chip-btn${sort === val ? ' active' : ''}" data-sort="${val}">${t(key)}</button>`;
-  const title = partialOnly ? t('nav.inventoryPartial') : t('nav.inventoryAll');
-  const statusBtns = partialOnly ? '' : `
+  const title = t('nav.inventoryAll');
+  const statusBtns = `
         ${filterBtn('all', 'inv.f.all')}
         ${filterBtn('partial', 'inv.f.partial')}
         ${filterBtn('intransit', 'inv.f.intransit')}

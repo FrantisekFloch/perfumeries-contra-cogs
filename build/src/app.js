@@ -13,10 +13,10 @@ import { runPipeline } from './lib/pipeline.js';
 import { ingestFiles, persistIngest } from './lib/ingest.js';
 import { matchInvoice } from './lib/matching.js';
 import { applyMatchStatus } from './lib/lifecycle.js';
-import { exportInventory, invoiceDetail } from './lib/inventory.js';
+import { exportInventoryCsv, invoiceDetail } from './lib/inventory.js';
 import { archiveInvoice, exportArchive } from './lib/archive.js';
 import { renderDashboard, renderInventory, connectForm, invoiceDocHtml, deliveryNoteDocHtml, homeHtml, boardSummaryHtml, chaseEmailText } from './ui/dashboards.js';
-import { whatIfContra, dataQuality } from './lib/insights.js';
+import { whatIfContra } from './lib/insights.js';
 import { t, setLang, getLang } from './lib/i18n.js';
 import { startTour } from './ui/tour.js';
 import { createBootLoader } from './ui/boot.js';
@@ -36,7 +36,7 @@ const store = new StateStore(getLocalStorageBackend() || createMemoryBackend(), 
 const session = new Session(getSessionBackend() || createMemoryKV());
 let ALL_PORTFOLIO = [];
 let lastIngest = null;
-let currentView = 'home'; // 'home' | 'role' | 'inventory' | 'inventoryPartial' | 'about'
+let currentView = 'home'; // 'home' | 'role' | 'inventory' | 'about'
 let storageFilter = null;
 let invMonth = null;
 let invAllMonths = true; // default: show all months
@@ -94,16 +94,16 @@ function renderRoleBar() {
   const role = session.getRole();
   const tab = (active, attrs, lbl) => `<button role="tab" aria-selected="${active}"${active ? ' aria-current="page"' : ''} class="role-tab${active ? ' active' : ''}" ${attrs}>${lbl}</button>`;
   const home = tab(currentView === 'home', 'data-home="1"', t('nav.home'));
-  const tabs = ROLES.map((r) => tab(currentView === 'role' && role === r, `data-role="${r}"`, t('nav.' + r))).join('');
-  const invAll = tab(currentView === 'inventory', 'data-inventory="1"', t('nav.inventoryAll'));
-  const invPart = tab(currentView === 'inventoryPartial', 'data-inventory-partial="1"', t('nav.inventoryPartial'));
+  const inv = tab(currentView === 'inventory', 'data-inventory="1"', t('nav.inventoryAll'));
+  // Finance dashboard before Operations dashboard (finance is the priority view).
+  const order = ['finance', 'operations'];
+  const tabs = order.map((r) => tab(currentView === 'role' && role === r, `data-role="${r}"`, t('nav.' + r))).join('');
   const about = tab(currentView === 'about', 'data-about="1"', t('nav.about'));
-  // Home first, then Inventory tabs, role tabs, and About.
-  bar.innerHTML = home + invAll + invPart + tabs + about;
+  // Home · Inventory · Finance · Operations · About.
+  bar.innerHTML = home + inv + tabs + about;
   bar.querySelectorAll('.role-tab').forEach((b) => b.addEventListener('click', () => {
     if (b.dataset.home) showHome();
-    else if (b.dataset.inventoryPartial) openInventory(true);
-    else if (b.dataset.inventory) openInventory(false);
+    else if (b.dataset.inventory) openInventory();
     else if (b.dataset.about) showAbout();
     else selectRole(b.dataset.role);
   }));
@@ -136,20 +136,18 @@ function openBoard() {
 function renderInventoryView() {
   const root = $('view-root'); show(root);
   const ctx = { goodsReceipts: store.all('goodsReceipts'), deliveryNotes: store.all('deliveryNotes'), creditNotes: store.all('creditNotes'), auditLog: store.auditLog() };
-  const partialOnly = currentView === 'inventoryPartial';
   const collapseAllDefault = invFreshOpen; invFreshOpen = false; // collapse once, on open
   renderInventory(root, store.all('invoices'), ctx, {
     month: invMonth,
     allMonths: invAllMonths,
-    statusFilter: partialOnly ? 'partial' : invStatusFilter,
+    statusFilter: invStatusFilter,
     sort: invSort,
-    partialOnly,
     collapseAllDefault,
     onMonth: (m) => { invMonth = m; invAllMonths = false; renderInventoryView(); },
     onAllMonths: (on) => { invAllMonths = on; renderInventoryView(); },
     onStatusFilter: (f) => { invStatusFilter = f; renderInventoryView(); },
     onSort: (s) => { invSort = s; renderInventoryView(); },
-    onExport: (month, list) => downloadText(`inventory_${month || 'all'}.json`, exportInventory(list)),
+    onExport: (month, list) => downloadText(`inventory_${month || 'all'}.csv`, exportInventoryCsv(list), 'text/csv'),
     onViewDoc: (invoice) => openDoc(invoice),
     onViewDeliveryNote: (invoice) => openDeliveryNote(invoice),
     onChase: (invNum) => openChase(invNum),
@@ -244,36 +242,15 @@ function wireDocModal() {
 }
 function renderHome() {
   const root = $('view-root'); show(root);
-  const quality = dataQuality({
-    invoices: store.all('invoices'), goodsReceipts: store.all('goodsReceipts'),
-    deliveryNotes: store.all('deliveryNotes'), creditNotes: store.all('creditNotes'),
-    incomplete: (lastIngest && lastIngest.incomplete) || [],
-  });
-  root.innerHTML = homeHtml(filteredPortfolio(), quality);
+  root.innerHTML = homeHtml(filteredPortfolio());
   root.querySelectorAll('.home-card').forEach((b) => b.addEventListener('click', () => {
     const go = b.dataset.go;
-    if (go === 'inventory') openInventory(false);
-    else if (go === 'inventoryPartial') openInventory(true);
+    if (go === 'inventory') openInventory();
     else if (go === 'about') showAbout();
     else selectRole(go);
   }));
-  // Clickable exception → jump to that invoice in Inventory (all months, expanded).
-  root.querySelectorAll('.exc-link').forEach((b) => b.addEventListener('click', () => focusInvoiceInInventory(b.dataset.inv)));
 }
 
-// Open Inventory (all months, unfiltered) and expand + scroll to a specific invoice.
-function focusInvoiceInInventory(invNum) {
-  invAllMonths = true; invStatusFilter = 'all';
-  openInventory(false);
-  setTimeout(() => {
-    const card = document.querySelector(`.inv-card[data-inv="${invNum}"]`);
-    if (!card) return;
-    if (card.classList.contains('collapsed')) { const tgl = card.querySelector('.inv-toggle'); if (tgl) tgl.click(); }
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card.classList.add('inv-flash');
-    setTimeout(() => card.classList.remove('inv-flash'), 1600);
-  }, 60);
-}
 function renderAbout() {
   const root = $('view-root'); show(root);
   // Terms-&-conditions-style manual: numbered sections + sticky table of contents.
@@ -338,14 +315,14 @@ function renderAbout() {
 }
 function renderCurrentView() {
   if (currentView === 'home') renderHome();
-  else if (currentView === 'inventory' || currentView === 'inventoryPartial') renderInventoryView();
+  else if (currentView === 'inventory') renderInventoryView();
   else if (currentView === 'about') renderAbout();
   else renderDash();
 }
 function showHome() { currentView = 'home'; renderRoleBar(); renderHome(); }
 function selectRole(role) { currentView = 'role'; session.setRole(role); renderRoleBar(); renderDash(); }
-function openInventory(partial = false) {
-  currentView = partial ? 'inventoryPartial' : 'inventory';
+function openInventory() {
+  currentView = 'inventory';
   invFreshOpen = true; // collapse all invoices on this fresh open
   renderRoleBar(); renderInventoryView();
 }
@@ -356,7 +333,7 @@ function showAbout() { currentView = 'about'; renderRoleBar(); renderAbout(); }
 // concrete on-screen targets to point its satellite tips at.
 function prepInventoryForTour() {
   invAllMonths = true; invStatusFilter = 'all';
-  openInventory(false);
+  openInventory();
   const firstToggle = document.querySelector('.inv-card.collapsed .inv-toggle');
   if (firstToggle) firstToggle.click(); // expand the first card if collapsed
 }
@@ -381,7 +358,6 @@ function launchTour() {
         { selector: '.inv-toggle', text: t('tour.sat.collapse'), dir: 'right' },
       ],
     },
-    { selector: '.role-tab[data-inventory-partial]', text: t('tour.partial'), before: () => openInventory(true) },
     {
       selector: '.role-tab[data-role="finance"]',
       text: t('tour.finance'),

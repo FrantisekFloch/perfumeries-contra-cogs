@@ -6,8 +6,8 @@
     <distributor id="DIST-EU-01" name="Maison Aroma s.r.o."/>
     <contraCogsModel>B</contraCogsModel>
     <poReference>PO-1021</poReference>
-    <invoiceDate>2026-07-09</invoiceDate>
-    <shipDate>2026-07-06</shipDate>
+    <invoiceDate>2026-07-18</invoiceDate>
+    <shipDate>2026-07-15</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">

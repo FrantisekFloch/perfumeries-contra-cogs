@@ -6,8 +6,8 @@
     <distributor id="DIST-EU-02" name="Nordic Scents AB"/>
     <contraCogsModel>A</contraCogsModel>
     <poReference>PO-1023</poReference>
-    <invoiceDate>2026-08-14</invoiceDate>
-    <shipDate>2026-08-13</shipDate>
+    <invoiceDate>2026-08-07</invoiceDate>
+    <shipDate>2026-08-06</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
