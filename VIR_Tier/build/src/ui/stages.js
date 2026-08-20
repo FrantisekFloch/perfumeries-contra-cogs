@@ -54,10 +54,21 @@ export function renderInputs(state) {
 // ---- Inputs SUMMARY sub-page (landing page after boot) ------------------
 // Shows how much of each document type was ingested, confirms the collection +
 // matching pass is complete, and offers a Continue button into ML Discovery.
+// Refined monoline SVG icons (24px, currentColor) — a professional alternative
+// to emoji. Stroke-based, consistent weight.
+const SUM_SVG = {
+  invoices: '<path d="M6 3h9l3 3v15H6z"/><path d="M9 8h6M9 12h6M9 16h4"/>',
+  deliveryNotes: '<path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7z"/><circle cx="7" cy="17" r="1.6"/><circle cx="17.5" cy="17" r="1.6"/>',
+  receipts: '<path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/>',
+  events: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+  ccogsEngine: '<circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>',
+  agreements: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15h5"/>',
+};
+const sumIcon = (key) => `<svg class="sum-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SUM_SVG[key] || SUM_SVG.agreements}</svg>`;
+
 export function renderInputsSummary(state) {
   const counts = DOC_CATS.map((c) => ({ key: c.key, label: t(c.label), n: state.store.all(c.coll).length }));
   const total = counts.reduce((s, c) => s + c.n, 0);
-  const ICON = { invoices: '🧾', deliveryNotes: '🚚', receipts: '🏭', events: '⚠️', ccogsEngine: '⚙️', agreements: '📄' };
 
   // recovery-side figures (analysis/matching result)
   const findN = state.discovery?.findings?.length || 0;
@@ -67,23 +78,22 @@ export function renderInputsSummary(state) {
 
   const tiles = counts.map((c) =>
     `<button class="sum-tile" data-sub="${c.key}">
-      <div class="sum-ico">${ICON[c.key] || '📁'}</div>
-      <div class="sum-n">${nf(c.n)}</div>
-      <div class="sum-l">${esc(c.label)}</div>
+      <div class="sum-ico">${sumIcon(c.key)}</div>
+      <div class="sum-tile-txt"><div class="sum-n">${nf(c.n)}</div><div class="sum-l">${esc(c.label)}</div></div>
     </button>`).join('');
 
   return `
     <p class="lead">${t('summaryLead')}</p>
 
     <div class="sum-hero">
-      <div class="sum-hero-badge">✓</div>
+      <div class="sum-hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
       <div>
         <div class="sum-hero-h">${t('summaryDone')}</div>
         <div class="sum-hero-sub">${t('summaryDoneSub', { total: nf(total) })}</div>
       </div>
     </div>
 
-    <h3>${t('summaryIngested')}</h3>
+    <h3 class="sum-h">${t('summaryIngested')}</h3>
     <div class="sum-grid">${tiles}</div>
 
     <div class="sum-result">
@@ -180,9 +190,14 @@ export function mlFindingCard(f, state = {}) {
       </div>`
     : '';
 
+  // contract duration badge (Yearly / Quarterly / Monthly / Half-year / Promo)
+  const windowType = group?.agreement?.windowType || null;
+  const durLabel = windowType ? t('dur' + windowType.replace(/_/g, '')) : '';
+  const durBadge = durLabel ? `<span class="dur-badge dur-${(windowType || '').toLowerCase()}">${esc(durLabel)}</span>` : '';
+
   return `<details class="mlfind">
     <summary class="ml-cols">
-      <span class="mf-main"><span class="chev">▶</span><strong>${esc(f.supplierName ?? f.supplierId)}</strong> <span class="mono">${f.agreementId}</span></span>
+      <span class="mf-main"><span class="chev">▶</span><strong>${esc(f.supplierName ?? f.supplierId)}</strong> <span class="mono">${f.agreementId}</span>${durBadge}</span>
       <span class="mf-scope">${f.scopeKey}</span>
       <span class="num mf-before">${nf(f.claimed)} ${c}</span>
       <span class="num mf-after">${nf(f.entitled)} ${c}</span>

@@ -5,7 +5,8 @@ import { runScan } from '../lib/source.js';
 import { ScanStatus } from '../lib/enums.js';
 import { t } from '../lib/i18n.js';
 
-const STEP_MS = 650;
+const STEP_MS = 900;
+const MIN_BOOT_MS = 6500; // keep the welcome/loading screen visible for a beat
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Friendly display labels for the scan sources (the underlying source .name
@@ -17,6 +18,7 @@ const SOURCE_LABEL = {
 };
 
 export async function runBoot(container, sources) {
+  const startedAt = Date.now();
   container.innerHTML = `
     <div class="boot">
       <div class="boot-badge">VIR<span class="tier">_Tier</span></div>
@@ -60,5 +62,8 @@ export async function runBoot(container, sources) {
 
   const result = await runScan(sources, { onStatus });
   await wait(STEP_MS);
+  // hold the loading screen so the user actually sees the "connecting…" step
+  const elapsed = Date.now() - startedAt;
+  if (elapsed < MIN_BOOT_MS) await wait(MIN_BOOT_MS - elapsed);
   return result;
 }

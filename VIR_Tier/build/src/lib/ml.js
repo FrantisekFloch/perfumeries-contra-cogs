@@ -74,7 +74,7 @@ export function scoreOpportunities(beforeAfter, reconstructions = [], consolidat
       driverPressure: weights.driverPressure * driverPressure,
       tierProximity: weights.tierProximity * tierProximity,
     };
-    const score = clamp01(contrib.magnitude + contrib.lift + contrib.driverPressure + contrib.tierProximity);
+    const rawScore = clamp01(contrib.magnitude + contrib.lift + contrib.driverPressure + contrib.tierProximity);
 
     const reasons = [];
     // lead with the concrete "process miss but goods delivered" story where present
@@ -98,6 +98,14 @@ export function scoreOpportunities(beforeAfter, reconstructions = [], consolidat
       .filter((cx) => (cx.volumeDelta || 0) !== 0)
       .map((cx) => ({ driver: cx.driver, units: cx.volumeDelta, note: cx.note })) : [];
     const restoredUnits = driverContributions.reduce((s, d) => s + d.units, 0);
+
+    // Complexity = how many correction rows this finding carries. Very heavy,
+    // many-row cases (e.g. stacked multi-cause pan-EU agreements) are harder to
+    // action and clutter the top of the list, so we apply a small priority
+    // penalty that pushes them toward the bottom without hiding them.
+    const complexity = driverContributions.length;
+    const complexityPenalty = complexity > 3 ? Math.min(0.6, (complexity - 3) * 0.12) : 0;
+    const score = clamp01(rawScore * (1 - complexityPenalty));
 
     // tier before (on engine/base volume) vs after (on reconstructed volume)
     const tierAt = (vol) => { let idx = -1; for (let i = 0; i < tiers.length; i++) { if (vol >= tiers[i].threshold) idx = i; else break; } return idx >= 0 ? { idx, rate: tiers[idx].rate, threshold: tiers[idx].threshold } : { idx: -1, rate: 0, threshold: 0 }; };
@@ -141,6 +149,7 @@ export function scoreOpportunities(beforeAfter, reconstructions = [], consolidat
         restoredUnits: Math.round(restoredUnits),
         reconstructedVolume: b.after.reconstructedVolume,
         driverContributions,
+        complexity,
         tierBefore, tierAfter,
         liftPct: Math.round(liftRatioRaw * 100),
         magnitudeZ: Number(magnitudeZ.toFixed(2)),
