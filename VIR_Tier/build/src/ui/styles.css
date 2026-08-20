@@ -394,6 +394,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .btn.tint-blue:hover { filter: brightness(1.05); }
 .btn.tint-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
 .btn.tint-ghost:hover { background: #fafafa; border-color: #cfcfcf; }
+.btn.tint-amber { background: #EBD9A6; border-color: #d9c384; color: #6b5312; font-weight: 600; }
+.btn.tint-amber:hover { filter: brightness(1.03); }
+.mf-actrow2 { margin-top: 8px; justify-content: flex-end; }
 
 /* finance journey per-stage issue counts */
 .jstep-count { font-size: 0.66rem; color: var(--muted); margin-top: 2px; font-weight: 600; }

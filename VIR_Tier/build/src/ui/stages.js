@@ -188,6 +188,9 @@ export function mlFindingCard(f, state = {}) {
           <button class="btn tint-ghost" data-exportdlg="${charge.chargeId}">${t('exportFile')}</button>
           <button class="btn tint-blue mf-gen" data-genfinding="${charge.chargeId}">${t('genContraInvoice')}</button>
         </div>
+        <div class="mf-actrow mf-actrow2">
+          <button class="btn tint-amber" data-doc="agreements|${esc(f.agreementId)}">${t('showAgreement')}</button>
+        </div>
       </div>`
     : '';
 
