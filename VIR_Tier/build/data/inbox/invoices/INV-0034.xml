@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-0034</invoiceNumber>
+    <type>final</type>
+    <agreementId>AGR-018</agreementId>
+    <distributor id="SUP-LUMIERE" name="Lumière Cosmetics SA"/>
+    <country>CZ</country>
+    <poReference>PO-2026-5641</poReference>
+    <invoiceDate>2026-04-08</invoiceDate>
+    <shipDate>2026-04-08</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>CZK</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="5000" pct="1"/>
+      <tier minQty="5001" maxQty="10000" pct="1.5"/>
+      <tier minQty="10001" maxQty="20000" pct="2"/>
+      <tier minQty="20001" maxQty="" pct="2.5"/>
+    </discount>
+    <totalValueStandard>851497.5</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>MSC-200</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>572</qtyInvoiced>
+      <unitPriceStandard>496.5</unitPriceStandard>
+      <targetStorage>WH-CZ-01</targetStorage>
+    </line>
+    <line>
+      <stockId>EDT-075</stockId>
+      <description>Eau de Toilette 75ml</description>
+      <qtyInvoiced>572</qtyInvoiced>
+      <unitPriceStandard>496.5</unitPriceStandard>
+      <targetStorage>WH-CZ-01</targetStorage>
+    </line>
+    <line>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>571</qtyInvoiced>
+      <unitPriceStandard>496.5</unitPriceStandard>
+      <targetStorage>WH-CZ-01</targetStorage>
+    </line>
+  </lines>
+</invoice>

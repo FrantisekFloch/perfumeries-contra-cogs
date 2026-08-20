@@ -1,0 +1,2 @@
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
+EVT-0029,REROUTE_SKIPPED_SCAN,AGR-009,SUP-NORD,SK,EDP-050,604,PUR-0017,2026-06-16,

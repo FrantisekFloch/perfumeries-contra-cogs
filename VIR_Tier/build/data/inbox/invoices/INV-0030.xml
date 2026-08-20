@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-0030</invoiceNumber>
+    <type>final</type>
+    <agreementId>AGR-016</agreementId>
+    <distributor id="SUP-NORD" name="Nordica Beauty Group"/>
+    <country>CZ</country>
+    <poReference>PO-2026-4224</poReference>
+    <invoiceDate>2026-02-13</invoiceDate>
+    <shipDate>2026-02-13</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="5000" pct="1"/>
+      <tier minQty="5001" maxQty="10000" pct="1.5"/>
+      <tier minQty="10001" maxQty="20000" pct="2"/>
+      <tier minQty="20001" maxQty="" pct="2.5"/>
+    </discount>
+    <totalValueStandard>405975.15</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>CRM-050</stockId>
+      <description>Face Cream 50ml</description>
+      <qtyInvoiced>5654</qtyInvoiced>
+      <unitPriceStandard>17.95</unitPriceStandard>
+      <targetStorage>WH-CZ-01</targetStorage>
+    </line>
+    <line>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>5654</qtyInvoiced>
+      <unitPriceStandard>17.95</unitPriceStandard>
+      <targetStorage>WH-CZ-01</targetStorage>
+    </line>
+    <line>
+      <stockId>LIP-004</stockId>
+      <description>Lipstick 4g</description>
+      <qtyInvoiced>5654</qtyInvoiced>
+      <unitPriceStandard>17.95</unitPriceStandard>
+      <targetStorage>WH-CZ-01</targetStorage>
+    </line>
+    <line>
+      <stockId>GFT-SET</stockId>
+      <description>Gift Set</description>
+      <qtyInvoiced>5655</qtyInvoiced>
+      <unitPriceStandard>17.95</unitPriceStandard>
+      <targetStorage>WH-CZ-01</targetStorage>
+    </line>
+  </lines>
+</invoice>

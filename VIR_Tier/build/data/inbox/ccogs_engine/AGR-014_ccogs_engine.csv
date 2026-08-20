@@ -1,0 +1,2 @@
+outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
+ENG-0014,AGR-014,SUP-BOTANI,CZ,2026,WEIGHT,5596.8,0.025,139.92,EUR,CCOGS_INVOICE,INV-0028,DN-0014,RCP-0086|RCP-0087|RCP-0088,5597 weight @ 2.50% = 139.92 EUR (base receipts only; missing leakage-driver units)

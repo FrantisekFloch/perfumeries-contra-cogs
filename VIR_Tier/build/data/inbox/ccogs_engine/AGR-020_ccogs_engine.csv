@@ -1,0 +1,2 @@
+outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
+ENG-0020,AGR-020,SUP-NORD,SK,2026,WEIGHT,3397.2800000000007,0.012,40.77,EUR,CCOGS_INVOICE,INV-0036,DN-0020,RCP-0111|RCP-0112|RCP-0113,3397 weight @ 1.20% = 40.77 EUR (full combined volume; no leakage)

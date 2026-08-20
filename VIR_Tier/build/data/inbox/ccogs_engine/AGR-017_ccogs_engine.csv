@@ -1,0 +1,2 @@
+outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
+ENG-0017,AGR-017,SUP-ORIENT,PL,2026,WEIGHT,3885.3,0.012,46.62,EUR,CCOGS_INVOICE,INV-0031,DN-0017,RCP-0096|RCP-0097,3885 weight @ 1.20% = 46.62 EUR (base receipts only; missing leakage-driver units)

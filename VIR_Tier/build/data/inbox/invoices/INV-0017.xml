@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-0017</invoiceNumber>
+    <type>final</type>
+    <agreementId>AGR-009</agreementId>
+    <distributor id="SUP-NORD" name="Nordica Beauty Group"/>
+    <country>SK</country>
+    <poReference>PO-2026-4707</poReference>
+    <invoiceDate>2026-06-18</invoiceDate>
+    <shipDate>2026-06-18</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="5000" pct="1"/>
+      <tier minQty="5001" maxQty="10000" pct="1.5"/>
+      <tier minQty="10001" maxQty="20000" pct="2"/>
+      <tier minQty="20001" maxQty="" pct="2.5"/>
+    </discount>
+    <totalValueStandard>57093.3</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>EDP-050</stockId>
+      <description>Eau de Parfum 50ml</description>
+      <qtyInvoiced>2008</qtyInvoiced>
+      <unitPriceStandard>14.22</unitPriceStandard>
+      <targetStorage>WH-PO</targetStorage>
+    </line>
+    <line>
+      <stockId>LIP-004</stockId>
+      <description>Lipstick 4g</description>
+      <qtyInvoiced>2007</qtyInvoiced>
+      <unitPriceStandard>14.22</unitPriceStandard>
+      <targetStorage>WH-PO</targetStorage>
+    </line>
+  </lines>
+</invoice>

@@ -1,0 +1,3 @@
+purchaseId,agreementId,supplierId,country,stockId,orderDate,qty,unitValue,weightPerUnit,currency
+PUR-0027-0,AGR-013,SUP-ORIENT,SK,EDP-050,2026-07-14,11398,8.47,0.28,EUR
+PUR-0027-1,AGR-013,SUP-ORIENT,SK,SRM-030,2026-07-14,11398,8.47,0.14,EUR

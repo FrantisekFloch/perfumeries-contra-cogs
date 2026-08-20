@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deliveryNote>
+  <deliveryNoteId>DN-0017</deliveryNoteId>
+  <invoiceNumber>INV-0031</invoiceNumber>
+  <invoiceRefs>INV-0031</invoiceRefs>
+  <agreementId>AGR-017</agreementId>
+  <targetStorageId>WH-PL-01</targetStorageId>
+  <country>PL</country>
+  <shipDate>2026-01-15</shipDate>
+  <deliveryStatus>Received</deliveryStatus>
+  <expectedDate></expectedDate>
+  <lines>
+    <line><stockId>EDT-075</stockId><qtyShipped>14390</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0031</invoiceRef></line>
+  </lines>
+</deliveryNote>

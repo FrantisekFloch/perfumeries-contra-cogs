@@ -1,0 +1,2 @@
+outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
+ENG-0024,AGR-024,SUP-LUMIERE,PL,2026,UNITS,23266,0.025,581.65,EUR,CCOGS_INVOICE,INV-0040,DN-0024,RCP-0124|RCP-0125|RCP-0126|RCP-0127,23266 units @ 2.50% = 581.65 EUR (full combined volume; no leakage)

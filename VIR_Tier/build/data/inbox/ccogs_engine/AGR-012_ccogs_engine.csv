@@ -1,0 +1,2 @@
+outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
+ENG-0012,AGR-012,SUP-BOTANI,PAN_EU,2026,UNITS,5985,per-country,59.85,EUR,CCOGS_DEBIT_NOTE,INV-0024|INV-0025|INV-0026,DN-0012,RCP-0078|RCP-0079|RCP-0080|RCP-0081|RCP-0082|RCP-0083,Summed per-country tiers (NOT aggregated pan-EU): 59.85 EUR. Missed the combined-volume tier + leakage-driver units.

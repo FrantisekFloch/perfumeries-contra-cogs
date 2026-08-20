@@ -1,0 +1,2 @@
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
+EVT-0039,BACKORDERING,AGR-015,SUP-BOTANI,CZ,EDP-050,434,PUR-0029,2026-03-08,2026-02-09

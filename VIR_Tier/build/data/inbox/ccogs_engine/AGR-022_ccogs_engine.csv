@@ -1,0 +1,2 @@
+outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
+ENG-0022,AGR-022,SUP-NORD,SK,2026,VALUE,147107.18,0.02,2942.14,EUR,CCOGS_INVOICE,INV-0038,DN-0022,RCP-0118|RCP-0119|RCP-0120,147107 value @ 2.00% = 2942.14 EUR (full combined volume; no leakage)

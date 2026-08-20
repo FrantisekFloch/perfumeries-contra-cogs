@@ -1,0 +1,2 @@
+outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
+ENG-0011,AGR-011,SUP-VELVET,PAN_EU,2026,UNITS,6836,per-country,82.03,EUR,CCOGS_DEBIT_NOTE,INV-0021|INV-0022|INV-0023,DN-0011,RCP-0069|RCP-0070|RCP-0071|RCP-0072|RCP-0073|RCP-0074|RCP-0075|RCP-0076|RCP-0077,Summed per-country tiers (NOT aggregated pan-EU): 82.03 EUR. Missed the combined-volume tier + leakage-driver units.

@@ -1,0 +1,3 @@
+purchaseId,agreementId,supplierId,country,stockId,orderDate,qty,unitValue,weightPerUnit,currency
+PUR-0017-0,AGR-009,SUP-NORD,SK,EDP-050,2026-06-18,2008,14.22,0.28,EUR
+PUR-0017-1,AGR-009,SUP-NORD,SK,LIP-004,2026-06-18,2007,14.22,0.03,EUR

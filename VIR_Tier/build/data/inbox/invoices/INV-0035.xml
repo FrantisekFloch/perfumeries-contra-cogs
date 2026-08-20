@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-0035</invoiceNumber>
+    <type>final</type>
+    <agreementId>AGR-019</agreementId>
+    <distributor id="SUP-LUMIERE" name="Lumière Cosmetics SA"/>
+    <country>PL</country>
+    <poReference>PO-2026-9040</poReference>
+    <invoiceDate>2026-01-03</invoiceDate>
+    <shipDate>2026-01-03</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="" pct="40"/>
+    </discount>
+    <totalValueStandard>212712.5</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>GFT-SET</stockId>
+      <description>Gift Set</description>
+      <qtyInvoiced>3039</qtyInvoiced>
+      <unitPriceStandard>17.5</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>EDP-100</stockId>
+      <description>Eau de Parfum 100ml</description>
+      <qtyInvoiced>3039</qtyInvoiced>
+      <unitPriceStandard>17.5</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>MSC-200</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>3039</qtyInvoiced>
+      <unitPriceStandard>17.5</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>CRM-050</stockId>
+      <description>Face Cream 50ml</description>
+      <qtyInvoiced>3038</qtyInvoiced>
+      <unitPriceStandard>17.5</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+  </lines>
+</invoice>

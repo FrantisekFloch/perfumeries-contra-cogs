@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<agreement>
+  <agreementId>AGR-002</agreementId>
+  <supplierId>SUP-LUMIERE</supplierId>
+  <supplierName>Lumière Cosmetics SA</supplierName>
+  <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
+  <basis>UNITS</basis>
+  <period>YEAR</period>
+  <scope>PAN_EU</scope>
+  <retrospectiveReach>WITHIN_PERIOD</retrospectiveReach>
+  <tierMeasure>PER_SKU</tierMeasure>
+  <windowType>HALF_YEAR</windowType>
+  <contractRef>CTR-2026-0002</contractRef>
+  <effectiveFrom>2026-01-01</effectiveFrom>
+  <effectiveTo>2026-06-30</effectiveTo>
+  <signatory>Mgr. Jana Kučerová</signatory>
+  <signatoryTitle>Head of Procurement</signatoryTitle>
+  <signedDate>2026-01-01</signedDate>
+  <governingLaw>Slovak Republic</governingLaw>
+  <tiers>
+    <tier threshold="0" rate="0.008"/>
+    <tier threshold="8000" rate="0.014"/>
+    <tier threshold="16000" rate="0.022"/>
+  </tiers>
+  <skuSet>
+    <sku>GFT-SET</sku>
+    <sku>SRM-030</sku>
+    <sku>MSC-200</sku>
+  </skuSet>
+  <engineConfiguredSkus>
+    <sku>GFT-SET</sku>
+    <sku>SRM-030</sku>
+  </engineConfiguredSkus>
+  <currencies>
+    <currency>EUR</currency>
+  </currencies>
+  <countries>
+    <country>SK</country>
+    <country>PL</country>
+    <country>CZ</country>
+  </countries>
+  <clauses>
+    <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>
+    <clause key="panEu">Clause 4.5 — Pan-EU aggregation: qualifying volume is combined across SK, PL and CZ.</clause>
+    <clause key="retro">Clause 4.7 — Retrospective true-up: achieving a tier reprices prior qualifying periods.</clause>
+    <clause key="control">Clause 6.1 — Volume recognised on transfer of control (goods received).</clause>
+  </clauses>
+</agreement>

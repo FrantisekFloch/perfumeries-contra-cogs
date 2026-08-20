@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<agreement>
+  <agreementId>AGR-013</agreementId>
+  <supplierId>SUP-ORIENT</supplierId>
+  <supplierName>Orient Essence Trading</supplierName>
+  <rebateStructure>SLIDING_INCREMENTAL</rebateStructure>
+  <basis>VALUE</basis>
+  <period>QUARTER</period>
+  <scope>PER_COUNTRY</scope>
+  <retrospectiveReach>WITHIN_PERIOD</retrospectiveReach>
+  <tierMeasure>COMBINED</tierMeasure>
+  <windowType>QUARTER</windowType>
+  <contractRef>CTR-2026-0013</contractRef>
+  <effectiveFrom>2026-07-01</effectiveFrom>
+  <effectiveTo>2026-09-30</effectiveTo>
+  <signatory>Anna Wiśniewska</signatory>
+  <signatoryTitle>Head of Procurement</signatoryTitle>
+  <signedDate>2026-07-01</signedDate>
+  <governingLaw>Slovak Republic</governingLaw>
+  <tiers>
+    <tier threshold="0" rate="0.01"/>
+    <tier threshold="5000" rate="0.015"/>
+    <tier threshold="10000" rate="0.02"/>
+    <tier threshold="20000" rate="0.025"/>
+  </tiers>
+  <skuSet>
+    <sku>EDP-050</sku>
+    <sku>SRM-030</sku>
+  </skuSet>
+  <engineConfiguredSkus>
+    <sku>EDP-050</sku>
+    <sku>SRM-030</sku>
+  </engineConfiguredSkus>
+  <currencies>
+    <currency>EUR</currency>
+  </currencies>
+  <countries>
+    <country>SK</country>
+  </countries>
+  <clauses>
+    <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>
+    <clause key="panEu">Clause 4.5 — Pan-EU aggregation: qualifying volume is combined across SK, PL and CZ.</clause>
+    <clause key="retro">Clause 4.7 — Retrospective true-up: achieving a tier reprices prior qualifying periods.</clause>
+    <clause key="control">Clause 6.1 — Volume recognised on transfer of control (goods received).</clause>
+  </clauses>
+</agreement>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-0040</invoiceNumber>
+    <type>final</type>
+    <agreementId>AGR-024</agreementId>
+    <distributor id="SUP-LUMIERE" name="Lumière Cosmetics SA"/>
+    <country>PL</country>
+    <poReference>PO-2026-7845</poReference>
+    <invoiceDate>2026-06-16</invoiceDate>
+    <shipDate>2026-06-16</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="5000" pct="1"/>
+      <tier minQty="5001" maxQty="10000" pct="1.5"/>
+      <tier minQty="10001" maxQty="20000" pct="2"/>
+      <tier minQty="20001" maxQty="" pct="2.5"/>
+    </discount>
+    <totalValueStandard>334099.76</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>CRM-050</stockId>
+      <description>Face Cream 50ml</description>
+      <qtyInvoiced>5817</qtyInvoiced>
+      <unitPriceStandard>14.36</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>MSC-200</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>5817</qtyInvoiced>
+      <unitPriceStandard>14.36</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>GFT-SET</stockId>
+      <description>Gift Set</description>
+      <qtyInvoiced>5817</qtyInvoiced>
+      <unitPriceStandard>14.36</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>LIP-004</stockId>
+      <description>Lipstick 4g</description>
+      <qtyInvoiced>5815</qtyInvoiced>
+      <unitPriceStandard>14.36</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+  </lines>
+</invoice>

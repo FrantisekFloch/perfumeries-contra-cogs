@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-0009</invoiceNumber>
+    <type>final</type>
+    <agreementId>AGR-005</agreementId>
+    <distributor id="SUP-VELVET" name="Velvet &amp; Co. Fragrances"/>
+    <country>SK</country>
+    <poReference>PO-2026-2375</poReference>
+    <invoiceDate>2026-01-14</invoiceDate>
+    <shipDate>2026-01-14</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="6000" pct="1.2"/>
+      <tier minQty="6001" maxQty="12000" pct="2"/>
+      <tier minQty="12001" maxQty="" pct="3"/>
+    </discount>
+    <totalValueStandard>115035.48</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>1783</qtyInvoiced>
+      <unitPriceStandard>21.51</unitPriceStandard>
+      <targetStorage>WH-SK-01</targetStorage>
+    </line>
+    <line>
+      <stockId>EDP-100</stockId>
+      <description>Eau de Parfum 100ml</description>
+      <qtyInvoiced>1783</qtyInvoiced>
+      <unitPriceStandard>21.51</unitPriceStandard>
+      <targetStorage>WH-SK-01</targetStorage>
+    </line>
+    <line>
+      <stockId>CRM-050</stockId>
+      <description>Face Cream 50ml</description>
+      <qtyInvoiced>1782</qtyInvoiced>
+      <unitPriceStandard>21.51</unitPriceStandard>
+      <targetStorage>WH-SK-01</targetStorage>
+    </line>
+  </lines>
+</invoice>

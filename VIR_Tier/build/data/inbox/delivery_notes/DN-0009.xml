@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deliveryNote>
+  <deliveryNoteId>DN-0009</deliveryNoteId>
+  <invoiceNumber>INV-0017</invoiceNumber>
+  <invoiceRefs>INV-0017</invoiceRefs>
+  <agreementId>AGR-009</agreementId>
+  <targetStorageId>WH-PO</targetStorageId>
+  <country>SK</country>
+  <shipDate>2026-06-18</shipDate>
+  <deliveryStatus>Received</deliveryStatus>
+  <expectedDate></expectedDate>
+  <lines>
+    <line><stockId>EDP-050</stockId><qtyShipped>4015</qtyShipped><targetStorage>WH-PO</targetStorage><invoiceRef>INV-0017</invoiceRef></line>
+  </lines>
+</deliveryNote>

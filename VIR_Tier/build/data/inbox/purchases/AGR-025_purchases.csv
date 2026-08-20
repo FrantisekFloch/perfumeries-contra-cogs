@@ -1,0 +1,3 @@
+purchaseId,agreementId,supplierId,country,stockId,orderDate,qty,unitValue,weightPerUnit,currency
+PUR-0041-0,AGR-025,SUP-BOTANI,PL,EDT-075,2026-04-19,9195,18.28,0.35,EUR
+PUR-0041-1,AGR-025,SUP-BOTANI,PL,LIP-004,2026-04-19,9194,18.28,0.03,EUR

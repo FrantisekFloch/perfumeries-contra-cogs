@@ -1,0 +1,3 @@
+receiptId,grnNumber,poRef,invoiceRef,deliveryNoteRef,purchaseId,agreementId,country,storageId,warehouseKind,reachedStep,scannedAtMain,stockId,qtyOrdered,qtyReceived,qtyAccepted,qtyRejected,condition,inspectedBy,orderDate,receiptDate,vatTaxPointDate
+RCP-0084,GRN-SK-2026-0084,PO-2026-2513,INV-0027,,PUR-0027-0,AGR-013,SK,WH-SK-01,MAIN,UNLOADED_SCANNED,true,EDP-050,11398,11398,11398,0,Good,J. Horák,2026-07-14,2026-07-14,
+RCP-0085,GRN-SK-2026-0085,PO-2026-2513,INV-0027,,PUR-0027-1,AGR-013,SK,WH-SK-01,MAIN,UNLOADED_SCANNED,true,SRM-030,11398,11398,11398,0,Good,M. Kowalski,2026-07-14,2026-07-17,

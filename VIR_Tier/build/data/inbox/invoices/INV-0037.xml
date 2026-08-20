@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-0037</invoiceNumber>
+    <type>final</type>
+    <agreementId>AGR-021</agreementId>
+    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <country>PL</country>
+    <poReference>PO-2026-6471</poReference>
+    <invoiceDate>2026-08-17</invoiceDate>
+    <shipDate>2026-08-17</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="8000" pct="0.8"/>
+      <tier minQty="8001" maxQty="16000" pct="1.4"/>
+      <tier minQty="16001" maxQty="" pct="2.2"/>
+    </discount>
+    <totalValueStandard>334124.08</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>EDP-100</stockId>
+      <description>Eau de Parfum 100ml</description>
+      <qtyInvoiced>4882</qtyInvoiced>
+      <unitPriceStandard>17.11</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>MSC-200</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>4882</qtyInvoiced>
+      <unitPriceStandard>17.11</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>4882</qtyInvoiced>
+      <unitPriceStandard>17.11</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>GFT-SET</stockId>
+      <description>Gift Set</description>
+      <qtyInvoiced>4882</qtyInvoiced>
+      <unitPriceStandard>17.11</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+  </lines>
+</invoice>

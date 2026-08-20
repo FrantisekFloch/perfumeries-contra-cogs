@@ -1,0 +1,12 @@
+{
+  "name": "vir-tier-recovery",
+  "version": "0.1.0",
+  "description": "VIR_Tier — CCOGS recovery engine (detect under-claimed volume incentive rebates, generate supplementing charges).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "serve": "node tools/serve.js",
+    "samples": "node tools/generate_samples.js"
+  }
+}

@@ -1,0 +1,2 @@
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
+EVT-0027,EXPIRED_WINDOW_LATE_DELIVERY,AGR-007,SUP-BOTANI,CZ,EDT-075,307,PUR-0013,2026-07-10,2026-06-08

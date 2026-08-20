@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-0005</invoiceNumber>
+    <type>final</type>
+    <agreementId>AGR-002</agreementId>
+    <distributor id="SUP-LUMIERE" name="Lumière Cosmetics SA"/>
+    <country>PL</country>
+    <poReference>PO-2026-5109</poReference>
+    <invoiceDate>2026-01-07</invoiceDate>
+    <shipDate>2026-01-07</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="8000" pct="0.8"/>
+      <tier minQty="8001" maxQty="16000" pct="1.4"/>
+      <tier minQty="16001" maxQty="" pct="2.2"/>
+    </discount>
+    <totalValueStandard>82214.92</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>GFT-SET</stockId>
+      <description>Gift Set</description>
+      <qtyInvoiced>1555</qtyInvoiced>
+      <unitPriceStandard>17.62</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>1555</qtyInvoiced>
+      <unitPriceStandard>17.62</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>MSC-200</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>1556</qtyInvoiced>
+      <unitPriceStandard>17.62</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+  </lines>
+</invoice>

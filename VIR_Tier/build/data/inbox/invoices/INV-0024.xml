@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-0024</invoiceNumber>
+    <type>final</type>
+    <agreementId>AGR-012</agreementId>
+    <distributor id="SUP-BOTANI" name="Botanika Naturals"/>
+    <country>SK</country>
+    <poReference>PO-2026-2913</poReference>
+    <invoiceDate>2026-02-17</invoiceDate>
+    <shipDate>2026-02-17</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="5000" pct="1"/>
+      <tier minQty="5001" maxQty="10000" pct="1.5"/>
+      <tier minQty="10001" maxQty="20000" pct="2"/>
+      <tier minQty="20001" maxQty="" pct="2.5"/>
+    </discount>
+    <totalValueStandard>32258.55</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>LIP-004</stockId>
+      <description>Lipstick 4g</description>
+      <qtyInvoiced>987</qtyInvoiced>
+      <unitPriceStandard>16.35</unitPriceStandard>
+      <targetStorage>WH-SK-01</targetStorage>
+    </line>
+    <line>
+      <stockId>EDP-050</stockId>
+      <description>Eau de Parfum 50ml</description>
+      <qtyInvoiced>986</qtyInvoiced>
+      <unitPriceStandard>16.35</unitPriceStandard>
+      <targetStorage>WH-SK-01</targetStorage>
+    </line>
+  </lines>
+</invoice>

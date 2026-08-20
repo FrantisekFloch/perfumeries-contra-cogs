@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<agreement>
+  <agreementId>AGR-003</agreementId>
+  <supplierId>SUP-NORD</supplierId>
+  <supplierName>Nordica Beauty Group</supplierName>
+  <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
+  <basis>UNITS</basis>
+  <period>MONTH</period>
+  <scope>PER_COUNTRY</scope>
+  <retrospectiveReach>WITHIN_PERIOD</retrospectiveReach>
+  <tierMeasure>COMBINED</tierMeasure>
+  <windowType>MONTH</windowType>
+  <contractRef>CTR-2026-0003</contractRef>
+  <effectiveFrom>2026-02-01</effectiveFrom>
+  <effectiveTo>2026-02-28</effectiveTo>
+  <signatory>Dr. Martin Svoboda</signatory>
+  <signatoryTitle>Head of Procurement</signatoryTitle>
+  <signedDate>2026-02-01</signedDate>
+  <governingLaw>Poland</governingLaw>
+  <tiers>
+    <tier threshold="0" rate="0.01"/>
+    <tier threshold="5000" rate="0.015"/>
+    <tier threshold="10000" rate="0.02"/>
+    <tier threshold="20000" rate="0.025"/>
+  </tiers>
+  <skuSet>
+    <sku>MSC-200</sku>
+    <sku>GFT-SET</sku>
+    <sku>CRM-050</sku>
+    <sku>EDP-100</sku>
+  </skuSet>
+  <engineConfiguredSkus>
+    <sku>MSC-200</sku>
+    <sku>GFT-SET</sku>
+    <sku>CRM-050</sku>
+    <sku>EDP-100</sku>
+  </engineConfiguredSkus>
+  <currencies>
+    <currency>EUR</currency>
+  </currencies>
+  <countries>
+    <country>PL</country>
+  </countries>
+  <clauses>
+    <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>
+    <clause key="panEu">Clause 4.5 — Pan-EU aggregation: qualifying volume is combined across SK, PL and CZ.</clause>
+    <clause key="retro">Clause 4.7 — Retrospective true-up: achieving a tier reprices prior qualifying periods.</clause>
+    <clause key="control">Clause 6.1 — Volume recognised on transfer of control (goods received).</clause>
+  </clauses>
+</agreement>

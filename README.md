@@ -1,4 +1,18 @@
-# Perfumeries
+# VIR_Tier — CCOGS Recovery Engine (default) · Perfumeries — Contra COGS Reconciliation (archived)
+
+This repository now hosts **two standalone demo tools**. The **default page** (`index.html` at the repo root) is the newer **VIR_Tier** tool; the earlier **Perfumeries** tool is preserved and still reachable.
+
+## The two tools
+
+- **VIR_Tier — CCOGS Recovery Engine** — the current default. A single-file, offline-capable tool that detects under-claimed volume rebates (Contra-COGS), reconstructs the true qualifying volume, and prepares a recoverable True-Up. EN/SK/PL/CZ, light theme.
+  - Served entry: **`index.html`** (repo root, self-contained).
+  - Source + tests + generator: **`VIR_Tier/build/`** (`node --test`, `node tools/build_offline.js`).
+- **Perfumeries — Contra COGS Reconciliation** — the earlier tool, kept for reference.
+  - Reachable at **`perfumeries.html`** (repo root, self-contained), or from its full source tree at **`build/`** (`build/index.html`).
+
+Everything below documents the original Perfumeries build workspace, which remains intact under `build/`.
+
+---
 
 A fresh, standalone project. **No connection** to the other workspace tools (Atlas, ACM, FinOps, Work Tracker, etc.) or their steering files. This tool is designed to run **online** and may use a **cloud environment** in its final stage.
 

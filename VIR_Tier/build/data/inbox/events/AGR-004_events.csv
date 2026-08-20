@@ -1,0 +1,2 @@
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
+EVT-0020,FORGOTTEN_SKU,AGR-004,SUP-NORD,PL,LIP-004,2650,PUR-0008,2026-07-06,

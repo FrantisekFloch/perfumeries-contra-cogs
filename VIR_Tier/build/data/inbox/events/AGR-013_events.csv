@@ -1,0 +1,2 @@
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
+EVT-0037,RETURN_REJECTION,AGR-013,SUP-ORIENT,SK,EDP-050,373,PUR-0027,2026-07-20,

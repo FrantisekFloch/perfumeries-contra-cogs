@@ -1,0 +1,132 @@
+# VIR_Tier — Resume Point
+
+_Last saved: 2026-08-19 (end of day — full save)_
+
+## Where we are
+New **VIR_Tier** recovery sub-tool is **built, tested, and running the full slide flow**. **59 tests passing.** Runs served (`tools/serve.js`) and as a single-file offline demo (`build/offline/vir_tier_offline.html`, 339 KB, boots clean). Light theme. The old reconciliation tool in `Perfumeries/build/` is untouched.
+
+## Finishing pass — summary page, tougher data, full i18n, richer finance (latest)
+Five finishing changes:
+- **Inputs Summary landing page**: added a `summary` sub (last, after Agreements) rendered by `renderInputsSummary`; the app now opens on it. Boot overlay reworked into a welcome ("connecting to databases, supplier sources and warehouses, collecting updates…") with a badge + spinner and friendly source labels (source `name`s kept as Database/API/Folder for the e2e test). Sub-nav items show live counts `(42)`. The summary shows a "collection & matching complete" hero, six ingested-volume tiles (clickable), result KPIs (discrepancies / clean / recoverable EUR) and a **Continue to ML Discovery** button.
+- **Tougher, more exciting scenarios**: new `triple_threat` (PAN-EU, forgotten SKU + found-later pallet + reroute stacked → jumps 1.4%→2.2%, ~23k units restored, 10 True-Up lines) and a `clean` scenario (7 reps, PER_COUNTRY, matched engine claim → no charge). Portfolio is now **26 agreements = 17 recoverable + 9 clean**, window mix MONTH 11 / QUARTER 7 / HALF_YEAR 3 / YEAR 5.
+- **Full i18n**: the language selector now translates the whole app. Filled all 67 previously-EN-only keys in SK/PL/CZ and added ~50 new keys, then converted hardcoded English in the ML card (legend, story, tables, per-country, goods-behind-base), Finance Overview (KPIs, banner, chart titles, duration section, grouped opportunities), Summary, boot, and the process-journey (stage labels + issue chips) to `t()`. Document layouts (invoice / contract / GRN) keep their intentional bilingual SK/EN labels. Verified EN vs SK differ with no English leakage; 36 renders (9 views × 4 languages) clean.
+- **Finance dashboard**: the process journey now shows, per stage of travel, healthy movements **plus concrete issue-type chips** (late delivery, missed scan, returned/kept, SKU not in system, rerouted…), mapped from the reconstruction corrections. Added a **performance-by-contract-duration** section (recoverable-EUR chart + fail-rate chart + table by Monthly/Quarterly/Half-year/Yearly). The three charts are now **full page width**. Top recovery opportunities are **grouped by supplier** (with a subtotal header row) then by contract validity.
+- **Closed/clean deliveries + ML before-block**: with the new `clean` cases there is more healthy data, and ML Discovery now leads with a 4-panel flow **Total portfolio → Skipped — no issue found → CCOGS Engine (before) → VIR_Tier reconstructed (after)**.
+- 59 tests pass; offline rebuilt (**491 KB**, 189 data files) and boots clean.
+
+## Finding actions + documents rework (previous)
+Reworked the ML finding action buttons and several document views.
+- **Finding buttons**: removed the big full-width green button; now **3 compact, left-aligned, tinted** buttons per finding — **Review Document** (light green `tint-green`), **Export as CSV/XML** (light orange `tint-orange`), **Reject and Archive** (subtle `tint-ghost`).
+- **Review Document modal** gained a **Generate Contra-COGS Invoice** button (`data-gencontra` -> `openContraInvoice`). It renders `contraCogsInvoiceHtml` — a professional **supplier-facing debit note** with the parties **reversed** (Buyer = issuer, Supplier = billed-to, per rebate-settlement regs) and **supplier-friendly line descriptions** (`CONTRA_LINE_TEXT`: e.g. "Rebate on goods delivered to a regional warehouse (dispatch confirmed, awaiting central scan)") instead of the internal engine's technical leakage cause. Approve/Export/Inject in the modal retinted (green/orange/blue).
+- **Export as CSV/XML**: `openExportDialog` opens a format chooser; CSV via `chargesToCsv`, XML via a new `chargeToXml` in app.js.
+- **Reject and Archive**: `openArchiveDialog` shows a comment box + "will be archived and no longer appear in the suggested list"; `archiveFinding` drops the matching finding + charge and records it in `state.archived`, which `recompute()` re-filters so archived suggestions stay gone.
+- **Process journey relocated**: removed from the **invoice**; extracted `journeyStateFor` and added reusable **`processJourney`** at the bottom of **delivery notes** and **goods receipts**; added **`financeJourney`** to the **Finance Overview** — aggregates all portfolio receipts and shows an **issue count under each stage of travel** (goods still in transit or that missed a scan).
+- **Invoice** gained the **"Line-item distribution by storage / Rozpis položiek podľa skladu"** section (ported from the perfumeries tool; per-line x warehouse split from delivery notes, with totals).
+- **Delivery notes** now look invoice-like at the top: an **invoice-style parties header** ("Dispatched from / Sklad odoslania" = source store/DC entity -> "Ship to / Príjemca") plus a "From store / DC" meta field.
+- i18n: added `genContraInvoice, exportAs, exportFormatQ, archiveTitle, archiveComment, archiveNote, archive, cancel, archivedMsg, contraInvoiceTitle` (EN/SK/PL/CZ); `exportFile` changed to "Export as CSV/XML".
+- 59 tests pass; offline **387 KB** boots clean; a node smoke test rendered 22 documents (invoices/DN/GRN/contra-invoice/overview/ML) with no runtime errors.
+
+## ⭐ OPEN POINTS FOR NEXT SESSION (pick up here)
+1. **Remove the Analyst Review stage.** User decided it's redundant — the analysis/points it shows are already covered by the earlier steps (Inputs/Before-After, Consolidation, ML Discovery). Next session: drop stage 4 "Analyst Review" from the sidebar/flow in `src/app.js` (STAGES array) and re-route; the draft-charges table it held can move into ML Discovery or straight to the Approver queue. Decide where the "draft supplementing charges" list lives once Analyst is gone (likely: ML Discovery → approve, or a small "Charges" view feeding the Approver). Keep `renderAnalyst` code until we confirm nothing unique is lost (before/after + charges table).
+2. **(Fixed today, verify visually)** ML Discovery column alignment — header + rows now share `.ml-cols` 6-column grid; confirm on screen the values sit under Original / Recomputed / Leakage / Priority.
+3. Optional label check: "Priority" (renamed from "Opportunity") — confirm wording or pick another (Urgency / Recovery priority).
+4. Deeper i18n for SK/PL/CZ (nav labels localized; detail strings fall back to EN).
+5. Audit-log stage + About/Manual in sidebar footer; Overview chart drill-through; guided tour.
+
+## Full-flow update
+- **CCOGS Engine output** is now a real input file (the "before"); `ccogsEngine` collection, parser, model, enriched with invoice/DN/receipt refs + calc-trail note.
+- **Before/After + cost-of-inaction** in the pipeline (`out.beforeAfter`).
+- **ML discovery** (`lib/ml.js`): explainable scoring + confidence + reasons + computed/illustrative pattern insights; runs before suggestions; opt-in in the UI.
+- **CSV export** primary (billing-ingestible) + companion audit CSV.
+
+## Stage consolidation (latest) — 3 stages
+Simplified the workspace to **3 stages: Inputs → ML Discovery → Finance Overview**.
+- **"Leakage" renamed to "True-Up"** everywhere in ML Discovery (columns, legend, totals, finding cards).
+- **Consolidation stage removed**; its **per-country roll-up** and **goods-receipts-behind-the-base** tables moved into the ML finding's expand panel.
+- **ML finding**: removed the "Why this priority" signal-bar breakdown and the "Use this suggestion" button. Added a role-gated **Review** action on each finding (opens the full review + True-Up modal); Approve/Reject/Export/Inject now live there.
+- **Finance Approver stage removed** — its actions live on the ML finding, still gated to the Finance Approver role (selected in the sidebar). Non-approvers see a "browsing" note + a View button.
+- **Analyst Review stage removed.**
+- **Finance Overview rebuilt** as a savings & earnings summary: portfolio before (engine claimed) → after (tool entitled) cards, total recoverable True-Up + % uplift, pipeline status (injected/approved/pending), and recovery breakdowns by supplier/country/period + a top-opportunities table.
+- 59 tests pass; offline 369 KB boots clean; 11-point render check green.
+
+## Real CCOGS-loss rework — the big one
+Reworked the tool to model the REAL losing-money situations, not abstract leakage:
+- **Contracts**: flexible windows (month/quarter/half-year/year), SKU set (=ASINs) with combined or per-SKU tier measurement, `engineConfiguredSkus` subset (forgotten-SKU), + legal metadata (contractRef, signatory, governing law).
+- **Eligibility** now keys off the **order/invoice date inside the contract window** — goods ordered in-window qualify even if delivered/unloaded after expiry (the current engine wrongly requires the delivery-note date in-window; that mismatch is the miss).
+- **New loss situations** (all restore volume + drive a True-Up): expired-window-late-delivery, found-later pallet, forgotten SKU, reroute/skipped-scan.
+- **True-Up** (`lib/trueup.js`): the recovery output is now a CCOGS True-Up debit note that **itemizes each cause as a line** but headlines the **cumulative tier delta** (e.g. 1% → 2%). Flows through approval → CSV → injection unchanged. Verified: multi-cause True-Up 0.8%→1.4% with tier-uplift + forgotten-SKU lines.
+- **Warehouse hierarchy**: Country/Main WH (WH-SK-01…) → Town WH (WH-PO, WH-ZA…). Reroute = goods to town WH without the main-WH scan.
+- **ML** now recognises the four real patterns (skipped-scan-but-delivered, ordered-in-window/delivered-late, forgotten-SKU, found-pallet) as computed insights, and finding reasons lead with the concrete "process miss but goods delivered" story.
+- **Contract document view** — a distinct **legal-style** layout (recitals BETWEEN/AND/WHEREAS, numbered clauses 1–8, Schedules A/B/C, signature blocks), different from the invoice.
+- **Invoice process-journey visual** (invoice view only): Invoice → Order → Fulfillment → Truck driving → Truck waiting → Unloaded & scanned (delivery note) → Town WH. Last reached = active, future = faded, **skipped-but-delivered = inactive gap** (dashed connector) with a "the tool caught this" note.
+- Sample generator reworked for all scenarios; 59 tests pass; offline 380 KB boots clean; all four new views verified rendering.
+
+## ML column-alignment fix (end of day)
+- ML Discovery findings header + each finding summary now share a single `.ml-cols` 6-column grid (chevron moved inside the first cell so it no longer consumes a column and pushes values out / wraps to a 2nd row). Verified 6 header cells == 6 summary cells.
+
+## ML + Consolidation clarity update
+- **ML Discovery** now has a legend explaining the terms, clear columns **Original CCOGS (claimed) / Recomputed CCOGS (entitled) / Leakage (recoverable) / Priority (0–100 work-rank, not money)**, and **expandable finding cards** showing: a plain-language story (engine claimed X on volume Y → reconstructed Z = base + restored units → tier before/after → entitled → leakage), a "Where the volume came from" table (base + per-driver contributions), a before→after money table, and a "Why this priority" signal breakdown (each signal's value, weight, and points contributed). `ml.js` findings enriched with `claimed/entitled/leakage/priority/derivation/weights/contrib`; `runDiscovery` returns `totalLeakage`.
+- **Consolidation** now opens with a "what is consolidation / why it matters / how to read a row" narrative + KPI cards, and each agreement expands to a reconstruction story (base → restored → combined → tier → before/after money), a per-country roll-up (shows pan-EU combine), a "units restored by leakage drivers — why it was missing" table, and the goods receipts (GRN) behind the base volume.
+- 59 tests pass; offline 339 KB boots clean.
+
+## Agreement sheet update
+- The **Agreement document** (`agreementDocHtml` in `src/ui/doc.js`) is now a rich, eye-catching rebate-agreement sheet: status ribbon (UNDER-CLAIMED / ON TARGET), supplier+buyer parties with key-account contacts, term + model + basis/scope/currencies meta, **4 headline metric cards**, a **tier-progress bar** (achieved tier + units to next), a **tier ladder table** (achieved tier highlighted), an **allowance-components table with multiple rows** (VIR / growth bonus / marketing allowance / co-op fund), settlement terms, eligible product scope, and an **"Invoices applied under this agreement"** table (invoice, country, date, qty, value, warehouses + totals). Achieved metrics derived live from the pipeline's beforeAfter. New supplier contacts + settlement terms in `companies.js`. Verified all sections render; 59 tests pass; offline 326 KB.
+
+## Realism + volume update
+- **Volume reduced ~60%**: 19 cases (was 48). Files ~151 (was 462).
+- **Broke the 1:1:1**: Invoices 45 · **Delivery Notes 19 (consolidated** — pan-EU dispatches cover multiple invoices/warehouses on one note) · **Goods Receipts 81 (out-number** — 1–3 partial GRN receipts per delivery, with ordered/received/accepted/rejected/condition/inspector).
+- **Realistic document views** (`src/ui/doc.js` + `src/lib/companies.js`): invoice & delivery-note reuse the old tool's realistic layout (letterhead, parties, meta grid, line table, VAT, e-invoice badge, rebate tiers); **GRN** = standard Goods Received Note; **OSD/Exception** = reason code + qty affected + backorder + "why this matters"; **CCOGS Engine** = calc trail + linked docs. New perfume company/product reference data across SK/PL/CZ.
+- 59 tests pass; offline rebuilt (313 KB) + runtime-verified; all 5 doc renderers verified.
+
+## Workspace update (left-nav)
+- App is now a **left-nav workspace**: `src/app.js` renders a sidebar (2-level nav) + wide working area; free navigation; role selector in the sidebar gates approve/reject/export/inject to Finance Approver.
+- **6 navigable stages:** 1 Inputs & Collection (file browser + doc modal View/Print/Download; `src/ui/stages.js` + `src/ui/doc.js`), 2 Consolidation (expandable drill-downs), 3 ML Discovery (SVG Visio flow + hover + "How it works"), 4 Analyst (sections split by blank row + `<hr>`), 5 Approver, 6 Overview.
+- Real **invoices (120)** + **delivery notes (120)** inputs; reuse old-tool XML formats with new perfume values.
+- **59 tests passing.** Offline single-file rebuilt (484 KB) + runtime-verified.
+- Light theme throughout (no black); old top-bar back button removed (superseded by sidebar).
+
+## Next-session ideas (updated)
+1. Localise the deeper strings for SK/PL/CZ (nav labels done; detail strings fall back to EN).
+2. Audit-log stage (secondary nav) — surface the immutable audit trail as its own screen.
+3. About/Manual stage in the sidebar footer.
+4. Overview drill-through from a chart bar into the underlying charges.
+5. Wire a guided tour across the stages.
+
+## What's done
+- **Concept locked** — `CONCEPT.md` (§11 answers) + process map from `PErfumeries.pptx`.
+- **Spec** — `.kiro/specs/vir-tier-recovery/` (requirements 12 EARS reqs, design, tasks 18).
+- **Engines (pure, tested):** enums, models, periods (control vs VAT), money (FX), audit (immutable), store, parsers (agreement XML + purchase/receipt/event/claimed CSV), ingest, consolidation, reconstruction (5 leakage drivers + de-dup + pan-EU), rebate (4 structures + retrospective reach), variance + supplementing charge, pipeline, source/scanner, approval, injection, regnotes.
+- **Sample data:** 48 cases · 6 suppliers · 6 each of 8 scenarios (pan_eu, return_rejection, overage, backorder, late, retro, mixed_fx, zero_variance). `tools/generate_samples.js` (deterministic).
+- **UI:** boot scan animation → 3 role views (Analyst / Finance Approver / Finance Overview) → review document modal; selectable controls with real-time recompute; hover regulatory tooltips; EN/SK/PL/CZ i18n; SVG charts; export/inject with approval gating.
+- **Offline build:** `tools/build_offline.js` emulates ES modules (IIFE + `__require` registry) so it bundles into one file without name collisions. Verified at runtime.
+
+## Verified behavior
+- Ingest 48 agreements, 0 parse errors.
+- 42 recoverable charges; 6 zero-variance controls correctly produce none.
+- 6 mixed-currency (PLN+EUR) value pan-EU charges carry an FX-derived EUR equivalent.
+- Each charge cites its agreement clause, starts Pending_Approval, has an audit trace.
+- Approval gates export/inject; rejection records a reason.
+- Pan-EU combined entitlement ≥ per-country split.
+
+## How to run / verify
+```
+cd "Perfumeries/VIR_Tier/build"
+node --test                    # 50 tests
+node tools/serve.js            # http://localhost:8080
+node tools/generate_samples.js # regenerate samples
+node tools/build_offline.js    # rebuild offline single-file
+```
+
+## Open / next-session ideas
+1. **Guided tour** ("walk me through") — string keys exist; wire a tour like the old tool.
+2. **Retrospective UI** — expose within-period vs prior-periods reach as a control + show reopened periods in the review doc.
+3. **VAT divergence surfacing** — show the flag + tooltip prominently in the Analyst/Inventory views.
+4. **Per-driver drill-down** in the Analyst view (list the exact events behind each correction).
+5. **Charts** — add recovered-vs-at-risk and trend/forecast (old tool has patterns to borrow).
+6. **Cloud stage** — real DB/API adapters, real auth, persistent audit (layers already isolated).
+7. **Accessibility pass** — keyboard/focus, ARIA on modal + tooltips.
+
+## Key files
+- Concept: `CONCEPT.md` · Spec: `.kiro/specs/vir-tier-recovery/{requirements,design,tasks}.md`
+- Engines: `build/src/lib/*` · UI: `build/src/ui/*` · Entry: `build/src/app.js`
+- Samples: `build/data/inbox/*` + `manifest.json` + `fx_rates.json`

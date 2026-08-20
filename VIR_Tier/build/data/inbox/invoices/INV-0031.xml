@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <header>
+    <invoiceNumber>INV-0031</invoiceNumber>
+    <type>final</type>
+    <agreementId>AGR-017</agreementId>
+    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <country>PL</country>
+    <poReference>PO-2026-5144</poReference>
+    <invoiceDate>2026-01-15</invoiceDate>
+    <shipDate>2026-01-15</shipDate>
+    <incoterms>FOB_SHIPPING_POINT</incoterms>
+    <currency>EUR</currency>
+    <discount basis="total_volume">
+      <tier minQty="1" maxQty="6000" pct="1.2"/>
+      <tier minQty="6001" maxQty="12000" pct="2"/>
+      <tier minQty="12001" maxQty="" pct="3"/>
+    </discount>
+    <totalValueStandard>376442.4</totalValueStandard>
+  </header>
+  <lines>
+    <line>
+      <stockId>EDT-075</stockId>
+      <description>Eau de Toilette 75ml</description>
+      <qtyInvoiced>7195</qtyInvoiced>
+      <unitPriceStandard>26.16</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>CRM-050</stockId>
+      <description>Face Cream 50ml</description>
+      <qtyInvoiced>7195</qtyInvoiced>
+      <unitPriceStandard>26.16</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+  </lines>
+</invoice>

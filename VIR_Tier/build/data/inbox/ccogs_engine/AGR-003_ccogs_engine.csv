@@ -1,0 +1,2 @@
+outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
+ENG-0003,AGR-003,SUP-NORD,PL,2026,UNITS,4414,0.01,44.14,EUR,CCOGS_INVOICE,INV-0007,DN-0003,RCP-0022|RCP-0023|RCP-0024|RCP-0025,4414 units @ 1.00% = 44.14 EUR (base receipts only; missing leakage-driver units)
