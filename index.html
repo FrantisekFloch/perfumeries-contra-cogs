@@ -500,8 +500,59 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .dur-badge.dur-quarter { background: #FBEFE0; color: #8a5a12; border-color: #F0D9BC; }
 .dur-badge.dur-month { background: #F3E7F7; color: #7a3a8a; border-color: #e0c6f0; }
 .dur-badge.dur-custom { background: #FBE7EC; color: #a8305a; border-color: #f3c6d4; }
+
+/* ---- Login gate (demo) — light theme ---- */
+.login-screen, .denied-screen {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #eef2f0 0%, #e2ede8 55%, #dbe9fb 100%); z-index: 200; padding: 20px;
+}
+.login-screen[hidden], .denied-screen[hidden] { display: none; }
+.login-card {
+  background: #fff; border-radius: 14px; padding: 32px 30px; width: min(380px, 92vw);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.14); display: grid; gap: 14px; border: 1px solid var(--line);
+}
+.login-brand { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.01em; }
+.login-brand .tier { color: var(--accent); }
+.login-sub { margin: -8px 0 6px; color: var(--muted); font-size: 0.9rem; }
+.login-fld { display: grid; gap: 5px; }
+.login-fld span { font-size: 0.8rem; color: var(--muted); }
+.login-fld input { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 0.95rem; }
+.login-fld input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,182,122,0.14); }
+.login-btn {
+  margin-top: 4px; padding: 11px 14px; border: none; border-radius: 8px; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 600; font-size: 0.95rem;
+}
+.login-btn:hover { filter: brightness(1.03); }
+.login-err { margin: 0; color: var(--danger); font-size: 0.85rem; }
+.login-note { margin: 4px 0 0; color: var(--muted); font-size: 0.75rem; line-height: 1.4; }
+.denied-card { background: #fff; border-radius: 14px; padding: 34px 30px; width: min(420px, 92vw); text-align: center; box-shadow: 0 18px 50px rgba(0,0,0,0.14); border: 1px solid var(--line); }
+.denied-ico { font-size: 2.6rem; margin-bottom: 8px; }
+.denied-card h2 { margin: 0 0 8px; }
+.denied-card p { color: var(--muted); margin: 0 0 18px; line-height: 1.5; }
 </style></head>
-<body><div id="app"></div>
+<body>
+<div id="login-screen" class="login-screen">
+  <form id="login-card" class="login-card" autocomplete="off">
+    <div class="login-brand">VIR<span class="tier">_Tier</span></div>
+    <p class="login-sub" id="login-sub">CCOGS Recovery Engine</p>
+    <label class="login-fld"><span id="login-user-label">User</span>
+      <input id="login-user" type="text" autocomplete="username" /></label>
+    <label class="login-fld"><span id="login-pass-label">Password</span>
+      <input id="login-pass" type="password" autocomplete="current-password" /></label>
+    <button class="login-btn" id="login-btn" type="submit">Sign in</button>
+    <p class="login-err" id="login-err" hidden></p>
+    <p class="login-note" id="login-note"></p>
+  </form>
+</div>
+<div id="denied-screen" class="denied-screen" hidden>
+  <div class="denied-card">
+    <div class="denied-ico">⛔</div>
+    <h2 id="denied-title">Access not granted</h2>
+    <p id="denied-body">Sorry, you are not granted access to this tool.</p>
+    <button class="login-btn" id="denied-back" type="button">Back to sign in</button>
+  </div>
+</div>
+<div id="app" hidden></div>
 <script>
 
 const __M = {};
@@ -728,6 +779,8 @@ const STRINGS = {
     validity: 'Validity', mlTotalAmount: 'Total portfolio', mlSkippedClean: 'Skipped — no issue found',
     allAgreements: 'All agreements', cleanDeliveries: 'clean deliveries',
     durMONTH: 'Monthly', durQUARTER: 'Quarterly', durHALFYEAR: 'Half-year', durYEAR: 'Yearly', durCUSTOM: 'Promo',
+    loginUser: 'User', loginPass: 'Password', loginSignIn: 'Sign in', loginNote: 'Authorized access only. This is a demonstration environment.',
+    loginError: 'Incorrect user or password.', loginDeniedTitle: 'Access not granted', loginDeniedBody: 'Sorry, you are not granted access to this tool.', loginBack: 'Back to sign in',
     upliftOnClaimed: 'uplift on claimed', recoverableAgreements: 'recoverable agreements',
     kpiExportedInjected: 'exported / injected', kpiApprovedAwaiting: 'approved, awaiting billing', kpiPendingApproval: 'pending approval',
     processJourney: 'Process journey', finJourneyTitle: 'Process journey — issues by stage of travel ({n} issues)',
@@ -874,6 +927,8 @@ const STRINGS = {
     validity: 'Platnosť', mlTotalAmount: 'Celé portfólio', mlSkippedClean: 'Preskočené — bez problému',
     allAgreements: 'Všetky zmluvy', cleanDeliveries: 'čistých dodávok',
     durMONTH: 'Mesačná', durQUARTER: 'Štvrťročná', durHALFYEAR: 'Polročná', durYEAR: 'Ročná', durCUSTOM: 'Promo',
+    loginUser: 'Používateľ', loginPass: 'Heslo', loginSignIn: 'Prihlásiť sa', loginNote: 'Iba autorizovaný prístup. Toto je demonštračné prostredie.',
+    loginError: 'Nesprávny používateľ alebo heslo.', loginDeniedTitle: 'Prístup nepovolený', loginDeniedBody: 'Ľutujeme, nemáte povolený prístup k tomuto nástroju.', loginBack: 'Späť na prihlásenie',
     upliftOnClaimed: 'nárast oproti nárokovanému', recoverableAgreements: 'získateľných zmlúv',
     kpiExportedInjected: 'exportované / vložené', kpiApprovedAwaiting: 'schválené, čaká na fakturáciu', kpiPendingApproval: 'čaká na schválenie',
     processJourney: 'Priebeh procesu', finJourneyTitle: 'Priebeh procesu — problémy podľa fázy prepravy ({n} problémov)',
@@ -1020,6 +1075,8 @@ const STRINGS = {
     validity: 'Ważność', mlTotalAmount: 'Całe portfolio', mlSkippedClean: 'Pominięte — brak problemu',
     allAgreements: 'Wszystkie umowy', cleanDeliveries: 'czystych dostaw',
     durMONTH: 'Miesięczna', durQUARTER: 'Kwartalna', durHALFYEAR: 'Półroczna', durYEAR: 'Roczna', durCUSTOM: 'Promo',
+    loginUser: 'Użytkownik', loginPass: 'Hasło', loginSignIn: 'Zaloguj się', loginNote: 'Tylko autoryzowany dostęp. To jest środowisko demonstracyjne.',
+    loginError: 'Nieprawidłowy użytkownik lub hasło.', loginDeniedTitle: 'Brak dostępu', loginDeniedBody: 'Przepraszamy, nie masz dostępu do tego narzędzia.', loginBack: 'Powrót do logowania',
     upliftOnClaimed: 'wzrost względem zgłoszonego', recoverableAgreements: 'umów do odzyskania',
     kpiExportedInjected: 'wyeksportowane / wstrzyknięte', kpiApprovedAwaiting: 'zatwierdzone, oczekują na fakturowanie', kpiPendingApproval: 'oczekują na zatwierdzenie',
     processJourney: 'Przebieg procesu', finJourneyTitle: 'Przebieg procesu — problemy wg etapu transportu ({n} problemów)',
@@ -1166,6 +1223,8 @@ const STRINGS = {
     validity: 'Platnost', mlTotalAmount: 'Celé portfolio', mlSkippedClean: 'Přeskočeno — bez problému',
     allAgreements: 'Všechny smlouvy', cleanDeliveries: 'čistých dodávek',
     durMONTH: 'Měsíční', durQUARTER: 'Čtvrtletní', durHALFYEAR: 'Pololetní', durYEAR: 'Roční', durCUSTOM: 'Promo',
+    loginUser: 'Uživatel', loginPass: 'Heslo', loginSignIn: 'Přihlásit se', loginNote: 'Pouze autorizovaný přístup. Toto je demonstrační prostředí.',
+    loginError: 'Nesprávný uživatel nebo heslo.', loginDeniedTitle: 'Přístup nepovolen', loginDeniedBody: 'Omlouváme se, nemáte povolen přístup k tomuto nástroji.', loginBack: 'Zpět na přihlášení',
     upliftOnClaimed: 'nárůst oproti nárokovanému', recoverableAgreements: 'získatelných smluv',
     kpiExportedInjected: 'exportováno / vloženo', kpiApprovedAwaiting: 'schváleno, čeká na fakturaci', kpiPendingApproval: 'čeká na schválení',
     processJourney: 'Průběh procesu', finJourneyTitle: 'Průběh procesu — problémy podle fáze přepravy ({n} problémů)',
@@ -5785,7 +5844,61 @@ async function main() {
   render();
 }
 
-main().catch((e) => { app.innerHTML = `<div class="work"><h2>Startup error</h2><pre class="mono">${e.message}</pre></div>`; });
+function startApp() { main().catch((e) => { app.innerHTML = `<div class="work"><h2>Startup error</h2><pre class="mono">${e.message}</pre></div>`; }); }
+
+// ---- demo login gate (same credentials as the Perfumeries tool) ----
+const DEMO_CREDS = { user: 'Finance', pass: 'Pegasus' };
+const $ = (id) => document.getElementById(id);
+
+function enterApp() {
+  const ls = $('login-screen'); if (ls) ls.hidden = true;
+  const ds = $('denied-screen'); if (ds) ds.hidden = true;
+  app.hidden = false;
+  startApp();
+}
+function showDenied() {
+  const ls = $('login-screen'); if (ls) ls.hidden = true;
+  app.hidden = true;
+  const ds = $('denied-screen'); if (ds) ds.hidden = false;
+}
+function applyLoginI18n() {
+  if ($('login-sub')) $('login-sub').textContent = t('tagline');
+  if ($('login-user-label')) $('login-user-label').textContent = t('loginUser');
+  if ($('login-pass-label')) $('login-pass-label').textContent = t('loginPass');
+  if ($('login-btn')) $('login-btn').textContent = t('loginSignIn');
+  if ($('login-note')) $('login-note').textContent = t('loginNote');
+  if ($('denied-title')) $('denied-title').textContent = t('loginDeniedTitle');
+  if ($('denied-body')) $('denied-body').textContent = t('loginDeniedBody');
+  if ($('denied-back')) $('denied-back').textContent = t('loginBack');
+}
+function wireLogin() {
+  applyLoginI18n();
+  const form = $('login-card');
+  if (!form) { enterApp(); return; }   // no gate markup -> run ungated
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const u = $('login-user').value.trim();
+    const p = $('login-pass').value;
+    if (u === DEMO_CREDS.user && p === DEMO_CREDS.pass) {
+      enterApp();
+    } else {
+      const err = $('login-err'); err.textContent = t('loginError'); err.hidden = false;
+      setTimeout(showDenied, 700);
+    }
+  });
+  const back = $('denied-back');
+  if (back) back.addEventListener('click', () => {
+    $('denied-screen').hidden = true;
+    $('login-screen').hidden = false;
+    $('login-err').hidden = true;
+    $('login-pass').value = '';
+    try { $('login-user').focus(); } catch { /* ignore */ }
+  });
+  try { $('login-user').focus(); } catch { /* ignore */ }
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireLogin);
+else wireLogin();
 
 
 });

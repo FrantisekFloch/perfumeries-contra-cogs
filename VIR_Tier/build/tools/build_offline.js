@@ -129,7 +129,29 @@ __require('app');
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>VIR_Tier — Offline Demo</title>
 <style>${css}</style></head>
-<body><div id="app"></div>
+<body>
+<div id="login-screen" class="login-screen">
+  <form id="login-card" class="login-card" autocomplete="off">
+    <div class="login-brand">VIR<span class="tier">_Tier</span></div>
+    <p class="login-sub" id="login-sub">CCOGS Recovery Engine</p>
+    <label class="login-fld"><span id="login-user-label">User</span>
+      <input id="login-user" type="text" autocomplete="username" /></label>
+    <label class="login-fld"><span id="login-pass-label">Password</span>
+      <input id="login-pass" type="password" autocomplete="current-password" /></label>
+    <button class="login-btn" id="login-btn" type="submit">Sign in</button>
+    <p class="login-err" id="login-err" hidden></p>
+    <p class="login-note" id="login-note"></p>
+  </form>
+</div>
+<div id="denied-screen" class="denied-screen" hidden>
+  <div class="denied-card">
+    <div class="denied-ico">⛔</div>
+    <h2 id="denied-title">Access not granted</h2>
+    <p id="denied-body">Sorry, you are not granted access to this tool.</p>
+    <button class="login-btn" id="denied-back" type="button">Back to sign in</button>
+  </div>
+</div>
+<div id="app" hidden></div>
 <script>
 ${loader}
 ${modulesJs}

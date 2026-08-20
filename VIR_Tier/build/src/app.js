@@ -360,4 +360,58 @@ async function main() {
   render();
 }
 
-main().catch((e) => { app.innerHTML = `<div class="work"><h2>Startup error</h2><pre class="mono">${e.message}</pre></div>`; });
+function startApp() { main().catch((e) => { app.innerHTML = `<div class="work"><h2>Startup error</h2><pre class="mono">${e.message}</pre></div>`; }); }
+
+// ---- demo login gate (same credentials as the Perfumeries tool) ----
+const DEMO_CREDS = { user: 'Finance', pass: 'Pegasus' };
+const $ = (id) => document.getElementById(id);
+
+function enterApp() {
+  const ls = $('login-screen'); if (ls) ls.hidden = true;
+  const ds = $('denied-screen'); if (ds) ds.hidden = true;
+  app.hidden = false;
+  startApp();
+}
+function showDenied() {
+  const ls = $('login-screen'); if (ls) ls.hidden = true;
+  app.hidden = true;
+  const ds = $('denied-screen'); if (ds) ds.hidden = false;
+}
+function applyLoginI18n() {
+  if ($('login-sub')) $('login-sub').textContent = t('tagline');
+  if ($('login-user-label')) $('login-user-label').textContent = t('loginUser');
+  if ($('login-pass-label')) $('login-pass-label').textContent = t('loginPass');
+  if ($('login-btn')) $('login-btn').textContent = t('loginSignIn');
+  if ($('login-note')) $('login-note').textContent = t('loginNote');
+  if ($('denied-title')) $('denied-title').textContent = t('loginDeniedTitle');
+  if ($('denied-body')) $('denied-body').textContent = t('loginDeniedBody');
+  if ($('denied-back')) $('denied-back').textContent = t('loginBack');
+}
+function wireLogin() {
+  applyLoginI18n();
+  const form = $('login-card');
+  if (!form) { enterApp(); return; }   // no gate markup -> run ungated
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const u = $('login-user').value.trim();
+    const p = $('login-pass').value;
+    if (u === DEMO_CREDS.user && p === DEMO_CREDS.pass) {
+      enterApp();
+    } else {
+      const err = $('login-err'); err.textContent = t('loginError'); err.hidden = false;
+      setTimeout(showDenied, 700);
+    }
+  });
+  const back = $('denied-back');
+  if (back) back.addEventListener('click', () => {
+    $('denied-screen').hidden = true;
+    $('login-screen').hidden = false;
+    $('login-err').hidden = true;
+    $('login-pass').value = '';
+    try { $('login-user').focus(); } catch { /* ignore */ }
+  });
+  try { $('login-user').focus(); } catch { /* ignore */ }
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireLogin);
+else wireLogin();

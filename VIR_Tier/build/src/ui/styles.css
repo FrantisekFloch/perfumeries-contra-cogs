@@ -496,3 +496,32 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .dur-badge.dur-quarter { background: #FBEFE0; color: #8a5a12; border-color: #F0D9BC; }
 .dur-badge.dur-month { background: #F3E7F7; color: #7a3a8a; border-color: #e0c6f0; }
 .dur-badge.dur-custom { background: #FBE7EC; color: #a8305a; border-color: #f3c6d4; }
+
+/* ---- Login gate (demo) — light theme ---- */
+.login-screen, .denied-screen {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #eef2f0 0%, #e2ede8 55%, #dbe9fb 100%); z-index: 200; padding: 20px;
+}
+.login-screen[hidden], .denied-screen[hidden] { display: none; }
+.login-card {
+  background: #fff; border-radius: 14px; padding: 32px 30px; width: min(380px, 92vw);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.14); display: grid; gap: 14px; border: 1px solid var(--line);
+}
+.login-brand { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.01em; }
+.login-brand .tier { color: var(--accent); }
+.login-sub { margin: -8px 0 6px; color: var(--muted); font-size: 0.9rem; }
+.login-fld { display: grid; gap: 5px; }
+.login-fld span { font-size: 0.8rem; color: var(--muted); }
+.login-fld input { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 0.95rem; }
+.login-fld input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,182,122,0.14); }
+.login-btn {
+  margin-top: 4px; padding: 11px 14px; border: none; border-radius: 8px; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 600; font-size: 0.95rem;
+}
+.login-btn:hover { filter: brightness(1.03); }
+.login-err { margin: 0; color: var(--danger); font-size: 0.85rem; }
+.login-note { margin: 4px 0 0; color: var(--muted); font-size: 0.75rem; line-height: 1.4; }
+.denied-card { background: #fff; border-radius: 14px; padding: 34px 30px; width: min(420px, 92vw); text-align: center; box-shadow: 0 18px 50px rgba(0,0,0,0.14); border: 1px solid var(--line); }
+.denied-ico { font-size: 2.6rem; margin-bottom: 8px; }
+.denied-card h2 { margin: 0 0 8px; }
+.denied-card p { color: var(--muted); margin: 0 0 18px; line-height: 1.5; }
