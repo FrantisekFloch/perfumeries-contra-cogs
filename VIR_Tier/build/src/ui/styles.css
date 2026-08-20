@@ -165,11 +165,16 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
 
 /* charts */
-.chart { width: 100%; height: 220px; }
-.bar { fill: var(--accent); }
+/* charts — professional finance style */
+.chart { width: 100%; height: auto; display: block; }
+.bar { fill: #0072B2; }
+.bar.accent { fill: var(--accent); }
 .bar.risk { fill: var(--gold); }
-.axis { stroke: var(--line); }
-.axis-label { fill: var(--muted); font-size: 11px; }
+.c-grid { stroke: #EEF0F2; stroke-width: 1; }
+.c-axis { stroke: #D8DCE0; stroke-width: 1; }
+.c-yaxis, .c-xaxis { fill: var(--muted); font-size: 10.5px; }
+.c-val { fill: #3a3a3a; font-size: 10.5px; font-weight: 600; }
+.chart-empty { color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; }
 
 .small { color: var(--muted); font-size: 13px; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
@@ -434,9 +439,16 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* sidebar sub-item: filled background when active (mirrors the main nav item) */
 .nav-subitem.active { background: var(--accent-soft); color: #0a7a53; font-weight: 600; border-left: 2px solid var(--accent); border-radius: 0 7px 7px 0; margin-left: -1px; }
 
-/* full-width finance charts */
-.card.wide { width: 100%; margin: 12px 0; }
-.card.wide .chart { width: 100%; height: auto; }
+/* finance charts — two per row, professional cards */
+.ov-h { margin: 26px 0 4px; }
+.chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 8px 0 4px; }
+@media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+.chart-card { padding: 16px 18px; }
+.chart-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+.chart-head h3 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+.chart-sub { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.chart-card .table-wrap { margin-top: 4px; }
+.ov-dur-table table { font-size: 13px; }
 
 /* finance process-journey with per-stage issue chips */
 .journey-finance { align-items: flex-start; }

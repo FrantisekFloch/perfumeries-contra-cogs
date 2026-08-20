@@ -107,11 +107,10 @@ export function renderOverview(state) {
   });
   const winSavingsChart = winRows.map((r) => ({ label: r.label, value: r.savings }));
   const winFailChart = winRows.map((r) => ({ label: r.label, value: r.failPct }));
-  const winTable = winRows.map((r) => `
+  const winTableCompact = winRows.map((r) => `
     <tr>
       <td><strong>${r.label}</strong></td>
       <td class="num">${r.total}</td>
-      <td class="num">${r.recAg}</td>
       <td class="num">${r.failPct}%</td>
       <td class="num"><strong style="color:var(--gold)">${fmtN(r.savings)} EUR</strong></td>
     </tr>`).join('');
@@ -135,19 +134,41 @@ export function renderOverview(state) {
 
     ${financeJourney(allReceipts, allCorrections)}
 
-    <div class="card wide"><h3>${t('recoveryBySupplier')}</h3>${barChart(bySupplier.slice(0, 10), { width: 1040, height: 260 })}</div>
-    <div class="card wide"><h3>${t('recoveryByScope')}</h3>${barChart(byScope, { cls: 'bar risk', width: 1040, height: 240 })}</div>
-    <div class="card wide"><h3>${t('recoveryByPeriod')}</h3>${barChart(byPeriod.slice(0, 12), { width: 1040, height: 240 })}</div>
+    <div class="chart-grid">
+      <div class="card chart-card">
+        <div class="chart-head"><h3>${t('recoveryBySupplier')}</h3><span class="chart-sub">EUR</span></div>
+        ${barChart(bySupplier.slice(0, 8), { palette: true, unit: 'EUR' })}
+      </div>
+      <div class="card chart-card">
+        <div class="chart-head"><h3>${t('recoveryByScope')}</h3><span class="chart-sub">EUR</span></div>
+        ${barChart(byScope, { palette: true, unit: 'EUR' })}
+      </div>
+      <div class="card chart-card">
+        <div class="chart-head"><h3>${t('recoveryByPeriod')}</h3><span class="chart-sub">EUR</span></div>
+        ${barChart(byPeriod.slice(0, 12), { cls: 'bar accent', unit: 'EUR' })}
+      </div>
+      <div class="card chart-card">
+        <div class="chart-head"><h3>${t('recoverableByDuration')}</h3><span class="chart-sub">EUR</span></div>
+        ${barChart(winSavingsChart, { cls: 'bar accent', unit: 'EUR' })}
+      </div>
+    </div>
 
-    <h3>${t('byContractDuration')}</h3>
+    <h3 class="ov-h">${t('byContractDuration')}</h3>
     <p class="muted small">${t('byContractDurationNote')}</p>
-    <div class="card wide"><h3>${t('recoverableByDuration')}</h3>${barChart(winSavingsChart, { cls: 'bar', width: 1040, height: 240 })}</div>
-    <div class="card wide"><h3>${t('failRateByDuration')}</h3>${barChart(winFailChart, { cls: 'bar risk', width: 1040, height: 220 })}</div>
-    <div class="table-wrap"><table><thead><tr>
-      <th>${t('contractDuration')}</th><th class="num">${t('agreements')}</th><th class="num">${t('withRecovery')}</th><th class="num">${t('failRate')}</th><th class="num">${t('recoverableEur')}</th>
-    </tr></thead><tbody>${winTable || `<tr><td colspan="5" class="small">—</td></tr>`}</tbody></table></div>
+    <div class="chart-grid">
+      <div class="card chart-card">
+        <div class="chart-head"><h3>${t('failRateByDuration')}</h3><span class="chart-sub">%</span></div>
+        ${barChart(winFailChart, { cls: 'bar risk', unit: '%' })}
+      </div>
+      <div class="card chart-card ov-dur-table">
+        <div class="chart-head"><h3>${t('contractDuration')}</h3></div>
+        <div class="table-wrap"><table><thead><tr>
+          <th>${t('contractDuration')}</th><th class="num">${t('agreements')}</th><th class="num">${t('failRate')}</th><th class="num">${t('recoverableEur')}</th>
+        </tr></thead><tbody>${winTableCompact || `<tr><td colspan="4" class="small">—</td></tr>`}</tbody></table></div>
+      </div>
+    </div>
 
-    <h3>${t('topOpportunities')}</h3>
+    <h3 class="ov-h">${t('topOpportunities')}</h3>
     <p class="muted small">${t('topOpportunitiesNote')}</p>
     <div class="table-wrap"><table><thead><tr>
       <th>${t('supplier')}</th><th>${t('validity')}</th><th>${t('agreement')}</th><th>${t('scope')}</th>
