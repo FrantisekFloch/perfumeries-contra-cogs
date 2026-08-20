@@ -184,8 +184,9 @@ export function mlFindingCard(f, state = {}) {
     ? `<div class="mf-actionbar">
         <div class="mf-actrow">
           <button class="btn tint-green" data-review="${charge.chargeId}">${t('reviewDoc')}</button>
-          <button class="btn tint-orange" data-exportdlg="${charge.chargeId}">${t('exportFile')}</button>
-          <button class="btn tint-ghost" data-archive="${charge.chargeId}">${t('rejectArchive')}</button>
+          <button class="btn tint-orange" data-archive="${charge.chargeId}">${t('rejectArchive')}</button>
+          <button class="btn tint-ghost" data-exportdlg="${charge.chargeId}">${t('exportFile')}</button>
+          <button class="btn tint-blue mf-gen" data-genfinding="${charge.chargeId}">${t('genContraInvoice')}</button>
         </div>
       </div>`
     : '';

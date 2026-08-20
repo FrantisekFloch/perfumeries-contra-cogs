@@ -14,7 +14,7 @@ function fmtN(n) { return Math.round(n).toLocaleString(); }
 
 // ---- Finance Overview: savings & earnings summary (before -> after portfolio) ----
 export function renderOverview(state) {
-  const { charges, beforeAfter = [] } = state;
+  const { beforeAfter = [] } = state;
 
   // portfolio before (engine claimed) -> after (tool entitled) -> recovered True-Up
   const totalBefore = beforeAfter.reduce((s, b) => s + (b.before?.claimed || 0), 0);
@@ -23,12 +23,13 @@ export function renderOverview(state) {
   const recoverableCount = beforeAfter.filter((b) => b.recoverable).length;
   const upliftPct = totalBefore > 0 ? ((totalAfter / totalBefore - 1) * 100) : 0;
 
-  // status of the recovery pipeline (how much is approved / injected)
-  const byStatus = {};
-  for (const c of charges) byStatus[c.status] = (byStatus[c.status] || 0) + (c.variance || 0);
-  const injected = (byStatus.INJECTED || 0) + (byStatus.EXPORTED || 0);
-  const approved = byStatus.APPROVED || 0;
-  const pending = byStatus.PENDING_APPROVAL || 0;
+  // portfolio framing (same flow as ML Discovery): everything, then the clean
+  // (no-issue) slice, then the engine-claimed "before" on the flagged agreements.
+  const totalAll = beforeAfter.reduce((s, b) => s + (b.after?.entitled || b.before?.claimed || 0), 0);
+  const cleanRows = beforeAfter.filter((b) => !b.recoverable);
+  const skippedAmt = cleanRows.reduce((s, b) => s + (b.before?.claimed || 0), 0);
+  const skippedN = cleanRows.length;
+  const eur = (v) => `${fmtN(v)} €`;
 
   // breakdowns of the recoverable True-Up
   const val = (b) => b.costOfInaction || 0;
@@ -118,19 +119,16 @@ export function renderOverview(state) {
   return `
     <p class="lead">${t('overviewLead')}</p>
 
-    <div class="ba">
-      <div class="panel before"><div class="h">${t('before')}</div><div class="big">${fmtN(totalBefore)}</div><div class="small">${t('engineClaimed')}</div></div>
+    <div class="ba ba-ml">
+      <div class="panel total"><div class="h">${t('mlTotalAmount')}</div><div class="big">${eur(totalAll)}</div><div class="small">${t('allAgreements')}</div></div>
+      <div class="arrow">›</div>
+      <div class="panel skipped"><div class="h">${t('mlSkippedClean')}</div><div class="big">${eur(skippedAmt)}</div><div class="small">${skippedN} ${t('cleanDeliveries')}</div></div>
+      <div class="arrow">›</div>
+      <div class="panel before"><div class="h">${t('before')}</div><div class="big">${eur(totalBefore)}</div><div class="small">${t('engineClaimed')}</div></div>
       <div class="arrow">→</div>
-      <div class="panel after"><div class="h">${t('after')}</div><div class="big">${fmtN(totalAfter)}</div><div class="small">${t('toolEntitled')} · ${hintSpan(t('controlPeriod'), 'CONTROL_PERIOD')}</div></div>
+      <div class="panel after"><div class="h">${t('after')}</div><div class="big">${eur(totalAfter)}</div><div class="small">${t('toolEntitled')} · ${hintSpan(t('controlPeriod'), 'CONTROL_PERIOD')}</div></div>
     </div>
-    <div class="loss-banner">${t('totalRecoverable')}: <strong>${fmtN(totalTrueUp)}</strong> &nbsp;·&nbsp; ${upliftPct.toFixed(1)}% ${t('upliftOnClaimed')} &nbsp;·&nbsp; ${recoverableCount} ${t('recoverableAgreements')}</div>
-
-    <div class="kpi">
-      <div class="box"><div class="n loss">${fmtN(totalTrueUp)}</div><div class="l">${t('totalRecoverable')} (True-Up)</div></div>
-      <div class="box"><div class="n">${fmtN(injected)}</div><div class="l">${t('kpiExportedInjected')}</div></div>
-      <div class="box"><div class="n">${fmtN(approved)}</div><div class="l">${t('kpiApprovedAwaiting')}</div></div>
-      <div class="box"><div class="n">${fmtN(pending)}</div><div class="l">${t('kpiPendingApproval')}</div></div>
-    </div>
+    <div class="loss-banner">${t('totalRecoverable')}: <strong>${eur(totalTrueUp)}</strong> &nbsp;·&nbsp; ${upliftPct.toFixed(1)}% ${t('upliftOnClaimed')} &nbsp;·&nbsp; ${recoverableCount} ${t('recoverableAgreements')}</div>
 
     ${financeJourney(allReceipts, allCorrections)}
 

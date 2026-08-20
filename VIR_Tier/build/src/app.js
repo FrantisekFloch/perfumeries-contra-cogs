@@ -156,6 +156,7 @@ function bind() {
   app.querySelectorAll('[data-review]').forEach((b) => b.addEventListener('click', () => openReview(b.dataset.review)));
   app.querySelectorAll('[data-exportdlg]').forEach((b) => b.addEventListener('click', () => openExportDialog(b.dataset.exportdlg)));
   app.querySelectorAll('[data-archive]').forEach((b) => b.addEventListener('click', () => openArchiveDialog(b.dataset.archive)));
+  app.querySelectorAll('[data-genfinding]').forEach((b) => b.addEventListener('click', () => generateContraFor(b.dataset.genfinding)));
 }
 
 // ---- document view/download ----
@@ -234,6 +235,15 @@ function openReview(chargeId) {
   // Generate Contra-COGS invoice (supplier-facing debit note) — open in a doc modal
   const gb = holder.querySelector('[data-gencontra]');
   if (gb) gb.addEventListener('click', () => openContraInvoice(charge, group, rec));
+}
+
+// Generate the Contra-COGS invoice directly from a finding row (same action as
+// the button inside the Review Document modal).
+function generateContraFor(chargeId) {
+  const charge = state.charges.find((c) => c.chargeId === chargeId); if (!charge) return;
+  const group = state.consolidated.byAgreement.get(charge.agreementId);
+  const rec = state.reconstructions.find((r) => r.agreementId === charge.agreementId);
+  openContraInvoice(charge, group, rec);
 }
 
 // ---- Contra-COGS invoice document (generated from the review modal) ----

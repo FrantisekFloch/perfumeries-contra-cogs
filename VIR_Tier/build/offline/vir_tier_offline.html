@@ -387,15 +387,16 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .mf-actionbar { margin: 12px 0 4px; }
 .mf-actrow { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
 .mf-actrow .btn { flex: 0 0 auto; font-size: 0.82rem; padding: 7px 12px; }
+.mf-actrow .mf-gen { margin-left: auto; }
 
-/* soft button tints */
-.btn.tint-green { background: #E7F7F0; border-color: #BFE8D8; color: #0a7a53; }
-.btn.tint-green:hover { background: #DBF2E8; }
-.btn.tint-orange { background: #FBEFE0; border-color: #F0D9BC; color: #8a5a12; }
-.btn.tint-orange:hover { background: #F7E7D2; }
-.btn.tint-blue { background: #E7F0FB; border-color: #C6DBF3; color: #1d5aa8; }
-.btn.tint-blue:hover { background: #DBE8F7; }
-.btn.tint-ghost { background: transparent; border-color: var(--line); color: var(--muted); }
+/* button tints — bright, clearly visible action colours */
+.btn.tint-green { background: var(--accent); border-color: transparent; color: #fff; font-weight: 600; }
+.btn.tint-green:hover { filter: brightness(1.05); }
+.btn.tint-orange { background: #E8891A; border-color: transparent; color: #fff; font-weight: 600; }
+.btn.tint-orange:hover { filter: brightness(1.05); }
+.btn.tint-blue { background: #2f6fed; border-color: transparent; color: #fff; font-weight: 600; }
+.btn.tint-blue:hover { filter: brightness(1.05); }
+.btn.tint-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
 .btn.tint-ghost:hover { background: #fafafa; border-color: #cfcfcf; }
 
 /* finance journey per-stage issue counts */
@@ -770,7 +771,7 @@ const STRINGS = {
     summaryDone: 'Collection & matching complete', summaryDoneSub: '{total} documents ingested, validated and reconciled across all sources.',
     summaryIngested: 'Ingested volumes', summaryDiscrepancies: 'Discrepancies found', summaryClean: 'Clean — no issue', summaryRecoverable: 'Recoverable (True-Up)',
     summaryMatchNote: 'Documents were parsed, consolidated per agreement and matched against the CCOGS engine output. Discrepancies and corrections have been sorted and prepared as suggestions.',
-    summaryContinue: 'Continue to ML Discovery',
+    summaryContinue: 'See what VIR_Tier reconstructed (ML Discovery)',
     recoveryBySupplier: 'Recovery by supplier', recoveryByScope: 'Recovery by scope / country', recoveryByPeriod: 'Recovery by period',
     byContractDuration: 'Performance by contract duration', byContractDurationNote: 'How each contract length performs — the share of agreements with an under-claim (fail rate) and the money recoverable per duration. Longer contracts accumulate more volume and, when mis-tracked, more leakage.',
     recoverableByDuration: 'Recoverable by contract duration (EUR)', failRateByDuration: 'Fail rate by contract duration (%)',
@@ -918,7 +919,7 @@ const STRINGS = {
     summaryDone: 'Zber a párovanie dokončené', summaryDoneSub: '{total} dokumentov načítaných, overených a zosúladených naprieč všetkými zdrojmi.',
     summaryIngested: 'Načítané objemy', summaryDiscrepancies: 'Nájdené nezrovnalosti', summaryClean: 'Čisté — bez problému', summaryRecoverable: 'Získateľné (True-Up)',
     summaryMatchNote: 'Dokumenty boli spracované, konsolidované podľa zmluvy a spárované s výstupom CCOGS engine. Nezrovnalosti a opravy boli zoradené a pripravené ako návrhy.',
-    summaryContinue: 'Pokračovať do ML objavu',
+    summaryContinue: 'Pozrite, čo VIR_Tier zrekonštruoval (ML objav)',
     recoveryBySupplier: 'Obnova podľa dodávateľa', recoveryByScope: 'Obnova podľa rozsahu / krajiny', recoveryByPeriod: 'Obnova podľa obdobia',
     byContractDuration: 'Výkonnosť podľa dĺžky zmluvy', byContractDurationNote: 'Ako si vedie každá dĺžka zmluvy — podiel zmlúv s poddotknutým nárokom (miera zlyhania) a získateľné peniaze podľa dĺžky. Dlhšie zmluvy hromadia väčší objem a pri chybnom sledovaní aj väčší únik.',
     recoverableByDuration: 'Získateľné podľa dĺžky zmluvy (EUR)', failRateByDuration: 'Miera zlyhania podľa dĺžky zmluvy (%)',
@@ -1066,7 +1067,7 @@ const STRINGS = {
     summaryDone: 'Zbiór i dopasowanie zakończone', summaryDoneSub: '{total} dokumentów wczytanych, zweryfikowanych i uzgodnionych ze wszystkich źródeł.',
     summaryIngested: 'Wczytane wolumeny', summaryDiscrepancies: 'Znalezione rozbieżności', summaryClean: 'Czyste — bez problemu', summaryRecoverable: 'Do odzyskania (True-Up)',
     summaryMatchNote: 'Dokumenty zostały sparsowane, skonsolidowane wg umowy i dopasowane do wyniku CCOGS engine. Rozbieżności i korekty zostały posortowane i przygotowane jako sugestie.',
-    summaryContinue: 'Przejdź do Odkryć ML',
+    summaryContinue: 'Zobacz, co zrekonstruował VIR_Tier (Odkrycia ML)',
     recoveryBySupplier: 'Odzysk wg dostawcy', recoveryByScope: 'Odzysk wg zakresu / kraju', recoveryByPeriod: 'Odzysk wg okresu',
     byContractDuration: 'Wyniki wg czasu trwania umowy', byContractDurationNote: 'Jak radzi sobie każdy czas trwania umowy — udział umów z zaniżonym roszczeniem (wskaźnik błędu) i pieniądze możliwe do odzyskania wg czasu trwania. Dłuższe umowy kumulują większy wolumen, a przy błędnym śledzeniu większy wyciek.',
     recoverableByDuration: 'Do odzyskania wg czasu trwania umowy (EUR)', failRateByDuration: 'Wskaźnik błędu wg czasu trwania umowy (%)',
@@ -1214,7 +1215,7 @@ const STRINGS = {
     summaryDone: 'Sběr a párování dokončeno', summaryDoneSub: '{total} dokumentů načtených, ověřených a sladěných napříč všemi zdroji.',
     summaryIngested: 'Načtené objemy', summaryDiscrepancies: 'Nalezené nesrovnalosti', summaryClean: 'Čisté — bez problému', summaryRecoverable: 'Získatelné (True-Up)',
     summaryMatchNote: 'Dokumenty byly zpracovány, konsolidovány podle smlouvy a spárovány s výstupem CCOGS engine. Nesrovnalosti a opravy byly seřazeny a připraveny jako návrhy.',
-    summaryContinue: 'Pokračovat do ML objevů',
+    summaryContinue: 'Podívejte se, co VIR_Tier rekonstruoval (ML objevy)',
     recoveryBySupplier: 'Obnova podle dodavatele', recoveryByScope: 'Obnova podle rozsahu / země', recoveryByPeriod: 'Obnova podle období',
     byContractDuration: 'Výkonnost podle délky smlouvy', byContractDurationNote: 'Jak si vede každá délka smlouvy — podíl smluv s poddotknutým nárokem (míra selhání) a získatelné peníze podle délky. Delší smlouvy hromadí větší objem a při chybném sledování i větší únik.',
     recoverableByDuration: 'Získatelné podle délky smlouvy (EUR)', failRateByDuration: 'Míra selhání podle délky smlouvy (%)',
@@ -5072,8 +5073,9 @@ function mlFindingCard(f, state = {}) {
     ? `<div class="mf-actionbar">
         <div class="mf-actrow">
           <button class="btn tint-green" data-review="${charge.chargeId}">${t('reviewDoc')}</button>
-          <button class="btn tint-orange" data-exportdlg="${charge.chargeId}">${t('exportFile')}</button>
-          <button class="btn tint-ghost" data-archive="${charge.chargeId}">${t('rejectArchive')}</button>
+          <button class="btn tint-orange" data-archive="${charge.chargeId}">${t('rejectArchive')}</button>
+          <button class="btn tint-ghost" data-exportdlg="${charge.chargeId}">${t('exportFile')}</button>
+          <button class="btn tint-blue mf-gen" data-genfinding="${charge.chargeId}">${t('genContraInvoice')}</button>
         </div>
       </div>`
     : '';
@@ -5157,7 +5159,7 @@ function fmtN(n) { return Math.round(n).toLocaleString(); }
 
 // ---- Finance Overview: savings & earnings summary (before -> after portfolio) ----
 function renderOverview(state) {
-  const { charges, beforeAfter = [] } = state;
+  const { beforeAfter = [] } = state;
 
   // portfolio before (engine claimed) -> after (tool entitled) -> recovered True-Up
   const totalBefore = beforeAfter.reduce((s, b) => s + (b.before?.claimed || 0), 0);
@@ -5166,12 +5168,13 @@ function renderOverview(state) {
   const recoverableCount = beforeAfter.filter((b) => b.recoverable).length;
   const upliftPct = totalBefore > 0 ? ((totalAfter / totalBefore - 1) * 100) : 0;
 
-  // status of the recovery pipeline (how much is approved / injected)
-  const byStatus = {};
-  for (const c of charges) byStatus[c.status] = (byStatus[c.status] || 0) + (c.variance || 0);
-  const injected = (byStatus.INJECTED || 0) + (byStatus.EXPORTED || 0);
-  const approved = byStatus.APPROVED || 0;
-  const pending = byStatus.PENDING_APPROVAL || 0;
+  // portfolio framing (same flow as ML Discovery): everything, then the clean
+  // (no-issue) slice, then the engine-claimed "before" on the flagged agreements.
+  const totalAll = beforeAfter.reduce((s, b) => s + (b.after?.entitled || b.before?.claimed || 0), 0);
+  const cleanRows = beforeAfter.filter((b) => !b.recoverable);
+  const skippedAmt = cleanRows.reduce((s, b) => s + (b.before?.claimed || 0), 0);
+  const skippedN = cleanRows.length;
+  const eur = (v) => `${fmtN(v)} €`;
 
   // breakdowns of the recoverable True-Up
   const val = (b) => b.costOfInaction || 0;
@@ -5261,19 +5264,16 @@ function renderOverview(state) {
   return `
     <p class="lead">${t('overviewLead')}</p>
 
-    <div class="ba">
-      <div class="panel before"><div class="h">${t('before')}</div><div class="big">${fmtN(totalBefore)}</div><div class="small">${t('engineClaimed')}</div></div>
+    <div class="ba ba-ml">
+      <div class="panel total"><div class="h">${t('mlTotalAmount')}</div><div class="big">${eur(totalAll)}</div><div class="small">${t('allAgreements')}</div></div>
+      <div class="arrow">›</div>
+      <div class="panel skipped"><div class="h">${t('mlSkippedClean')}</div><div class="big">${eur(skippedAmt)}</div><div class="small">${skippedN} ${t('cleanDeliveries')}</div></div>
+      <div class="arrow">›</div>
+      <div class="panel before"><div class="h">${t('before')}</div><div class="big">${eur(totalBefore)}</div><div class="small">${t('engineClaimed')}</div></div>
       <div class="arrow">→</div>
-      <div class="panel after"><div class="h">${t('after')}</div><div class="big">${fmtN(totalAfter)}</div><div class="small">${t('toolEntitled')} · ${hintSpan(t('controlPeriod'), 'CONTROL_PERIOD')}</div></div>
+      <div class="panel after"><div class="h">${t('after')}</div><div class="big">${eur(totalAfter)}</div><div class="small">${t('toolEntitled')} · ${hintSpan(t('controlPeriod'), 'CONTROL_PERIOD')}</div></div>
     </div>
-    <div class="loss-banner">${t('totalRecoverable')}: <strong>${fmtN(totalTrueUp)}</strong> &nbsp;·&nbsp; ${upliftPct.toFixed(1)}% ${t('upliftOnClaimed')} &nbsp;·&nbsp; ${recoverableCount} ${t('recoverableAgreements')}</div>
-
-    <div class="kpi">
-      <div class="box"><div class="n loss">${fmtN(totalTrueUp)}</div><div class="l">${t('totalRecoverable')} (True-Up)</div></div>
-      <div class="box"><div class="n">${fmtN(injected)}</div><div class="l">${t('kpiExportedInjected')}</div></div>
-      <div class="box"><div class="n">${fmtN(approved)}</div><div class="l">${t('kpiApprovedAwaiting')}</div></div>
-      <div class="box"><div class="n">${fmtN(pending)}</div><div class="l">${t('kpiPendingApproval')}</div></div>
-    </div>
+    <div class="loss-banner">${t('totalRecoverable')}: <strong>${eur(totalTrueUp)}</strong> &nbsp;·&nbsp; ${upliftPct.toFixed(1)}% ${t('upliftOnClaimed')} &nbsp;·&nbsp; ${recoverableCount} ${t('recoverableAgreements')}</div>
 
     ${financeJourney(allReceipts, allCorrections)}
 
@@ -5640,6 +5640,7 @@ function bind() {
   app.querySelectorAll('[data-review]').forEach((b) => b.addEventListener('click', () => openReview(b.dataset.review)));
   app.querySelectorAll('[data-exportdlg]').forEach((b) => b.addEventListener('click', () => openExportDialog(b.dataset.exportdlg)));
   app.querySelectorAll('[data-archive]').forEach((b) => b.addEventListener('click', () => openArchiveDialog(b.dataset.archive)));
+  app.querySelectorAll('[data-genfinding]').forEach((b) => b.addEventListener('click', () => generateContraFor(b.dataset.genfinding)));
 }
 
 // ---- document view/download ----
@@ -5718,6 +5719,15 @@ function openReview(chargeId) {
   // Generate Contra-COGS invoice (supplier-facing debit note) — open in a doc modal
   const gb = holder.querySelector('[data-gencontra]');
   if (gb) gb.addEventListener('click', () => openContraInvoice(charge, group, rec));
+}
+
+// Generate the Contra-COGS invoice directly from a finding row (same action as
+// the button inside the Review Document modal).
+function generateContraFor(chargeId) {
+  const charge = state.charges.find((c) => c.chargeId === chargeId); if (!charge) return;
+  const group = state.consolidated.byAgreement.get(charge.agreementId);
+  const rec = state.reconstructions.find((r) => r.agreementId === charge.agreementId);
+  openContraInvoice(charge, group, rec);
 }
 
 // ---- Contra-COGS invoice document (generated from the review modal) ----

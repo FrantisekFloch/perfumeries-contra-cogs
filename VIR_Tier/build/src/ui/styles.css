@@ -383,15 +383,16 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .mf-actionbar { margin: 12px 0 4px; }
 .mf-actrow { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
 .mf-actrow .btn { flex: 0 0 auto; font-size: 0.82rem; padding: 7px 12px; }
+.mf-actrow .mf-gen { margin-left: auto; }
 
-/* soft button tints */
-.btn.tint-green { background: #E7F7F0; border-color: #BFE8D8; color: #0a7a53; }
-.btn.tint-green:hover { background: #DBF2E8; }
-.btn.tint-orange { background: #FBEFE0; border-color: #F0D9BC; color: #8a5a12; }
-.btn.tint-orange:hover { background: #F7E7D2; }
-.btn.tint-blue { background: #E7F0FB; border-color: #C6DBF3; color: #1d5aa8; }
-.btn.tint-blue:hover { background: #DBE8F7; }
-.btn.tint-ghost { background: transparent; border-color: var(--line); color: var(--muted); }
+/* button tints — bright, clearly visible action colours */
+.btn.tint-green { background: var(--accent); border-color: transparent; color: #fff; font-weight: 600; }
+.btn.tint-green:hover { filter: brightness(1.05); }
+.btn.tint-orange { background: #E8891A; border-color: transparent; color: #fff; font-weight: 600; }
+.btn.tint-orange:hover { filter: brightness(1.05); }
+.btn.tint-blue { background: #2f6fed; border-color: transparent; color: #fff; font-weight: 600; }
+.btn.tint-blue:hover { filter: brightness(1.05); }
+.btn.tint-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
 .btn.tint-ghost:hover { background: #fafafa; border-color: #cfcfcf; }
 
 /* finance journey per-stage issue counts */
