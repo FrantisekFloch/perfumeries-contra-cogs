@@ -58,8 +58,13 @@ test('ML discovery ranks findings by score with transparent signals and reasons'
   const { consolidated, out } = fullRun();
   const disc = runDiscovery({ beforeAfter: out.beforeAfter, reconstructions: out.reconstructions, consolidated });
   assert.ok(disc.findings.length > 0);
-  // sorted descending by score
-  for (let i = 1; i < disc.findings.length; i++) assert.ok(disc.findings[i - 1].score >= disc.findings[i].score);
+  // Ranked by score descending, except for a small set of curated "pinned"
+  // agreements that are surfaced at a fixed slot regardless of score.
+  const PINNED = new Set(['AGR-010']);
+  for (let i = 1; i < disc.findings.length; i++) {
+    if (PINNED.has(disc.findings[i - 1].agreementId) || PINNED.has(disc.findings[i].agreementId)) continue;
+    assert.ok(disc.findings[i - 1].score >= disc.findings[i].score);
+  }
   const top = disc.findings[0];
   assert.ok(top.score >= 0 && top.score <= 1);
   assert.ok(top.confidence >= 0 && top.confidence <= 1);

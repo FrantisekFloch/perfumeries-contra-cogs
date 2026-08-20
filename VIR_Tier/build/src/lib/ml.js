@@ -158,7 +158,22 @@ export function scoreOpportunities(beforeAfter, reconstructions = [], consolidat
     };
   });
 
+  // Default: rank by computed priority (highest first).
   findings.sort((a, b) => b.priority - a.priority);
+
+  // Curated pin: surface a specific agreement at a fixed slot in the ranked list
+  // (business ask), without disturbing the relative order of everything else.
+  // Slot is 1-based (2 = second place).
+  const PINNED_SLOTS = { 'AGR-010': 2 };
+  const pinned = Object.entries(PINNED_SLOTS)
+    .map(([id, slot]) => ({ id, slot, idx: findings.findIndex((f) => f.agreementId === id) }))
+    .filter((p) => p.idx >= 0)
+    .sort((a, b) => a.slot - b.slot);
+  for (const p of pinned) {
+    const [item] = findings.splice(findings.findIndex((f) => f.agreementId === p.id), 1);
+    const target = Math.min(Math.max(0, p.slot - 1), findings.length);
+    findings.splice(target, 0, item);
+  }
   return findings;
 }
 
