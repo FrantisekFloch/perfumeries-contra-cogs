@@ -1,2 +1,2 @@
 outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
-ENG-0024,AGR-024,SUP-ORIENT,SK,2026,UNITS,18274,0.022,402.03,EUR,CCOGS_INVOICE,INV-0040,DN-0024,RCP-0122|RCP-0123|RCP-0124,18274 units @ 2.20% = 402.03 EUR (full combined volume; no leakage)
+ENG-0024,AGR-024,SUP-ORIENT,SK,2026,UNITS,182274,0.022,4010.03,EUR,CCOGS_INVOICE,INV-0040,DN-0024,RCP-0122|RCP-0123|RCP-0124,182274 units @ 2.20% = 4010.03 EUR (full combined volume; no leakage)

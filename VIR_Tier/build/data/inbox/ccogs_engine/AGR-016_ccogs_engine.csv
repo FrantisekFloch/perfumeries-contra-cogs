@@ -1,2 +1,2 @@
 outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
-ENG-0016,AGR-016,SUP-LUMIERE,CZ,2026,VALUE,572115.63,0.025,14302.89,EUR,CCOGS_INVOICE,INV-0030,DN-0016,RCP-0094|RCP-0095|RCP-0096,572116 value @ 2.50% = 14302.89 EUR (base receipts only; missing leakage-driver units)
+ENG-0016,AGR-016,SUP-LUMIERE,CZ,2026,VALUE,10028732.66,0.025,250718.32,EUR,CCOGS_INVOICE,INV-0030,DN-0016,RCP-0094|RCP-0095|RCP-0096,10028733 value @ 2.50% = 250718.32 EUR (base receipts only; missing leakage-driver units)

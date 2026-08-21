@@ -14,35 +14,35 @@
     <discount basis="total_volume">
       <tier minQty="1" maxQty="" pct="75"/>
     </discount>
-    <totalValueStandard>257424.7</totalValueStandard>
+    <totalValueStandard>427972.05</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>SRM-030</stockId>
       <description>Serum 30ml</description>
       <qtyInvoiced>3486</qtyInvoiced>
-      <unitPriceStandard>18.46</unitPriceStandard>
+      <unitPriceStandard>30.69</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
       <qtyInvoiced>3486</qtyInvoiced>
-      <unitPriceStandard>18.46</unitPriceStandard>
+      <unitPriceStandard>30.69</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-050</stockId>
       <description>Eau de Parfum 50ml</description>
       <qtyInvoiced>3486</qtyInvoiced>
-      <unitPriceStandard>18.46</unitPriceStandard>
+      <unitPriceStandard>30.69</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
       <qtyInvoiced>3487</qtyInvoiced>
-      <unitPriceStandard>18.46</unitPriceStandard>
+      <unitPriceStandard>30.69</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
   </lines>

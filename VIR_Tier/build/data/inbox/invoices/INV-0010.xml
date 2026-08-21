@@ -12,40 +12,40 @@
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="5000" pct="1"/>
-      <tier minQty="5001" maxQty="10000" pct="1.5"/>
-      <tier minQty="10001" maxQty="20000" pct="2"/>
-      <tier minQty="20001" maxQty="" pct="2.5"/>
+      <tier minQty="1" maxQty="60000" pct="1"/>
+      <tier minQty="60001" maxQty="120000" pct="1.5"/>
+      <tier minQty="120001" maxQty="240000" pct="2"/>
+      <tier minQty="240001" maxQty="" pct="2.5"/>
     </discount>
-    <totalValueStandard>38083.26</totalValueStandard>
+    <totalValueStandard>787187.56</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>MSC-200</stockId>
       <description>Body Mist 200ml</description>
-      <qtyInvoiced>1158</qtyInvoiced>
-      <unitPriceStandard>8.22</unitPriceStandard>
+      <qtyInvoiced>12846</qtyInvoiced>
+      <unitPriceStandard>15.32</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>1158</qtyInvoiced>
-      <unitPriceStandard>8.22</unitPriceStandard>
+      <qtyInvoiced>12846</qtyInvoiced>
+      <unitPriceStandard>15.32</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>1158</qtyInvoiced>
-      <unitPriceStandard>8.22</unitPriceStandard>
+      <qtyInvoiced>12846</qtyInvoiced>
+      <unitPriceStandard>15.32</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>GFT-SET</stockId>
       <description>Gift Set</description>
-      <qtyInvoiced>1159</qtyInvoiced>
-      <unitPriceStandard>8.22</unitPriceStandard>
+      <qtyInvoiced>12845</qtyInvoiced>
+      <unitPriceStandard>15.32</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
   </lines>

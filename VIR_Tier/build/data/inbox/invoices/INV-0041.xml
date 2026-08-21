@@ -12,25 +12,25 @@
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="8000" pct="0.8"/>
-      <tier minQty="8001" maxQty="16000" pct="1.4"/>
-      <tier minQty="16001" maxQty="" pct="2.2"/>
+      <tier minQty="1" maxQty="90000" pct="0.8"/>
+      <tier minQty="90001" maxQty="180000" pct="1.4"/>
+      <tier minQty="180001" maxQty="" pct="2.2"/>
     </discount>
-    <totalValueStandard>515881.38</totalValueStandard>
+    <totalValueStandard>7749074.86</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>EDT-075</stockId>
       <description>Eau de Toilette 75ml</description>
-      <qtyInvoiced>9879</qtyInvoiced>
-      <unitPriceStandard>26.11</unitPriceStandard>
+      <qtyInvoiced>91879</qtyInvoiced>
+      <unitPriceStandard>42.17</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>9879</qtyInvoiced>
-      <unitPriceStandard>26.11</unitPriceStandard>
+      <qtyInvoiced>91879</qtyInvoiced>
+      <unitPriceStandard>42.17</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
   </lines>

@@ -14,21 +14,21 @@
     <discount basis="total_volume">
       <tier minQty="1" maxQty="" pct="3"/>
     </discount>
-    <totalValueStandard>247449.75</totalValueStandard>
+    <totalValueStandard>411697.05</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>GFT-SET</stockId>
       <description>Gift Set</description>
       <qtyInvoiced>6743</qtyInvoiced>
-      <unitPriceStandard>18.35</unitPriceStandard>
+      <unitPriceStandard>30.53</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
       <qtyInvoiced>6742</qtyInvoiced>
-      <unitPriceStandard>18.35</unitPriceStandard>
+      <unitPriceStandard>30.53</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
   </lines>

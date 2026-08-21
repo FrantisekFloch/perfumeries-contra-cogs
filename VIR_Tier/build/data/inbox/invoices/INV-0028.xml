@@ -14,35 +14,35 @@
     <discount basis="total_volume">
       <tier minQty="1" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>108382.12</totalValueStandard>
+    <totalValueStandard>201025.16</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>EDT-075</stockId>
       <description>Eau de Toilette 75ml</description>
       <qtyInvoiced>3199</qtyInvoiced>
-      <unitPriceStandard>8.47</unitPriceStandard>
+      <unitPriceStandard>15.71</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-050</stockId>
       <description>Eau de Parfum 50ml</description>
       <qtyInvoiced>3199</qtyInvoiced>
-      <unitPriceStandard>8.47</unitPriceStandard>
+      <unitPriceStandard>15.71</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
       <qtyInvoiced>3199</qtyInvoiced>
-      <unitPriceStandard>8.47</unitPriceStandard>
+      <unitPriceStandard>15.71</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>CRM-050</stockId>
       <description>Face Cream 50ml</description>
       <qtyInvoiced>3199</qtyInvoiced>
-      <unitPriceStandard>8.47</unitPriceStandard>
+      <unitPriceStandard>15.71</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
   </lines>

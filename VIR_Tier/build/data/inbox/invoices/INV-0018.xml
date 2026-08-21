@@ -12,32 +12,32 @@
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="6000" pct="1.2"/>
-      <tier minQty="6001" maxQty="12000" pct="2"/>
-      <tier minQty="12001" maxQty="" pct="3"/>
+      <tier minQty="1" maxQty="70000" pct="1.2"/>
+      <tier minQty="70001" maxQty="140000" pct="2"/>
+      <tier minQty="140001" maxQty="" pct="3"/>
     </discount>
-    <totalValueStandard>84181.06</totalValueStandard>
+    <totalValueStandard>1661368.28</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>1687</qtyInvoiced>
-      <unitPriceStandard>16.63</unitPriceStandard>
+      <qtyInvoiced>19821</qtyInvoiced>
+      <unitPriceStandard>27.94</unitPriceStandard>
       <targetStorage>WH-PO</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>1687</qtyInvoiced>
-      <unitPriceStandard>16.63</unitPriceStandard>
+      <qtyInvoiced>19821</qtyInvoiced>
+      <unitPriceStandard>27.94</unitPriceStandard>
       <targetStorage>WH-PO</targetStorage>
     </line>
     <line>
       <stockId>SRM-030</stockId>
       <description>Serum 30ml</description>
-      <qtyInvoiced>1688</qtyInvoiced>
-      <unitPriceStandard>16.63</unitPriceStandard>
+      <qtyInvoiced>19820</qtyInvoiced>
+      <unitPriceStandard>27.94</unitPriceStandard>
       <targetStorage>WH-PO</targetStorage>
     </line>
   </lines>

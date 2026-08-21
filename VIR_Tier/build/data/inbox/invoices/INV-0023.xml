@@ -12,33 +12,33 @@
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="5000" pct="1"/>
-      <tier minQty="5001" maxQty="10000" pct="1.5"/>
-      <tier minQty="10001" maxQty="20000" pct="2"/>
-      <tier minQty="20001" maxQty="" pct="2.5"/>
+      <tier minQty="1" maxQty="60000" pct="1"/>
+      <tier minQty="60001" maxQty="120000" pct="1.5"/>
+      <tier minQty="120001" maxQty="240000" pct="2"/>
+      <tier minQty="240001" maxQty="" pct="2.5"/>
     </discount>
-    <totalValueStandard>35303.4</totalValueStandard>
+    <totalValueStandard>604311.75</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>CRM-050</stockId>
       <description>Face Cream 50ml</description>
-      <qtyInvoiced>660</qtyInvoiced>
-      <unitPriceStandard>17.83</unitPriceStandard>
+      <qtyInvoiced>6771</qtyInvoiced>
+      <unitPriceStandard>29.75</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-050</stockId>
       <description>Eau de Parfum 50ml</description>
-      <qtyInvoiced>660</qtyInvoiced>
-      <unitPriceStandard>17.83</unitPriceStandard>
+      <qtyInvoiced>6771</qtyInvoiced>
+      <unitPriceStandard>29.75</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>660</qtyInvoiced>
-      <unitPriceStandard>17.83</unitPriceStandard>
+      <qtyInvoiced>6771</qtyInvoiced>
+      <unitPriceStandard>29.75</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
   </lines>

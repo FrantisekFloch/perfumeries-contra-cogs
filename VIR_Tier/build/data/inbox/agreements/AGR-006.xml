@@ -19,9 +19,9 @@
   <governingLaw>Poland</governingLaw>
   <tiers>
     <tier threshold="0" rate="0.01"/>
-    <tier threshold="5000" rate="0.015"/>
-    <tier threshold="10000" rate="0.02"/>
-    <tier threshold="20000" rate="0.025"/>
+    <tier threshold="60000" rate="0.015"/>
+    <tier threshold="120000" rate="0.02"/>
+    <tier threshold="240000" rate="0.025"/>
   </tiers>
   <skuSet>
     <sku>MSC-200</sku>

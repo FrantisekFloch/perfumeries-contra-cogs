@@ -12,39 +12,39 @@
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="8000" pct="0.8"/>
-      <tier minQty="8001" maxQty="16000" pct="1.4"/>
-      <tier minQty="16001" maxQty="" pct="2.2"/>
+      <tier minQty="1" maxQty="90000" pct="0.8"/>
+      <tier minQty="90001" maxQty="180000" pct="1.4"/>
+      <tier minQty="180001" maxQty="" pct="2.2"/>
     </discount>
-    <totalValueStandard>70920</totalValueStandard>
+    <totalValueStandard>1181271</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>CRM-050</stockId>
       <description>Face Cream 50ml</description>
-      <qtyInvoiced>739</qtyInvoiced>
-      <unitPriceStandard>24</unitPriceStandard>
+      <qtyInvoiced>7572</qtyInvoiced>
+      <unitPriceStandard>39</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>GFT-SET</stockId>
       <description>Gift Set</description>
-      <qtyInvoiced>739</qtyInvoiced>
-      <unitPriceStandard>24</unitPriceStandard>
+      <qtyInvoiced>7572</qtyInvoiced>
+      <unitPriceStandard>39</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>739</qtyInvoiced>
-      <unitPriceStandard>24</unitPriceStandard>
+      <qtyInvoiced>7572</qtyInvoiced>
+      <unitPriceStandard>39</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-050</stockId>
       <description>Eau de Parfum 50ml</description>
-      <qtyInvoiced>738</qtyInvoiced>
-      <unitPriceStandard>24</unitPriceStandard>
+      <qtyInvoiced>7573</qtyInvoiced>
+      <unitPriceStandard>39</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
   </lines>

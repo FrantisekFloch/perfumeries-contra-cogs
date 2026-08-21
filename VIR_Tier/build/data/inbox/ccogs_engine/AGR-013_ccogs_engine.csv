@@ -1,2 +1,2 @@
 outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
-ENG-0013,AGR-013,SUP-NORD,PL,2026,VALUE,391977.16,0.022,8447.5,EUR,CCOGS_INVOICE,INV-0027,DN-0013,RCP-0082|RCP-0083|RCP-0084|RCP-0085,391977 value @ 2.20% = 8447.5 EUR (base receipts only; missing leakage-driver units)
+ENG-0013,AGR-013,SUP-NORD,PL,2026,VALUE,6254819.5600000005,0.022,135626.03,EUR,CCOGS_INVOICE,INV-0027,DN-0013,RCP-0082|RCP-0083|RCP-0084|RCP-0085,6254820 value @ 2.20% = 135626.03 EUR (base receipts only; missing leakage-driver units)

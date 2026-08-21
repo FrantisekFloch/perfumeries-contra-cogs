@@ -1,2 +1,2 @@
 outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
-ENG-0002,AGR-002,SUP-LUMIERE,PAN_EU,2026,UNITS,13418,per-country,134.18,EUR,CCOGS_DEBIT_NOTE,INV-0004|INV-0005|INV-0006,DN-0002,RCP-0013|RCP-0014|RCP-0015|RCP-0016|RCP-0017|RCP-0018,Summed per-country tiers (NOT aggregated pan-EU): 134.18 EUR. Missed the combined-volume tier + leakage-driver units.
+ENG-0002,AGR-002,SUP-LUMIERE,PAN_EU,2026,UNITS,153668,per-country,1536.68,EUR,CCOGS_DEBIT_NOTE,INV-0004|INV-0005|INV-0006,DN-0002,RCP-0013|RCP-0014|RCP-0015|RCP-0016|RCP-0017|RCP-0018,Summed per-country tiers (NOT aggregated pan-EU): 1536.68 EUR. Missed the combined-volume tier + leakage-driver units.

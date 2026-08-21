@@ -291,7 +291,7 @@ export function contraCogsInvoiceHtml(charge, group, reconstruction) {
   const lineRows = lines.map((l) => `<tr>
     <td>${esc(contraLineLabel(l))}${l.note ? `<div class="doc-sub-sku">${esc(l.note)}</div>` : ''}</td>
     <td class="num">${qtyf(l.qty)}</td>
-    <td class="num">${l.fromPct != null ? l.fromPct + '%' : '—'} → ${l.toPct != null ? l.toPct + '%' : '—'}</td>
+    <td class="num">${l.toPct != null ? l.toPct + '%' : (l.fromPct != null ? l.fromPct + '%' : '—')}</td>
     <td class="num">${cur(l.deltaValue, c)}</td></tr>`).join('');
   const subtotal = lines.reduce((s, l) => s + (Number(l.deltaValue) || 0), 0) || charge.variance;
 

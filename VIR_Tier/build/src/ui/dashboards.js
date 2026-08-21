@@ -224,7 +224,7 @@ export function reviewModalHtml(charge, group, reconstruction, opts = {}) {
   const f = opts.finding;
   if (f) {
     const dv = f.derivation || {}; const tb = dv.tierBefore || {}; const ta = dv.tierAfter || {};
-    storyBlock = `<p class="mf-story review-story">${t('mlStory', {
+    storyBlock = `<p class="mf-story review-story">${t(tb.idx !== ta.idx ? 'mlStoryTierMove' : 'mlStorySameTier', {
       claimed: fmtN(f.claimed), cur: f.currency, engV: fmtN(dv.engineVolume), reconV: fmtN(dv.reconstructedVolume),
       baseV: fmtN(dv.baseVolume), restored: fmtN(dv.restoredUnits),
       tierA: ta.idx >= 0 ? ta.idx + 1 : '—', rateA: ((ta.rate || 0) * 100).toFixed(2),
@@ -254,7 +254,7 @@ export function reviewModalHtml(charge, group, reconstruction, opts = {}) {
 
       ${storyBlock}
 
-      <div class="section"><h4>CCOGS True-Up ${charge.tierFromPct != null && charge.tierToPct != null && charge.tierFromPct !== charge.tierToPct ? `· ${charge.tierFromPct}% → ${charge.tierToPct}%` : ''}</h4>
+      <div class="section"><h4>CCOGS True-Up ${charge.tierToPct != null ? `· ${t('rateLabel')} ${charge.tierToPct}%` : ''}</h4>
         <div class="kv">
           <div class="k">${t('structure')}</div><div>${calc.structure ?? charge.structure ?? ''} / ${calc.basis ?? charge.basis ?? ''}</div>
           <div class="k">Original CCOGS (claimed)</div><div>${money(calc.claimedCcogs, calc.currency)}</div>
@@ -266,9 +266,9 @@ export function reviewModalHtml(charge, group, reconstruction, opts = {}) {
       ${volumeBlock}
 
       ${(charge.lines && charge.lines.length) ? `<div class="section"><h4>Itemized causes</h4>
-        <table><thead><tr><th>Cause</th><th class="num">Qty</th><th class="num">From%</th><th class="num">To%</th><th class="num">Delta</th></tr></thead>
-        <tbody>${charge.lines.map((l) => `<tr><td>${l.cause}${l.note ? `<div class="small">${l.note}</div>` : ''}</td><td class="num">${Number(l.qty).toLocaleString()}</td><td class="num">${l.fromPct}%</td><td class="num">${l.toPct}%</td><td class="num">${money(l.deltaValue, calc.currency)}</td></tr>`).join('')}
-        <tr class="mf-total"><td colspan="4">Total recoverable (cumulative)</td><td class="num">${money(calc.variance, calc.currency)}</td></tr></tbody></table>
+        <table><thead><tr><th>Cause</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Delta</th></tr></thead>
+        <tbody>${charge.lines.map((l) => `<tr><td>${l.cause}${l.note ? `<div class="small">${l.note}</div>` : ''}</td><td class="num">${Number(l.qty).toLocaleString()}</td><td class="num">${l.toPct != null ? l.toPct + '%' : (l.fromPct != null ? l.fromPct + '%' : '—')}</td><td class="num">${money(l.deltaValue, calc.currency)}</td></tr>`).join('')}
+        <tr class="mf-total"><td colspan="3">Total recoverable (cumulative)</td><td class="num">${money(calc.variance, calc.currency)}</td></tr></tbody></table>
       </div>` : ''}
 
       <div class="section"><h4>${t('reconstructedVolume')}</h4>

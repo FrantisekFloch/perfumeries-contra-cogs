@@ -14,35 +14,35 @@
     <discount basis="total_volume">
       <tier minQty="1" maxQty="" pct="50"/>
     </discount>
-    <totalValueStandard>287213</totalValueStandard>
+    <totalValueStandard>468544.5</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
       <qtyInvoiced>3144</qtyInvoiced>
-      <unitPriceStandard>22.84</unitPriceStandard>
+      <unitPriceStandard>37.26</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
       <stockId>MSC-200</stockId>
       <description>Body Mist 200ml</description>
       <qtyInvoiced>3144</qtyInvoiced>
-      <unitPriceStandard>22.84</unitPriceStandard>
+      <unitPriceStandard>37.26</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
       <stockId>EDT-075</stockId>
       <description>Eau de Toilette 75ml</description>
       <qtyInvoiced>3144</qtyInvoiced>
-      <unitPriceStandard>22.84</unitPriceStandard>
+      <unitPriceStandard>37.26</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
       <qtyInvoiced>3143</qtyInvoiced>
-      <unitPriceStandard>22.84</unitPriceStandard>
+      <unitPriceStandard>37.26</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
   </lines>

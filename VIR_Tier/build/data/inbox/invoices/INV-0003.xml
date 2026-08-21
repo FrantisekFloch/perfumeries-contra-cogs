@@ -12,39 +12,39 @@
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="8000" pct="0.8"/>
-      <tier minQty="8001" maxQty="16000" pct="1.4"/>
-      <tier minQty="16001" maxQty="" pct="2.2"/>
+      <tier minQty="1" maxQty="90000" pct="0.8"/>
+      <tier minQty="90001" maxQty="180000" pct="1.4"/>
+      <tier minQty="180001" maxQty="" pct="2.2"/>
     </discount>
-    <totalValueStandard>115298.19</totalValueStandard>
+    <totalValueStandard>2254846.77</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>EDT-075</stockId>
       <description>Eau de Toilette 75ml</description>
-      <qtyInvoiced>1626</qtyInvoiced>
-      <unitPriceStandard>17.73</unitPriceStandard>
+      <qtyInvoiced>19051</qtyInvoiced>
+      <unitPriceStandard>29.59</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>1626</qtyInvoiced>
-      <unitPriceStandard>17.73</unitPriceStandard>
+      <qtyInvoiced>19051</qtyInvoiced>
+      <unitPriceStandard>29.59</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-050</stockId>
       <description>Eau de Parfum 50ml</description>
-      <qtyInvoiced>1626</qtyInvoiced>
-      <unitPriceStandard>17.73</unitPriceStandard>
+      <qtyInvoiced>19051</qtyInvoiced>
+      <unitPriceStandard>29.59</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>MSC-200</stockId>
       <description>Body Mist 200ml</description>
-      <qtyInvoiced>1625</qtyInvoiced>
-      <unitPriceStandard>17.73</unitPriceStandard>
+      <qtyInvoiced>19050</qtyInvoiced>
+      <unitPriceStandard>29.59</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
   </lines>

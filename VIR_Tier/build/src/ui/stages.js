@@ -207,7 +207,7 @@ export function mlFindingCard(f, state = {}) {
       <span class="num mf-prio"><span class="prio-badge">${(f.priority * 100).toFixed(0)}</span></span>
     </summary>
     <div class="mf-body">
-      <p class="mf-story">${t('mlStory', {
+      <p class="mf-story">${t(tb.idx !== ta.idx ? 'mlStoryTierMove' : 'mlStorySameTier', {
         claimed: nf(f.claimed), cur: c, engV: nf(dv.engineVolume), reconV: nf(dv.reconstructedVolume),
         baseV: nf(dv.baseVolume), restored: nf(dv.restoredUnits),
         tierA: ta.idx >= 0 ? ta.idx + 1 : '—', rateA: ((ta.rate || 0) * 100).toFixed(2),

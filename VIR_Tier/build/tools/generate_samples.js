@@ -77,11 +77,15 @@ const STRUCTURES = Object.values(RebateStructure);
 const BASES = Object.values(Basis);
 const PERIODS = Object.values(Period);
 
-// standard tier ladder used for tiered structures (percent rates)
+// standard tier ladder used for tiered structures (percent rates). Thresholds are
+// in UNITS. Scaled up to realistic pan-EU cosmetics volumes (hundreds of
+// thousands of units/quarter) so unit-basis recoveries land in the low thousands
+// each and the portfolio total sits comfortably above €10k without any single
+// finding dominating.
 const TIER_LADDERS = [
-  [{ threshold: 0, rate: 0.01 }, { threshold: 5000, rate: 0.015 }, { threshold: 10000, rate: 0.02 }, { threshold: 20000, rate: 0.025 }],
-  [{ threshold: 0, rate: 0.008 }, { threshold: 8000, rate: 0.014 }, { threshold: 16000, rate: 0.022 }],
-  [{ threshold: 0, rate: 0.012 }, { threshold: 6000, rate: 0.02 }, { threshold: 12000, rate: 0.03 }],
+  [{ threshold: 0, rate: 0.01 }, { threshold: 60000, rate: 0.015 }, { threshold: 120000, rate: 0.02 }, { threshold: 240000, rate: 0.025 }],
+  [{ threshold: 0, rate: 0.008 }, { threshold: 90000, rate: 0.014 }, { threshold: 180000, rate: 0.022 }],
+  [{ threshold: 0, rate: 0.012 }, { threshold: 70000, rate: 0.02 }, { threshold: 140000, rate: 0.03 }],
 ];
 
 const CLAUSES = {
@@ -152,11 +156,13 @@ function entitledFor(tiers, q, structure) {
 }
 
 function unitValueFor(currency) {
-  // rough per-unit purchase values by currency (realistic-ish)
-  if (currency === 'EUR') return Number((8 + rand() * 20).toFixed(2));
-  if (currency === 'CZK') return Number((200 + rand() * 500).toFixed(2));
-  if (currency === 'PLN') return Number((35 + rand() * 90).toFixed(2));
-  return 10;
+  // Per-unit purchase values by currency — cosmetics/fragrance wholesale pricing.
+  // Drives invoice VALUE and value-basis rotating scenarios (headline tier-move
+  // deals are UNITS basis, so their recoverable comes from volume × rate, not price).
+  if (currency === 'EUR') return Number((15 + rand() * 30).toFixed(2));
+  if (currency === 'CZK') return Number((380 + rand() * 760).toFixed(2));
+  if (currency === 'PLN') return Number((65 + rand() * 130).toFixed(2));
+  return 20;
 }
 
 // Build a fully-formed case (agreement + purchases + receipts + events + claimed)
@@ -215,9 +221,13 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
   const baseByCountry = {};
   let sampleUnitValue = null;
 
-  // target base (engine-seen) volume.
-  const topThreshold = tiers[tiers.length - 1].threshold || 10000;
-  const tier1 = tiers[1] ? tiers[1].threshold : topThreshold; // first threshold above base tier
+  // target base (engine-seen) volume — ALWAYS computed in UNIT space (purchase
+  // quantities are units), using the raw unit `ladder` even when the agreement
+  // rebates on VALUE (whose `tiers` are the value-scaled thresholds). The
+  // value-scale is proportional, so the tier geometry is preserved.
+  const uLadder = isTiered ? ladder : tiers; // unit-space thresholds for qty sizing
+  const topThreshold = uLadder[uLadder.length - 1].threshold || 10000;
+  const tier1 = uLadder[1] ? uLadder[1].threshold : topThreshold; // first threshold above base tier
   // Tier-movement scenarios: base sits in the LOWEST tier so restored units lift it.
   const tierMove = ['both_causes', 'forgotten_sku', 'found_pallet', 'expired_late', 'reroute', 'tt_sku', 'tt_pallet'].includes(scenario);
   let perCountryBase;
@@ -329,21 +339,21 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
     }
     // --- new real-world CCOGS-loss situations ---
     if (scenario === 'found_pallet' && first) {
-      const band = (tiers[1] ? tiers[1].threshold : 2000);
+      const band = (uLadder[1] ? uLadder[1].threshold : 2000);
       events.push({ eventId: evId(), type: LeakageDriver.FOUND_LATER_PALLET, agreementId, supplierId: supplier.id, country, stockId: ev0, qty: Math.round(band * 0.4) + between(0, 400), refIds: [pid], eventDate: monthAfter(orderDate, 1) + '-05', intendedDate: orderDate });
     }
     if ((scenario === 'forgotten_sku' || scenario === 'both_causes') && first) {
       // the forgotten SKU(s) — units the internal engine never counted. Sized to
       // reliably lift the combined volume across a tier threshold.
       const missing = skuSet.filter((s) => !engineConfiguredSkus.includes(s));
-      const band = (tiers[1] && tiers[0]) ? (tiers[1].threshold) : 2000;
+      const band = (uLadder[1] && uLadder[0]) ? (uLadder[1].threshold) : 2000;
       for (const ms of missing) {
         events.push({ eventId: evId(), type: LeakageDriver.FORGOTTEN_SKU, agreementId, supplierId: supplier.id, country, stockId: ms, qty: Math.round(band * 0.5) + between(0, 400), refIds: [pid], eventDate: orderDate });
       }
     }
     if (scenario === 'both_causes' && first) {
       // second cause layered on: a found-later pallet — together push 1% -> 2%.
-      const band = tiers[2] ? (tiers[2].threshold - tiers[1].threshold) : 3000;
+      const band = uLadder[2] ? (uLadder[2].threshold - uLadder[1].threshold) : 3000;
       events.push({ eventId: evId(), type: LeakageDriver.FOUND_LATER_PALLET, agreementId, supplierId: supplier.id, country, stockId: ev0, qty: Math.round(band * 0.7) + between(0, 400), refIds: [pid], eventDate: monthAfter(orderDate, 1) + '-06', intendedDate: orderDate });
     }
     if (scenario === 'expired_late' && first) {
@@ -353,14 +363,14 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
     // finding stays compact (one row in the derivation table).
     // AGR-001 (tt_sku): a contract SKU missing from the internal engine.
     if (scenario === 'tt_sku' && first) {
-      const band = (tiers[1] ? tiers[1].threshold : 4000);
+      const band = (uLadder[1] ? uLadder[1].threshold : 4000);
       const missing = skuSet.filter((s) => !engineConfiguredSkus.includes(s));
       const ms = missing[0];
       if (ms) events.push({ eventId: evId(), type: LeakageDriver.FORGOTTEN_SKU, agreementId, supplierId: supplier.id, country, stockId: ms, qty: Math.round(band * 0.6) + between(0, 400), refIds: [pid], eventDate: orderDate });
     }
     // AGR-002 (tt_pallet): a pallet located after an initial short-scan.
     if (scenario === 'tt_pallet' && first) {
-      const band = (tiers[1] ? tiers[1].threshold : 4000);
+      const band = (uLadder[1] ? uLadder[1].threshold : 4000);
       events.push({ eventId: evId(), type: LeakageDriver.FOUND_LATER_PALLET, agreementId, supplierId: supplier.id, country, stockId: ev0, qty: Math.round(band * 0.6) + between(0, 400), refIds: [pid], eventDate: monthAfter(orderDate, 1) + '-05', intendedDate: orderDate });
     }
     if (scenario === 'reroute' && first) {
@@ -473,8 +483,10 @@ function buildAll() {
       // scenarios whose whole point is a TIER MOVEMENT must use a tiered structure
       const tierMoveScenario = ['tt_sku', 'tt_pallet', 'both_causes', 'forgotten_sku', 'found_pallet', 'expired_late', 'reroute', 'pan_eu', 'mixed_fx'].includes(scenario);
       const structure = tierMoveScenario ? RebateStructure.RETROSPECTIVE_TIERED : STRUCTURES[rot % STRUCTURES.length];
-      // mixed_fx: UNITS basis (avoids value-scale ambiguity) but mixed currencies
-      // on a pan-EU deal so the recovered amount is FX-converted to EUR.
+      // Tier-movement scenarios stay UNITS basis so the plain-language story reads
+      // in honest unit terms ("on a volume of N units"). The recoverable size comes
+      // from the tier RATES (see TIER_LADDERS), not invoice value. mixed_fx stays
+      // UNITS (mixed currencies, FX-converted).
       const basis = tierMoveScenario ? Basis.UNITS : BASES[rot % BASES.length];
       const period = scenario === 'backorder' || scenario === 'late' ? Period.MONTH : PERIODS[rot % PERIODS.length];
       let scope, countries, currencies;

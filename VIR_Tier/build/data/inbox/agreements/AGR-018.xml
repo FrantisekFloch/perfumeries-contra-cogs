@@ -19,8 +19,8 @@
   <governingLaw>Slovak Republic</governingLaw>
   <tiers>
     <tier threshold="0" rate="0.012"/>
-    <tier threshold="6000" rate="0.02"/>
-    <tier threshold="12000" rate="0.03"/>
+    <tier threshold="70000" rate="0.02"/>
+    <tier threshold="140000" rate="0.03"/>
   </tiers>
   <skuSet>
     <sku>EDT-075</sku>

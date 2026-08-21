@@ -104,7 +104,7 @@ export function renderConsolidatedDebit(state) {
       .map((l) => `<tr>
         <td>${esc(l.cause)} <span class="small mono">(${esc(c.agreementId)})</span>${l.note ? `<div class="small">${esc(l.note)}</div>` : ''}</td>
         <td class="num">${nf(l.qty)}</td>
-        <td class="num">${l.fromPct != null ? l.fromPct + '%' : '—'} → ${l.toPct != null ? l.toPct + '%' : '—'}</td>
+        <td class="num">${l.toPct != null ? l.toPct + '%' : (l.fromPct != null ? l.fromPct + '%' : '—')}</td>
         <td class="num">${money(l.deltaValue, c.currency)}</td>
       </tr>`)).join('');
 

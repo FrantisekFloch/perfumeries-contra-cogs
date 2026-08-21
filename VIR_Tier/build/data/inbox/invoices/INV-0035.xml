@@ -14,35 +14,35 @@
     <discount basis="total_volume">
       <tier minQty="1" maxQty="" pct="50"/>
     </discount>
-    <totalValueStandard>190825.65</totalValueStandard>
+    <totalValueStandard>326821</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>EDT-075</stockId>
       <description>Eau de Toilette 75ml</description>
       <qtyInvoiced>3376</qtyInvoiced>
-      <unitPriceStandard>14.13</unitPriceStandard>
+      <unitPriceStandard>24.2</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>MSC-200</stockId>
       <description>Body Mist 200ml</description>
       <qtyInvoiced>3376</qtyInvoiced>
-      <unitPriceStandard>14.13</unitPriceStandard>
+      <unitPriceStandard>24.2</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-050</stockId>
       <description>Eau de Parfum 50ml</description>
       <qtyInvoiced>3376</qtyInvoiced>
-      <unitPriceStandard>14.13</unitPriceStandard>
+      <unitPriceStandard>24.2</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
       <qtyInvoiced>3377</qtyInvoiced>
-      <unitPriceStandard>14.13</unitPriceStandard>
+      <unitPriceStandard>24.2</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
   </lines>

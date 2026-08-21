@@ -19,8 +19,8 @@
   <governingLaw>Czech Republic</governingLaw>
   <tiers>
     <tier threshold="0" rate="0.008"/>
-    <tier threshold="8000" rate="0.014"/>
-    <tier threshold="16000" rate="0.022"/>
+    <tier threshold="90000" rate="0.014"/>
+    <tier threshold="180000" rate="0.022"/>
   </tiers>
   <skuSet>
     <sku>EDT-075</sku>

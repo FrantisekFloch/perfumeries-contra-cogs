@@ -14,28 +14,28 @@
     <discount basis="total_volume">
       <tier minQty="1" maxQty="" pct="3"/>
     </discount>
-    <totalValueStandard>232077.24</totalValueStandard>
+    <totalValueStandard>388827.6</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>GFT-SET</stockId>
       <description>Gift Set</description>
       <qtyInvoiced>4516</qtyInvoiced>
-      <unitPriceStandard>17.13</unitPriceStandard>
+      <unitPriceStandard>28.7</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
       <qtyInvoiced>4516</qtyInvoiced>
-      <unitPriceStandard>17.13</unitPriceStandard>
+      <unitPriceStandard>28.7</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
       <qtyInvoiced>4516</qtyInvoiced>
-      <unitPriceStandard>17.13</unitPriceStandard>
+      <unitPriceStandard>28.7</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
   </lines>

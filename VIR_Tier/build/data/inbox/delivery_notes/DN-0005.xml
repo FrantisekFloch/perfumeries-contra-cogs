@@ -10,6 +10,6 @@
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>EDP-050</stockId><qtyShipped>3991</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0009</invoiceRef></line>
+    <line><stockId>EDP-050</stockId><qtyShipped>50741</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0009</invoiceRef></line>
   </lines>
 </deliveryNote>

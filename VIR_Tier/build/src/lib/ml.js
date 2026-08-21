@@ -107,11 +107,30 @@ export function scoreOpportunities(beforeAfter, reconstructions = [], consolidat
     const complexityPenalty = complexity > 3 ? Math.min(0.6, (complexity - 3) * 0.12) : 0;
     const score = clamp01(rawScore * (1 - complexityPenalty));
 
-    // tier before (on engine/base volume) vs after (on reconstructed volume)
+    // tier before vs after. `tierAfter` is the tier the reconstructed volume lands
+    // in (the achieved band). `tierBefore` must reflect the tier the engine
+    // ACTUALLY billed at — which, for pan-EU deals the engine tiered per-country,
+    // is a LOWER band than tierAt(combinedVolume) would suggest. So derive it from
+    // the effective claimed rate (claimed / engineVolume) rather than the volume,
+    // then snap to the nearest tier at or below that rate. This makes genuine tier
+    // movements visible whenever the engine under-tiered.
     const tierAt = (vol) => { let idx = -1; for (let i = 0; i < tiers.length; i++) { if (vol >= tiers[i].threshold) idx = i; else break; } return idx >= 0 ? { idx, rate: tiers[idx].rate, threshold: tiers[idx].threshold } : { idx: -1, rate: 0, threshold: 0 }; };
     const engineVol = (group?.ccogsEngine?.[0]?.engineVolume) ?? baseVolume;
-    const tierBefore = tierAt(engineVol);
+    const tierByRate = (rate) => {
+      // pick the highest tier whose rate is <= the effective claimed rate. Use a
+      // small relative tolerance (0.5%) so a claimed rate that equals a tier rate
+      // but drifts by rounding (e.g. 0.007999 vs 0.008) still matches that tier
+      // instead of dropping to "tier 0 / 0%".
+      let idx = -1;
+      for (let i = 0; i < tiers.length; i++) { if (tiers[i].rate <= rate * 1.005 + 1e-9) idx = i; else break; }
+      return idx >= 0 ? { idx, rate: tiers[idx].rate, threshold: tiers[idx].threshold } : { idx: -1, rate: 0, threshold: 0 };
+    };
     const tierAfter = tierAt(b.after.reconstructedVolume);
+    // effective rate the engine billed (money/volume); fall back to volume-based tier
+    const claimedRate = engineVol > 0 && claimed > 0 ? (claimed / engineVol) : null;
+    const tierBefore = (claimedRate != null && tiers.length)
+      ? tierByRate(claimedRate)
+      : tierAt(engineVol);
 
     return {
       agreementId: b.agreementId,

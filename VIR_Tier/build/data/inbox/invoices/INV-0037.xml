@@ -12,32 +12,32 @@
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="8000" pct="0.8"/>
-      <tier minQty="8001" maxQty="16000" pct="1.4"/>
-      <tier minQty="16001" maxQty="" pct="2.2"/>
+      <tier minQty="1" maxQty="90000" pct="0.8"/>
+      <tier minQty="90001" maxQty="180000" pct="1.4"/>
+      <tier minQty="180001" maxQty="" pct="2.2"/>
     </discount>
-    <totalValueStandard>370192.06</totalValueStandard>
+    <totalValueStandard>6235430.78</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>5913</qtyInvoiced>
-      <unitPriceStandard>20.87</unitPriceStandard>
+      <qtyInvoiced>60579</qtyInvoiced>
+      <unitPriceStandard>34.31</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>5913</qtyInvoiced>
-      <unitPriceStandard>20.87</unitPriceStandard>
+      <qtyInvoiced>60579</qtyInvoiced>
+      <unitPriceStandard>34.31</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>EDT-075</stockId>
       <description>Eau de Toilette 75ml</description>
-      <qtyInvoiced>5912</qtyInvoiced>
-      <unitPriceStandard>20.87</unitPriceStandard>
+      <qtyInvoiced>60580</qtyInvoiced>
+      <unitPriceStandard>34.31</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
   </lines>

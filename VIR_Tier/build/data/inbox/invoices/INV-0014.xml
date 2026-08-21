@@ -12,32 +12,32 @@
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="8000" pct="0.8"/>
-      <tier minQty="8001" maxQty="16000" pct="1.4"/>
-      <tier minQty="16001" maxQty="" pct="2.2"/>
+      <tier minQty="1" maxQty="90000" pct="0.8"/>
+      <tier minQty="90001" maxQty="180000" pct="1.4"/>
+      <tier minQty="180001" maxQty="" pct="2.2"/>
     </discount>
-    <totalValueStandard>102338.52</totalValueStandard>
+    <totalValueStandard>1990548.78</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>SRM-030</stockId>
       <description>Serum 30ml</description>
-      <qtyInvoiced>2218</qtyInvoiced>
-      <unitPriceStandard>15.38</unitPriceStandard>
+      <qtyInvoiced>25451</qtyInvoiced>
+      <unitPriceStandard>26.07</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>2218</qtyInvoiced>
-      <unitPriceStandard>15.38</unitPriceStandard>
+      <qtyInvoiced>25451</qtyInvoiced>
+      <unitPriceStandard>26.07</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>MSC-200</stockId>
       <description>Body Mist 200ml</description>
-      <qtyInvoiced>2218</qtyInvoiced>
-      <unitPriceStandard>15.38</unitPriceStandard>
+      <qtyInvoiced>25452</qtyInvoiced>
+      <unitPriceStandard>26.07</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
   </lines>

@@ -12,25 +12,25 @@
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>CZK</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="6000" pct="1.2"/>
-      <tier minQty="6001" maxQty="12000" pct="2"/>
-      <tier minQty="12001" maxQty="" pct="3"/>
+      <tier minQty="1" maxQty="70000" pct="1.2"/>
+      <tier minQty="70001" maxQty="140000" pct="2"/>
+      <tier minQty="140001" maxQty="" pct="3"/>
     </discount>
-    <totalValueStandard>1173220.68</totalValueStandard>
+    <totalValueStandard>23022226.81</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>EDT-075</stockId>
       <description>Eau de Toilette 75ml</description>
-      <qtyInvoiced>977</qtyInvoiced>
-      <unitPriceStandard>600.42</unitPriceStandard>
+      <qtyInvoiced>11644</qtyInvoiced>
+      <unitPriceStandard>988.63</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>CRM-050</stockId>
       <description>Face Cream 50ml</description>
-      <qtyInvoiced>977</qtyInvoiced>
-      <unitPriceStandard>600.42</unitPriceStandard>
+      <qtyInvoiced>11643</qtyInvoiced>
+      <unitPriceStandard>988.63</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
   </lines>

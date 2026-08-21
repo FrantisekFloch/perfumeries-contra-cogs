@@ -1,2 +1,2 @@
 outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
-ENG-0022,AGR-022,SUP-MAISON,SK,2026,VALUE,232077.24,0.03,6962.32,EUR,CCOGS_INVOICE,INV-0038,DN-0022,RCP-0115|RCP-0116|RCP-0117,232077 value @ 3.00% = 6962.32 EUR (full combined volume; no leakage)
+ENG-0022,AGR-022,SUP-MAISON,SK,2026,VALUE,388827.6,0.03,11664.83,EUR,CCOGS_INVOICE,INV-0038,DN-0022,RCP-0115|RCP-0116|RCP-0117,388828 value @ 3.00% = 11664.83 EUR (full combined volume; no leakage)
