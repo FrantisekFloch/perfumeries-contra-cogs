@@ -10,8 +10,17 @@
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>CRM-050</stockId><qtyShipped>30289</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0024</invoiceRef></line>
-    <line><stockId>CRM-050</stockId><qtyShipped>30007</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0025</invoiceRef></line>
-    <line><stockId>CRM-050</stockId><qtyShipped>29802</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0026</invoiceRef></line>
+    <line><stockId>CRM-050</stockId><qtyShipped>7572</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0024</invoiceRef></line>
+    <line><stockId>GFT-SET</stockId><qtyShipped>7572</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0024</invoiceRef></line>
+    <line><stockId>EDP-100</stockId><qtyShipped>7572</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0024</invoiceRef></line>
+    <line><stockId>EDP-050</stockId><qtyShipped>7573</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0024</invoiceRef></line>
+    <line><stockId>CRM-050</stockId><qtyShipped>7502</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0025</invoiceRef></line>
+    <line><stockId>GFT-SET</stockId><qtyShipped>7502</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0025</invoiceRef></line>
+    <line><stockId>EDP-100</stockId><qtyShipped>7502</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0025</invoiceRef></line>
+    <line><stockId>EDP-050</stockId><qtyShipped>7501</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0025</invoiceRef></line>
+    <line><stockId>CRM-050</stockId><qtyShipped>7451</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0026</invoiceRef></line>
+    <line><stockId>GFT-SET</stockId><qtyShipped>7451</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0026</invoiceRef></line>
+    <line><stockId>EDP-100</stockId><qtyShipped>7451</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0026</invoiceRef></line>
+    <line><stockId>EDP-050</stockId><qtyShipped>7449</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0026</invoiceRef></line>
   </lines>
 </deliveryNote>

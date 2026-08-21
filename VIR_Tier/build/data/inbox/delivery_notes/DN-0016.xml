@@ -10,6 +10,8 @@
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>SRM-030</stockId><qtyShipped>242357</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0030</invoiceRef></line>
+    <line><stockId>SRM-030</stockId><qtyShipped>80786</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0030</invoiceRef></line>
+    <line><stockId>EDP-100</stockId><qtyShipped>80786</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0030</invoiceRef></line>
+    <line><stockId>CRM-050</stockId><qtyShipped>80785</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0030</invoiceRef></line>
   </lines>
 </deliveryNote>

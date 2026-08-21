@@ -10,8 +10,14 @@
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>LIP-004</stockId><qtyShipped>59462</qtyShipped><targetStorage>WH-PO</targetStorage><invoiceRef>INV-0018</invoiceRef></line>
-    <line><stockId>LIP-004</stockId><qtyShipped>59200</qtyShipped><targetStorage>WH-KR</targetStorage><invoiceRef>INV-0019</invoiceRef></line>
-    <line><stockId>LIP-004</stockId><qtyShipped>59404</qtyShipped><targetStorage>WH-BR</targetStorage><invoiceRef>INV-0020</invoiceRef></line>
+    <line><stockId>LIP-004</stockId><qtyShipped>19821</qtyShipped><targetStorage>WH-PO</targetStorage><invoiceRef>INV-0018</invoiceRef></line>
+    <line><stockId>EDP-100</stockId><qtyShipped>19821</qtyShipped><targetStorage>WH-PO</targetStorage><invoiceRef>INV-0018</invoiceRef></line>
+    <line><stockId>SRM-030</stockId><qtyShipped>19820</qtyShipped><targetStorage>WH-PO</targetStorage><invoiceRef>INV-0018</invoiceRef></line>
+    <line><stockId>LIP-004</stockId><qtyShipped>19733</qtyShipped><targetStorage>WH-KR</targetStorage><invoiceRef>INV-0019</invoiceRef></line>
+    <line><stockId>EDP-100</stockId><qtyShipped>19733</qtyShipped><targetStorage>WH-KR</targetStorage><invoiceRef>INV-0019</invoiceRef></line>
+    <line><stockId>SRM-030</stockId><qtyShipped>19734</qtyShipped><targetStorage>WH-KR</targetStorage><invoiceRef>INV-0019</invoiceRef></line>
+    <line><stockId>LIP-004</stockId><qtyShipped>19801</qtyShipped><targetStorage>WH-BR</targetStorage><invoiceRef>INV-0020</invoiceRef></line>
+    <line><stockId>EDP-100</stockId><qtyShipped>19801</qtyShipped><targetStorage>WH-BR</targetStorage><invoiceRef>INV-0020</invoiceRef></line>
+    <line><stockId>SRM-030</stockId><qtyShipped>19802</qtyShipped><targetStorage>WH-BR</targetStorage><invoiceRef>INV-0020</invoiceRef></line>
   </lines>
 </deliveryNote>

@@ -10,6 +10,7 @@
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>SRM-030</stockId><qtyShipped>50732</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0007</invoiceRef></line>
+    <line><stockId>SRM-030</stockId><qtyShipped>25366</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0007</invoiceRef></line>
+    <line><stockId>GFT-SET</stockId><qtyShipped>25366</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0007</invoiceRef></line>
   </lines>
 </deliveryNote>

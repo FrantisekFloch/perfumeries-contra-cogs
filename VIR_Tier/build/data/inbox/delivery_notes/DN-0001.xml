@@ -10,8 +10,17 @@
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>EDT-075</stockId><qtyShipped>76648</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0001</invoiceRef></line>
-    <line><stockId>EDT-075</stockId><qtyShipped>76122</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0002</invoiceRef></line>
-    <line><stockId>EDT-075</stockId><qtyShipped>76203</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0003</invoiceRef></line>
+    <line><stockId>EDT-075</stockId><qtyShipped>19162</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0001</invoiceRef></line>
+    <line><stockId>LIP-004</stockId><qtyShipped>19162</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0001</invoiceRef></line>
+    <line><stockId>EDP-050</stockId><qtyShipped>19162</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0001</invoiceRef></line>
+    <line><stockId>MSC-200</stockId><qtyShipped>19162</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0001</invoiceRef></line>
+    <line><stockId>EDT-075</stockId><qtyShipped>19031</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0002</invoiceRef></line>
+    <line><stockId>LIP-004</stockId><qtyShipped>19031</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0002</invoiceRef></line>
+    <line><stockId>EDP-050</stockId><qtyShipped>19031</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0002</invoiceRef></line>
+    <line><stockId>MSC-200</stockId><qtyShipped>19029</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0002</invoiceRef></line>
+    <line><stockId>EDT-075</stockId><qtyShipped>19051</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0003</invoiceRef></line>
+    <line><stockId>LIP-004</stockId><qtyShipped>19051</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0003</invoiceRef></line>
+    <line><stockId>EDP-050</stockId><qtyShipped>19051</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0003</invoiceRef></line>
+    <line><stockId>MSC-200</stockId><qtyShipped>19050</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0003</invoiceRef></line>
   </lines>
 </deliveryNote>

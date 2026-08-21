@@ -312,8 +312,12 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
       grnIdsForCountry.push(rid);
     });
 
-    // remember per-country delivery facts so we can CONSOLIDATE delivery notes below
-    perCountryDelivery.push({ country, storage: isReroute ? townWh : storage, iid, po, sku: skuSetObjs[0].id, qty: baseQty, shipDate: orderDate, grnIds: grnIdsForCountry });
+    // remember per-country delivery facts so we can CONSOLIDATE delivery notes
+    // below. `skuLines` carries EVERY contract SKU (matching the invoice's per-SKU
+    // split) so the delivery note — and the invoice's line-item storage split —
+    // shows all SKUs, not just the first.
+    const skuLines = skuSetObjs.map((skuObj, si) => ({ stockId: skuObj.id, qty: perSku[si] }));
+    perCountryDelivery.push({ country, storage: isReroute ? townWh : storage, iid, po, sku: skuSetObjs[0].id, skuLines, qty: baseQty, shipDate: orderDate, grnIds: grnIdsForCountry });
 
     // scenario-specific leakage event(s) that RESTORE suppressed volume.
     const ev0 = skuSetObjs[0].id;
@@ -390,7 +394,7 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
       deliveryNoteId: did, invoiceNumber: invoiceNumbers[0], invoiceRefs: invoiceNumbers,
       agreementId, targetStorageId: perCountryDelivery.map((d) => d.storage).join('+'),
       country: perCountryDelivery[0].country, shipDate: perCountryDelivery[0].shipDate, deliveryStatus: 'Received',
-      lines: perCountryDelivery.map((d) => ({ stockId: d.sku, qtyShipped: d.qty, invoiceRef: d.iid, targetStorage: d.storage })),
+      lines: perCountryDelivery.flatMap((d) => d.skuLines.map((sl) => ({ stockId: sl.stockId, qtyShipped: sl.qty, invoiceRef: d.iid, targetStorage: d.storage }))),
     });
     deliveryNoteRefs.push(did);
   } else {
@@ -400,7 +404,7 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
         deliveryNoteId: did, invoiceNumber: d.iid, invoiceRefs: [d.iid],
         agreementId, targetStorageId: d.storage, country: d.country,
         shipDate: d.shipDate, deliveryStatus: 'Received',
-        lines: [{ stockId: d.sku, qtyShipped: d.qty, invoiceRef: d.iid, targetStorage: d.storage }],
+        lines: d.skuLines.map((sl) => ({ stockId: sl.stockId, qtyShipped: sl.qty, invoiceRef: d.iid, targetStorage: d.storage })),
       });
       deliveryNoteRefs.push(did);
     }
