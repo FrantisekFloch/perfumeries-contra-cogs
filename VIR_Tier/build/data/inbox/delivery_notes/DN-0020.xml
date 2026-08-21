@@ -4,12 +4,12 @@
   <invoiceNumber>INV-0036</invoiceNumber>
   <invoiceRefs>INV-0036</invoiceRefs>
   <agreementId>AGR-020</agreementId>
-  <targetStorageId>WH-SK-01</targetStorageId>
-  <country>SK</country>
-  <shipDate>2026-01-19</shipDate>
+  <targetStorageId>WH-PL-01</targetStorageId>
+  <country>PL</country>
+  <shipDate>2026-01-08</shipDate>
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>LIP-004</stockId><qtyShipped>14988</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0036</invoiceRef></line>
+    <line><stockId>LIP-004</stockId><qtyShipped>14332</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0036</invoiceRef></line>
   </lines>
 </deliveryNote>

@@ -76,6 +76,33 @@ export function renderOverview(state) {
   const allReceipts = state.consolidated ? [...state.consolidated.byAgreement.values()].flatMap((g) => g.receipts || []) : [];
   const allCorrections = (state.reconstructions || []).flatMap((r) => r.corrections || []);
 
+  // ---- Claim Builder worklist (from concept B5) — what's in this recovery run ----
+  // Findings currently in the discovery list are "included"; archived suggestions
+  // are "excluded". Placed above the process journey.
+  const findings = state.discovery?.findings || [];
+  const archived = state.archived || [];
+  // group per supplier -> compact boxes (included findings + excluded/archived)
+  const wlSup = new Map();
+  const wlBucket = (name) => { if (!wlSup.has(name)) wlSup.set(name, { name, items: [], total: 0, cur: 'EUR' }); return wlSup.get(name); };
+  for (const f of findings) { const b = wlBucket(f.supplierName || f.supplierId); b.items.push({ status: 'include', id: f.agreementId, amt: f.leakage || 0 }); b.total += (f.leakage || 0); b.cur = f.currency || 'EUR'; }
+  for (const a of archived) { const b = wlBucket(a.supplierName || a.agreementId); b.items.push({ status: 'excluded', id: a.agreementId, amt: 0, note: a.comment }); }
+  const wlIncludedCount = findings.length;
+  const wlIncTotal = findings.reduce((s, f) => s + (f.leakage || 0), 0);
+  const wlBoxes = [...wlSup.values()].sort((a, b) => b.total - a.total).map((b) => {
+    const chips = b.items.map((it) => `<span class="wl-chip ${it.status}" title="${it.status === 'include' ? fmtN(it.amt) + ' ' + b.cur : (it.note || t('wlExcluded'))}"><span class="mono">${it.id}</span>${it.status === 'include' ? ` · ${fmtN(it.amt)}` : ' ✕'}</span>`).join('');
+    return `<div class="wl-box">
+      <div class="wl-box-h"><span class="wl-box-n">${b.name}</span><span class="wl-box-t euro">${fmtN(b.total)} ${b.cur}</span></div>
+      <div class="wl-chips">${chips}</div>
+    </div>`;
+  }).join('');
+  const worklistBlock = `
+    <h3 class="ov-h">${t('wlTitle')}</h3>
+    <p class="muted small">${t('wlNote')}</p>
+    <div class="card wl-card">
+      <div class="wl-head"><span>${wlIncludedCount} ${t('wlInRun')} · ${wlSup.size} ${t('wlSuppliers')}</span><span class="euro" style="font-weight:800;color:var(--gold)">${fmtN(wlIncTotal)} EUR</span></div>
+      <div class="wl-boxes">${wlBoxes || `<div class="small">—</div>`}</div>
+    </div>`;
+
   // ---- agreement-duration split: fail rate + savings per contract length ----
   const WINDOW_LABEL = { MONTH: 'Monthly', QUARTER: 'Quarterly', HALF_YEAR: 'Half-year', YEAR: 'Yearly', CUSTOM: 'Custom' };
   const WINDOW_ORDER = ['MONTH', 'QUARTER', 'HALF_YEAR', 'YEAR', 'CUSTOM'];
@@ -130,6 +157,8 @@ export function renderOverview(state) {
     </div>
     <div class="loss-banner">${t('totalRecoverable')}: <strong>${eur(totalTrueUp)}</strong> &nbsp;·&nbsp; ${upliftPct.toFixed(1)}% ${t('upliftOnClaimed')} &nbsp;·&nbsp; ${recoverableCount} ${t('recoverableAgreements')}</div>
 
+    ${worklistBlock}
+
     ${financeJourney(allReceipts, allCorrections)}
 
     <div class="chart-grid">
@@ -176,7 +205,9 @@ export function renderOverview(state) {
 }
 
 // ---- review modal ----
-export function reviewModalHtml(charge, group, reconstruction) {
+// opts.readOnly = true renders the same document with NO action buttons
+// (used by the Consolidated Debit "View details").
+export function reviewModalHtml(charge, group, reconstruction, opts = {}) {
   const doc = buildReviewDocument({ charge, agreement: group.agreement, reconstruction, contributingRecords: group.receipts.map((r) => r.receiptId) });
   const calc = doc.calculation;
   const corrections = (doc.corrections || []).map((c) =>
@@ -186,11 +217,42 @@ export function reviewModalHtml(charge, group, reconstruction) {
   const audit = (doc.auditTrace || []).map((e) =>
     `<tr><td class="mono">${e.seq}</td><td class="mono small">${e.timestamp}</td><td>${e.actor}</td><td>${e.action}</td></tr>`).join('');
 
+  // Plain-language "what happened" sentence (same as ML Discovery). Built from
+  // the matching finding's derivation so figures line up exactly.
+  let storyBlock = '';
+  let volumeBlock = '';
+  const f = opts.finding;
+  if (f) {
+    const dv = f.derivation || {}; const tb = dv.tierBefore || {}; const ta = dv.tierAfter || {};
+    storyBlock = `<p class="mf-story review-story">${t('mlStory', {
+      claimed: fmtN(f.claimed), cur: f.currency, engV: fmtN(dv.engineVolume), reconV: fmtN(dv.reconstructedVolume),
+      baseV: fmtN(dv.baseVolume), restored: fmtN(dv.restoredUnits),
+      tierA: ta.idx >= 0 ? ta.idx + 1 : '—', rateA: ((ta.rate || 0) * 100).toFixed(2),
+      tierB: tb.idx >= 0 ? tb.idx + 1 : '—', rateB: ((tb.rate || 0) * 100).toFixed(2),
+      entitled: fmtN(f.entitled), leak: fmtN(f.leakage),
+    })}</p>`;
+
+    // "Where the volume came from" — base receipts + per-driver restored units +
+    // reconstructed total (ported from the ML Discovery finding card so this
+    // breakdown isn't lost when ML Discovery is hidden).
+    const driverRows = (dv.driverContributions || []).map((d) =>
+      `<tr><td>${hintSpan(String(d.driver).replace(/_/g, ' '), d.driver)}</td><td class="num">+${fmtN(d.units)}</td><td class="small">${d.note ?? ''}</td></tr>`).join('');
+    volumeBlock = `<div class="section"><h4>${t('whereVolume')}</h4>
+      <table><thead><tr><th>${t('colSource')}</th><th class="num">${t('colUnits')}</th><th>${t('colWhy')}</th></tr></thead><tbody>
+        <tr><td>${t('baseReceipts')}</td><td class="num">${fmtN(dv.baseVolume)}</td><td class="small">${t('baseReceiptsWhy')}</td></tr>
+        ${driverRows || `<tr><td colspan="3" class="small">${t('noDriverCorr')}</td></tr>`}
+        <tr class="mf-total"><td>${t('reconQualifying')}</td><td class="num">${fmtN(dv.reconstructedVolume)}</td><td></td></tr>
+      </tbody></table>
+    </div>`;
+  }
+
   return `
   <div class="modal-bg" id="reviewBg">
     <div class="modal">
       <h2>${t('reviewDoc')} — ${charge.chargeId}</h2>
       <div class="sub">${doc.supplier.name} · ${doc.agreementId} · ${doc.scopeKey} · ${doc.period}</div>
+
+      ${storyBlock}
 
       <div class="section"><h4>CCOGS True-Up ${charge.tierFromPct != null && charge.tierToPct != null && charge.tierFromPct !== charge.tierToPct ? `· ${charge.tierFromPct}% → ${charge.tierToPct}%` : ''}</h4>
         <div class="kv">
@@ -200,6 +262,8 @@ export function reviewModalHtml(charge, group, reconstruction) {
           <div class="k">Recoverable True-Up</div><div><strong style="color:var(--gold)">${money(calc.variance, calc.currency)}</strong>${(charge.eurEquivalent ?? calc.eurEquivalent) != null ? ` (${money(charge.eurEquivalent ?? calc.eurEquivalent, 'EUR')})` : ''}</div>
         </div>
       </div>
+
+      ${volumeBlock}
 
       ${(charge.lines && charge.lines.length) ? `<div class="section"><h4>Itemized causes</h4>
         <table><thead><tr><th>Cause</th><th class="num">Qty</th><th class="num">From%</th><th class="num">To%</th><th class="num">Delta</th></tr></thead>
@@ -224,7 +288,7 @@ export function reviewModalHtml(charge, group, reconstruction) {
       </div>
 
       <div class="actions">
-        <button class="btn primary" data-gencontra="${charge.chargeId}">${t('genContraInvoice')}</button>
+        ${opts.readOnly ? '' : `<button class="btn primary" data-gencontra="${charge.chargeId}">${t('genContraInvoice')}</button>`}
         <button class="btn ghost" data-closemodal>${t('close')}</button>
       </div>
     </div>
@@ -259,8 +323,9 @@ export function renderAbout() {
           <li>${t('ab.doc.agreement')}</li>
         </ul>
         <p>${t('ab.p.summary')}</p>` },
-    // ---- ML DISCOVERY — the big, detailed section (end-to-end mapping) ----
-    { id: 'ml', h: t('ab.h.ml'), body: `
+    // ---- RECONSTRUCTION ENGINE — the big, detailed section (end-to-end mapping
+    // that powers the Consolidated Debit findings) ----
+    { id: 'consol', h: t('ab.h.ml'), body: `
         <p>${t('ab.p.ml')}</p>
         <h5>${t('ab.ml.pipelineH')}</h5>
         <ol class="manual">
@@ -299,7 +364,6 @@ export function renderAbout() {
         <p>${t('ab.ml.outputP')}</p>` },
     { id: 'trueup', h: t('ab.h.trueup'), body: `<p>${t('ab.p.trueup')}</p>` },
     { id: 'finance', h: t('ab.h.finance'), body: `<p>${t('ab.p.finance')}</p>` },
-    { id: 'roles', h: t('ab.h.roles'), body: `<p>${t('ab.p.roles')}</p>` },
     { id: 'nav', h: t('ab.h.nav'), body: `<p>${t('ab.p.nav')}</p>` },
     { id: 'glossary', h: t('ab.h.glossary'), body: `<dl class="glossary">
         <dt>CCOGS</dt><dd>${t('ab.g.ccogs')}</dd>

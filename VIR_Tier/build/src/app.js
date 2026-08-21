@@ -1,7 +1,7 @@
 // VIR_Tier entry point — LEFT-NAV WORKSPACE.
 // Boot scan -> persistent sidebar (pipeline stages, free navigation) + wide
-// working area. All roles browse read-only; approve/reject gated to Finance
-// Approver. Engines are the same pure modules the tests exercise.
+// working area. Single open-access workspace (no role gating). Engines are the
+// same pure modules the tests exercise.
 
 import { demoSources } from './lib/source.js';
 import { ingestFiles } from './lib/ingest.js';
@@ -9,11 +9,12 @@ import { consolidate } from './lib/consolidation.js';
 import { runPipeline } from './lib/pipeline.js';
 import { runDiscovery } from './lib/ml.js';
 import { StateStore } from './lib/store.js';
-import { Role } from './lib/enums.js';
 import { t, setLang, getLang, LANGS } from './lib/i18n.js';
-import { runBoot } from './ui/boot.js';
+import { runScan } from './lib/source.js';
+import { animateIngestFlow, FLOW_NODES } from './ui/ingestflow.js';
 import { renderOverview, reviewModalHtml, renderAbout } from './ui/dashboards.js';
 import { renderInputs, renderMl, INPUT_CATS } from './ui/stages.js';
+import { renderConsolidatedDebit, chargesBySupplier } from './ui/consolidated.js';
 import { invoiceDocHtml, deliveryNoteDocHtml, receiptDocHtml, eventDocHtml, engineDocHtml, agreementDocHtml, contraCogsInvoiceHtml } from './ui/doc.js';
 import { serializeInvoiceXml, serializeDeliveryNoteXml, serializeReceiptCsv, serializeEventCsv, serializeCcogsEngineCsv, serializeAgreementXml } from './lib/parsers.js';
 import { chargesToCsv } from './lib/injection.js';
@@ -23,7 +24,10 @@ const app = document.getElementById('app');
 
 const STAGES = [
   { id: 'inputs', label: 'navInputs', n: 1, render: renderInputs, sub: INPUT_CATS.map((c) => ({ key: c.key, label: c.label })) },
-  { id: 'ml', label: 'navMl', n: 2, render: renderMl },
+  // ML Discovery hidden from the sidebar (renderMl kept for reference/reuse) — its
+  // key content (plain-language story + volume build-up) now lives in the
+  // Consolidated Debit "View details". Re-add here to restore it to the nav.
+  { id: 'consol', label: 'navConsolidated', n: 2, render: renderConsolidatedDebit },
   { id: 'overview', label: 'navOverview', n: 3, render: renderOverview },
 ];
 
@@ -37,7 +41,7 @@ const state = {
   archived: [],   // suggestions the user rejected & archived (agreementId+scopeKey)
   stage: 'inputs',
   sub: 'summary',
-  role: Role.ANALYST,           // acting role (gates approve). Browsing is open.
+  ingestDone: false,            // set true once the ingest-flow animation completes
 };
 
 // ---- loaders ----
@@ -91,14 +95,10 @@ function sidebar() {
       : '';
     return `<div class="nav-item ${active ? 'active' : ''}" data-stage="${st.id}"><span class="n">${st.n}</span>${t(st.label)}</div>${subs}`;
   }).join('');
-  const roles = [Role.ANALYST, Role.FINANCE_APPROVER, Role.FINANCE_OVERVIEW].map((r) =>
-    `<option value="${r}" ${state.role === r ? 'selected' : ''}>${t(r === Role.ANALYST ? 'roleAnalyst' : r === Role.FINANCE_APPROVER ? 'roleApprover' : 'roleOverview')}</option>`).join('');
   return `<aside class="sidebar">
     <div class="logo">VIR<span class="tier">_Tier</span></div>
     <div class="nav-group"><div class="g-label">${t('navPipeline')}</div>${items}</div>
     <div class="nav-group sidebar-foot">
-      <div class="g-label">${t('navRole')}</div>
-      <div style="padding:4px 12px"><select id="roleSel" class="field" style="width:100%; padding:7px 10px; border:1px solid var(--line); border-radius:8px">${roles}</select></div>
       <div class="langs">${LANGS.map((l) => `<button data-lang="${l.code}" class="${getLang() === l.code ? 'active' : ''}">${l.flag} ${l.label}</button>`).join('')}</div>
       <div class="nav-about ${state.stage === 'about' ? 'active' : ''}" data-stage="about">ⓘ ${t('navAbout')}</div>
     </div>
@@ -106,7 +106,9 @@ function sidebar() {
 }
 
 function render() {
-  const roleName = t(state.role === Role.ANALYST ? 'roleAnalyst' : state.role === Role.FINANCE_APPROVER ? 'roleApprover' : 'roleOverview');
+  // guard: if the active stage is no longer in the sidebar (e.g. the retired
+  // 'ml' stage), fall back to Inputs so render never dereferences undefined.
+  if (state.stage !== 'about' && !STAGES.find((s) => s.id === state.stage)) state.stage = STAGES[0].id;
   // About is a standalone view (not a numbered pipeline stage)
   const isAbout = state.stage === 'about';
   const title = isAbout ? t('navAbout') : t(STAGES.find((s) => s.id === state.stage).label);
@@ -114,12 +116,14 @@ function render() {
   app.innerHTML = `<div class="app-shell">
     ${sidebar()}
     <main class="work">
-      <div class="page-head"><h2>${title}</h2><span class="role-pill">${t('navRole')}: ${roleName}</span></div>
+      <div class="page-head"><h2>${title}</h2></div>
       <div id="view">${viewHtml}</div>
     </main>
   </div>`;
   bind();
   initTooltips(app);
+  // If the Summary ingest-flow is on screen, (re)play its fill animation.
+  if (app.querySelector('#ingestFlow')) playIngestFlow();
 }
 
 function bind() {
@@ -131,8 +135,6 @@ function bind() {
   }));
   app.querySelectorAll('[data-sub]').forEach((el) => el.addEventListener('click', (e) => { e.stopPropagation(); state.sub = el.dataset.sub; render(); }));
   app.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => { setLang(b.dataset.lang); render(); }));
-  const roleSel = app.querySelector('#roleSel');
-  if (roleSel) roleSel.addEventListener('change', () => { state.role = roleSel.value; render(); });
 
   // controls (analyst) -> recompute
   app.querySelectorAll('#controls [data-sel]').forEach((sel) => sel.addEventListener('change', () => {
@@ -143,9 +145,9 @@ function bind() {
     const msg = app.querySelector('#recomputedMsg'); if (msg) { msg.textContent = t('recomputed'); setTimeout(() => { const m = app.querySelector('#recomputedMsg'); if (m) m.textContent = ''; }, 1500); }
   }));
 
-  // inputs summary: continue into ML Discovery
+  // inputs summary: continue into Consolidated Debit (ML Discovery is hidden)
   const sumCont = app.querySelector('#sum-continue');
-  if (sumCont) sumCont.addEventListener('click', () => { state.stage = 'ml'; render(); });
+  if (sumCont) sumCont.addEventListener('click', () => { state.stage = 'consol'; render(); });
 
   // inputs: view / download documents
   app.querySelectorAll('[data-doc]').forEach((b) => b.addEventListener('click', () => openDoc(b.dataset.doc)));
@@ -157,6 +159,21 @@ function bind() {
   app.querySelectorAll('[data-exportdlg]').forEach((b) => b.addEventListener('click', () => openExportDialog(b.dataset.exportdlg)));
   app.querySelectorAll('[data-archive]').forEach((b) => b.addEventListener('click', () => openArchiveDialog(b.dataset.archive)));
   app.querySelectorAll('[data-genfinding]').forEach((b) => b.addEventListener('click', () => generateContraFor(b.dataset.genfinding)));
+
+  // consolidated per-supplier debit: toggle a charge, switch active supplier, generate / show agreement
+  app.querySelectorAll('[data-consoltoggle]').forEach((el) => el.addEventListener('change', () => {
+    const id = el.dataset.consoltoggle;
+    if (!state.consolSel) state.consolSel = new Set(state.charges.map((c) => c.chargeId));
+    if (el.checked) state.consolSel.add(id); else state.consolSel.delete(id);
+    render();
+  }));
+  app.querySelectorAll('[data-consolsup]').forEach((el) => el.addEventListener('click', (e) => {
+    if (e.target.matches('input,[data-consoltoggle]')) return; // don't hijack checkbox clicks
+    state.consolSup = el.dataset.consolsup; render();
+  }));
+  app.querySelectorAll('[data-consolgen]').forEach((b) => b.addEventListener('click', () => openConsolidatedInvoice(b.dataset.consolgen)));
+  app.querySelectorAll('[data-consolagr]').forEach((b) => b.addEventListener('click', () => openConsolidatedAgreement(b.dataset.consolagr)));
+  app.querySelectorAll('[data-consolview]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); openReviewReadOnly(b.dataset.consolview); }));
 }
 
 // ---- document view/download ----
@@ -244,6 +261,65 @@ function generateContraFor(chargeId) {
   const group = state.consolidated.byAgreement.get(charge.agreementId);
   const rec = state.reconstructions.find((r) => r.agreementId === charge.agreementId);
   openContraInvoice(charge, group, rec);
+}
+
+// ---- consolidated per-supplier debit actions ----
+// Build a synthetic consolidated charge from the SELECTED charges of a supplier,
+// then render it through the same supplier-facing invoice document.
+function selectedChargesForSupplier(supplierId) {
+  const groups = chargesBySupplier(state);
+  const g = groups.find((x) => x.supplierId === supplierId) || null;
+  if (!g) return [];
+  const sel = state.consolSel || new Set(state.charges.map((c) => c.chargeId));
+  return g.charges.filter((c) => sel.has(c.chargeId));
+}
+function openConsolidatedInvoice(supplierId) {
+  const charges = selectedChargesForSupplier(supplierId);
+  if (!charges.length) return;
+  const cur = charges[0].currency || 'EUR';
+  // merge selected charges into one consolidated charge (sum totals, concat lines)
+  const consolidated = {
+    ...charges[0],
+    chargeId: `CN-${supplierId}-CONSOL`,
+    scopeKey: charges.length > 1 ? 'CONSOLIDATED' : charges[0].scopeKey,
+    period: 'Control period',
+    claimedCcogs: charges.reduce((s, c) => s + (c.claimedCcogs || 0), 0),
+    entitledCcogs: charges.reduce((s, c) => s + (c.entitledCcogs || 0), 0),
+    variance: charges.reduce((s, c) => s + (c.variance || 0), 0),
+    eurEquivalent: null,
+    currency: cur,
+    tierFromPct: null, tierToPct: null,
+    lines: charges.flatMap((c) => (c.lines && c.lines.length ? c.lines
+      : [{ cause: 'Volume rebate adjustment', driver: 'TIER_UPLIFT', qty: 0, fromPct: c.tierFromPct, toPct: c.tierToPct, deltaValue: c.variance, note: `Agreement ${c.agreementId}` }])),
+  };
+  const group = state.consolidated.byAgreement.get(charges[0].agreementId);
+  const rec = state.reconstructions.find((r) => r.agreementId === charges[0].agreementId);
+  openContraInvoice(consolidated, group, rec);
+}
+function openConsolidatedAgreement(supplierId) {
+  const charges = selectedChargesForSupplier(supplierId);
+  if (!charges.length) return;
+  // show the agreement behind the largest selected charge for this supplier
+  const top = [...charges].sort((a, b) => (b.variance || 0) - (a.variance || 0))[0];
+  openDoc('agreements|' + top.agreementId);
+}
+
+// Read-only Review Document (same content as the ML Discovery review, no action
+// buttons) — opened from the Consolidated Debit "View details".
+function openReviewReadOnly(chargeId) {
+  const charge = state.charges.find((c) => c.chargeId === chargeId); if (!charge) return;
+  const group = state.consolidated.byAgreement.get(charge.agreementId);
+  const rec = state.reconstructions.find((r) => r.agreementId === charge.agreementId);
+  // matching ML Discovery finding drives the plain-language story sentence at
+  // the top of the read-only review (same figures as ML Discovery).
+  const finding = (state.discovery?.findings || []).find((f) => f.agreementId === charge.agreementId && f.scopeKey === charge.scopeKey) || null;
+  const holder = document.createElement('div');
+  holder.innerHTML = reviewModalHtml(charge, group, rec, { readOnly: true, finding });
+  document.body.appendChild(holder);
+  initTooltips(holder);
+  const close = () => holder.remove();
+  holder.querySelector('#reviewBg').addEventListener('click', (e) => { if (e.target.id === 'reviewBg') close(); });
+  holder.querySelector('[data-closemodal]').addEventListener('click', close);
 }
 
 // ---- Contra-COGS invoice document (generated from the review modal) ----
@@ -352,8 +428,12 @@ function download(name, text, type = 'text/csv') { const blob = new Blob([text],
 async function main() {
   const manifest = await loadManifest();
   state.fx = await loadFx();
+
+  // Real source scan (Database/API stubs + live Folder source). No full-screen
+  // boot — the ingestion is visualised on the Summary page itself as the
+  // horizontal ingest-flow infographic (see renderInputsSummary / ingestflow.js).
   const sources = demoSources(manifest, folderFetcher);
-  await runBoot(app, sources);
+  await runScan(sources);
 
   const files = [];
   for (const [category, names] of Object.entries(manifest.categories)) for (const name of names) files.push({ category, name, text: await folderFetcher(category, name) });
@@ -367,7 +447,33 @@ async function main() {
   state.store.putAll('events', ingested.events);
   state.store.putAll('ccogsEngine', ingested.ccogs_engine);
   recompute();
-  render();
+
+  // Land directly on the Summary (Inputs stage) and play the ingest-flow
+  // animation with the REAL ingested counts.
+  state.stage = 'inputs';
+  state.sub = 'summary';
+  render();   // render() plays the ingest-flow animation when it's on screen
+}
+
+// Drive the Summary ingest-flow animation from the real store counts. Called
+// after render() so the DOM the builder produced exists. Only animates on the
+// first visit; once state.ingestDone is set the flow renders static/finished
+// and this is a no-op. On completion it flips ingestDone and reveals the
+// results block (KPIs + continue).
+function playIngestFlow() {
+  const host = app.querySelector('#ingestFlow');
+  if (!host) return;
+  if (state.ingestDone) return; // already finished earlier this session
+  const counts = {};
+  const collOf = { invoices: 'invoices', deliveryNotes: 'deliveryNotes', receipts: 'receipts', events: 'events', ccogsEngine: 'ccogsEngine', agreements: 'agreements' };
+  for (const n of FLOW_NODES) counts[n.key] = state.store.all(collOf[n.key] || n.key).length;
+  animateIngestFlow(app, counts, {
+    onDone: () => {
+      state.ingestDone = true;
+      const res = app.querySelector('#sumResult');
+      if (res) res.classList.remove('sum-result-hidden');
+    },
+  });
 }
 
 function startApp() { main().catch((e) => { app.innerHTML = `<div class="work"><h2>Startup error</h2><pre class="mono">${e.message}</pre></div>`; }); }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-011</agreementId>
-  <supplierId>SUP-VELVET</supplierId>
-  <supplierName>Velvet &amp; Co. Fragrances</supplierName>
+  <supplierId>SUP-ORIENT</supplierId>
+  <supplierName>Orient Essence Trading</supplierName>
   <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
   <basis>UNITS</basis>
   <period>YEAR</period>
@@ -13,24 +13,25 @@
   <contractRef>CTR-2026-0011</contractRef>
   <effectiveFrom>2026-01-01</effectiveFrom>
   <effectiveTo>2026-12-31</effectiveTo>
-  <signatory>Anna Wiśniewska</signatory>
+  <signatory>Mgr. Jana Kučerová</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
   <signedDate>2026-01-01</signedDate>
   <governingLaw>Czech Republic</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.012"/>
-    <tier threshold="6000" rate="0.02"/>
-    <tier threshold="12000" rate="0.03"/>
+    <tier threshold="0" rate="0.01"/>
+    <tier threshold="5000" rate="0.015"/>
+    <tier threshold="10000" rate="0.02"/>
+    <tier threshold="20000" rate="0.025"/>
   </tiers>
   <skuSet>
-    <sku>GFT-SET</sku>
-    <sku>EDP-100</sku>
+    <sku>CRM-050</sku>
     <sku>EDP-050</sku>
+    <sku>LIP-004</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>GFT-SET</sku>
-    <sku>EDP-100</sku>
+    <sku>CRM-050</sku>
     <sku>EDP-050</sku>
+    <sku>LIP-004</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>

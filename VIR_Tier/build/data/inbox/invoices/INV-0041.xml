@@ -4,11 +4,11 @@
     <invoiceNumber>INV-0041</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-025</agreementId>
-    <distributor id="SUP-BOTANI" name="Botanika Naturals"/>
-    <country>PL</country>
-    <poReference>PO-2026-5104</poReference>
-    <invoiceDate>2026-04-19</invoiceDate>
-    <shipDate>2026-04-19</shipDate>
+    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <country>CZ</country>
+    <poReference>PO-2026-6056</poReference>
+    <invoiceDate>2026-04-14</invoiceDate>
+    <shipDate>2026-04-14</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
@@ -16,22 +16,22 @@
       <tier minQty="8001" maxQty="16000" pct="1.4"/>
       <tier minQty="16001" maxQty="" pct="2.2"/>
     </discount>
-    <totalValueStandard>336150.92</totalValueStandard>
+    <totalValueStandard>515881.38</totalValueStandard>
   </header>
   <lines>
     <line>
       <stockId>EDT-075</stockId>
       <description>Eau de Toilette 75ml</description>
-      <qtyInvoiced>9195</qtyInvoiced>
-      <unitPriceStandard>18.28</unitPriceStandard>
-      <targetStorage>WH-PL-01</targetStorage>
+      <qtyInvoiced>9879</qtyInvoiced>
+      <unitPriceStandard>26.11</unitPriceStandard>
+      <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>9194</qtyInvoiced>
-      <unitPriceStandard>18.28</unitPriceStandard>
-      <targetStorage>WH-PL-01</targetStorage>
+      <qtyInvoiced>9879</qtyInvoiced>
+      <unitPriceStandard>26.11</unitPriceStandard>
+      <targetStorage>WH-CZ-01</targetStorage>
     </line>
   </lines>
 </invoice>

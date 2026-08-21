@@ -11,12 +11,12 @@
   <tierMeasure>COMBINED</tierMeasure>
   <windowType>QUARTER</windowType>
   <contractRef>CTR-2026-0001</contractRef>
-  <effectiveFrom>2026-01-01</effectiveFrom>
-  <effectiveTo>2026-03-31</effectiveTo>
+  <effectiveFrom>2026-04-01</effectiveFrom>
+  <effectiveTo>2026-06-30</effectiveTo>
   <signatory>Anna Wiśniewska</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-01-01</signedDate>
-  <governingLaw>Czech Republic</governingLaw>
+  <signedDate>2026-04-01</signedDate>
+  <governingLaw>Poland</governingLaw>
   <tiers>
     <tier threshold="0" rate="0.008"/>
     <tier threshold="8000" rate="0.014"/>

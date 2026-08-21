@@ -24,7 +24,7 @@ const MODULES = [
   'lib/store', 'lib/xml', 'lib/csv', 'lib/models', 'lib/parsers', 'lib/ingest',
   'lib/companies', 'lib/consolidation', 'lib/reconstruction', 'lib/rebate', 'lib/variance', 'lib/trueup', 'lib/pipeline',
   'lib/ml', 'lib/source', 'lib/approval', 'lib/injection', 'lib/regnotes',
-  'ui/tooltip', 'ui/charts', 'ui/boot', 'ui/doc', 'ui/stages', 'ui/dashboards',
+  'ui/tooltip', 'ui/charts', 'ui/boot', 'ui/ingestflow', 'ui/doc', 'ui/stages', 'ui/dashboards', 'ui/consolidated',
   'app',
 ];
 

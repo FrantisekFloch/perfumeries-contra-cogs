@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-013</agreementId>
-  <supplierId>SUP-ORIENT</supplierId>
-  <supplierName>Orient Essence Trading</supplierName>
+  <supplierId>SUP-NORD</supplierId>
+  <supplierName>Nordica Beauty Group</supplierName>
   <rebateStructure>SLIDING_INCREMENTAL</rebateStructure>
   <basis>VALUE</basis>
   <period>QUARTER</period>
@@ -11,31 +11,34 @@
   <tierMeasure>COMBINED</tierMeasure>
   <windowType>QUARTER</windowType>
   <contractRef>CTR-2026-0013</contractRef>
-  <effectiveFrom>2026-07-01</effectiveFrom>
-  <effectiveTo>2026-09-30</effectiveTo>
-  <signatory>Anna Wiśniewska</signatory>
+  <effectiveFrom>2026-01-01</effectiveFrom>
+  <effectiveTo>2026-03-31</effectiveTo>
+  <signatory>Mgr. Jana Kučerová</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-07-01</signedDate>
-  <governingLaw>Slovak Republic</governingLaw>
+  <signedDate>2026-01-01</signedDate>
+  <governingLaw>Poland</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.01"/>
-    <tier threshold="5000" rate="0.015"/>
-    <tier threshold="10000" rate="0.02"/>
-    <tier threshold="20000" rate="0.025"/>
+    <tier threshold="0" rate="0.008"/>
+    <tier threshold="8000" rate="0.014"/>
+    <tier threshold="16000" rate="0.022"/>
   </tiers>
   <skuSet>
-    <sku>EDP-050</sku>
     <sku>SRM-030</sku>
+    <sku>EDT-075</sku>
+    <sku>MSC-200</sku>
+    <sku>EDP-100</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>EDP-050</sku>
     <sku>SRM-030</sku>
+    <sku>EDT-075</sku>
+    <sku>MSC-200</sku>
+    <sku>EDP-100</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>
   </currencies>
   <countries>
-    <country>SK</country>
+    <country>PL</country>
   </countries>
   <clauses>
     <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>

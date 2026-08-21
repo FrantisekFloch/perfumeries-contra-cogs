@@ -6,10 +6,10 @@
   <agreementId>AGR-022</agreementId>
   <targetStorageId>WH-SK-01</targetStorageId>
   <country>SK</country>
-  <shipDate>2026-04-17</shipDate>
+  <shipDate>2026-04-18</shipDate>
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>LIP-004</stockId><qtyShipped>14227</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0038</invoiceRef></line>
+    <line><stockId>GFT-SET</stockId><qtyShipped>13548</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0038</invoiceRef></line>
   </lines>
 </deliveryNote>

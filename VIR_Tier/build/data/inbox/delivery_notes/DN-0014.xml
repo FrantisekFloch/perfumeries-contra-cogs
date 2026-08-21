@@ -6,10 +6,10 @@
   <agreementId>AGR-014</agreementId>
   <targetStorageId>WH-CZ-01</targetStorageId>
   <country>CZ</country>
-  <shipDate>2026-01-03</shipDate>
+  <shipDate>2026-01-14</shipDate>
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>EDP-100</stockId><qtyShipped>13992</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0028</invoiceRef></line>
+    <line><stockId>EDT-075</stockId><qtyShipped>12796</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0028</invoiceRef></line>
   </lines>
 </deliveryNote>

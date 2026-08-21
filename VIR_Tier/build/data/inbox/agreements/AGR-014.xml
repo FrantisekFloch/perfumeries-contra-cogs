@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-014</agreementId>
-  <supplierId>SUP-BOTANI</supplierId>
-  <supplierName>Botanika Naturals</supplierName>
+  <supplierId>SUP-MAISON</supplierId>
+  <supplierName>Maison Aroma Distribution</supplierName>
   <rebateStructure>FLAT_PERCENTAGE</rebateStructure>
   <basis>WEIGHT</basis>
   <period>YEAR</period>
@@ -18,17 +18,19 @@
   <signedDate>2026-01-01</signedDate>
   <governingLaw>Slovak Republic</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.025"/>
+    <tier threshold="0" rate="0.02"/>
   </tiers>
   <skuSet>
+    <sku>EDT-075</sku>
+    <sku>EDP-050</sku>
     <sku>EDP-100</sku>
     <sku>CRM-050</sku>
-    <sku>MSC-200</sku>
   </skuSet>
   <engineConfiguredSkus>
+    <sku>EDT-075</sku>
+    <sku>EDP-050</sku>
     <sku>EDP-100</sku>
     <sku>CRM-050</sku>
-    <sku>MSC-200</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>

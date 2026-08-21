@@ -4,35 +4,48 @@
     <invoiceNumber>INV-0027</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-013</agreementId>
-    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
-    <country>SK</country>
-    <poReference>PO-2026-2513</poReference>
-    <invoiceDate>2026-07-14</invoiceDate>
-    <shipDate>2026-07-14</shipDate>
+    <distributor id="SUP-NORD" name="Nordica Beauty Group"/>
+    <country>PL</country>
+    <poReference>PO-2026-1726</poReference>
+    <invoiceDate>2026-01-11</invoiceDate>
+    <shipDate>2026-01-11</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="5000" pct="1"/>
-      <tier minQty="5001" maxQty="10000" pct="1.5"/>
-      <tier minQty="10001" maxQty="20000" pct="2"/>
-      <tier minQty="20001" maxQty="" pct="2.5"/>
+      <tier minQty="1" maxQty="8000" pct="0.8"/>
+      <tier minQty="8001" maxQty="16000" pct="1.4"/>
+      <tier minQty="16001" maxQty="" pct="2.2"/>
     </discount>
-    <totalValueStandard>193082.12</totalValueStandard>
+    <totalValueStandard>391977.16</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>EDP-050</stockId>
-      <description>Eau de Parfum 50ml</description>
-      <qtyInvoiced>11398</qtyInvoiced>
-      <unitPriceStandard>8.47</unitPriceStandard>
-      <targetStorage>WH-SK-01</targetStorage>
-    </line>
-    <line>
       <stockId>SRM-030</stockId>
       <description>Serum 30ml</description>
-      <qtyInvoiced>11398</qtyInvoiced>
-      <unitPriceStandard>8.47</unitPriceStandard>
-      <targetStorage>WH-SK-01</targetStorage>
+      <qtyInvoiced>4709</qtyInvoiced>
+      <unitPriceStandard>20.81</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>EDT-075</stockId>
+      <description>Eau de Toilette 75ml</description>
+      <qtyInvoiced>4709</qtyInvoiced>
+      <unitPriceStandard>20.81</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>MSC-200</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>4709</qtyInvoiced>
+      <unitPriceStandard>20.81</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>EDP-100</stockId>
+      <description>Eau de Parfum 100ml</description>
+      <qtyInvoiced>4709</qtyInvoiced>
+      <unitPriceStandard>20.81</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
     </line>
   </lines>
 </invoice>

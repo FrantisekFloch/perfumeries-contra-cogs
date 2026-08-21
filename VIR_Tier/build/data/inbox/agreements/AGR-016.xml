@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-016</agreementId>
-  <supplierId>SUP-NORD</supplierId>
-  <supplierName>Nordica Beauty Group</supplierName>
+  <supplierId>SUP-LUMIERE</supplierId>
+  <supplierName>Lumière Cosmetics SA</supplierName>
   <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
   <basis>VALUE</basis>
   <period>MONTH</period>
@@ -11,11 +11,11 @@
   <tierMeasure>COMBINED</tierMeasure>
   <windowType>MONTH</windowType>
   <contractRef>CTR-2026-0016</contractRef>
-  <effectiveFrom>2026-02-01</effectiveFrom>
-  <effectiveTo>2026-02-28</effectiveTo>
-  <signatory>Anna Wiśniewska</signatory>
+  <effectiveFrom>2026-07-01</effectiveFrom>
+  <effectiveTo>2026-07-31</effectiveTo>
+  <signatory>Ing. Tomáš Blocal</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-02-01</signedDate>
+  <signedDate>2026-07-01</signedDate>
   <governingLaw>Poland</governingLaw>
   <tiers>
     <tier threshold="0" rate="0.01"/>
@@ -24,16 +24,14 @@
     <tier threshold="20000" rate="0.025"/>
   </tiers>
   <skuSet>
-    <sku>CRM-050</sku>
     <sku>SRM-030</sku>
-    <sku>LIP-004</sku>
-    <sku>GFT-SET</sku>
+    <sku>EDP-100</sku>
+    <sku>CRM-050</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>CRM-050</sku>
     <sku>SRM-030</sku>
-    <sku>LIP-004</sku>
-    <sku>GFT-SET</sku>
+    <sku>EDP-100</sku>
+    <sku>CRM-050</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>

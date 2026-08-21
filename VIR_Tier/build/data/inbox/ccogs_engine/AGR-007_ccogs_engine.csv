@@ -1,2 +1,2 @@
 outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
-ENG-0007,AGR-007,SUP-BOTANI,CZ,2026,UNITS,4478,0.01,44.78,EUR,CCOGS_INVOICE,INV-0013,DN-0007,RCP-0045|RCP-0046|RCP-0047|RCP-0048,4478 units @ 1.00% = 44.78 EUR (base receipts only; missing leakage-driver units)
+ENG-0007,AGR-007,SUP-LUMIERE,PL,2026,UNITS,4711,0.012,56.53,EUR,CCOGS_INVOICE,INV-0013,DN-0007,RCP-0038|RCP-0039,4711 units @ 1.20% = 56.53 EUR (base receipts only; missing leakage-driver units)

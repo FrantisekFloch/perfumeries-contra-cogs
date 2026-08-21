@@ -1,36 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-006</agreementId>
-  <supplierId>SUP-ORIENT</supplierId>
-  <supplierName>Orient Essence Trading</supplierName>
+  <supplierId>SUP-VELVET</supplierId>
+  <supplierName>Velvet &amp; Co. Fragrances</supplierName>
   <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
   <basis>UNITS</basis>
   <period>MONTH</period>
   <scope>PAN_EU</scope>
   <retrospectiveReach>WITHIN_PERIOD</retrospectiveReach>
-  <tierMeasure>PER_SKU</tierMeasure>
+  <tierMeasure>COMBINED</tierMeasure>
   <windowType>MONTH</windowType>
   <contractRef>CTR-2026-0006</contractRef>
-  <effectiveFrom>2026-03-01</effectiveFrom>
-  <effectiveTo>2026-03-31</effectiveTo>
+  <effectiveFrom>2026-05-01</effectiveFrom>
+  <effectiveTo>2026-05-31</effectiveTo>
   <signatory>Anna Wiśniewska</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-03-01</signedDate>
+  <signedDate>2026-05-01</signedDate>
   <governingLaw>Poland</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.008"/>
-    <tier threshold="8000" rate="0.014"/>
-    <tier threshold="16000" rate="0.022"/>
+    <tier threshold="0" rate="0.01"/>
+    <tier threshold="5000" rate="0.015"/>
+    <tier threshold="10000" rate="0.02"/>
+    <tier threshold="20000" rate="0.025"/>
   </tiers>
   <skuSet>
-    <sku>EDP-050</sku>
-    <sku>EDP-100</sku>
     <sku>MSC-200</sku>
-    <sku>SRM-030</sku>
+    <sku>EDP-100</sku>
+    <sku>LIP-004</sku>
+    <sku>GFT-SET</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>EDP-050</sku>
+    <sku>MSC-200</sku>
     <sku>EDP-100</sku>
+    <sku>LIP-004</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>

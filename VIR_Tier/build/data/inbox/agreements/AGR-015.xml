@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-015</agreementId>
-  <supplierId>SUP-BOTANI</supplierId>
-  <supplierName>Botanika Naturals</supplierName>
+  <supplierId>SUP-MAISON</supplierId>
+  <supplierName>Maison Aroma Distribution</supplierName>
   <rebateStructure>PER_UNIT</rebateStructure>
   <basis>UNITS</basis>
   <period>MONTH</period>
@@ -11,30 +11,32 @@
   <tierMeasure>COMBINED</tierMeasure>
   <windowType>MONTH</windowType>
   <contractRef>CTR-2026-0015</contractRef>
-  <effectiveFrom>2026-02-01</effectiveFrom>
-  <effectiveTo>2026-02-28</effectiveTo>
-  <signatory>Ing. Tomáš Blocal</signatory>
+  <effectiveFrom>2026-09-01</effectiveFrom>
+  <effectiveTo>2026-09-30</effectiveTo>
+  <signatory>Anna Wiśniewska</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-02-01</signedDate>
-  <governingLaw>Poland</governingLaw>
+  <signedDate>2026-09-01</signedDate>
+  <governingLaw>Slovak Republic</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.5"/>
+    <tier threshold="0" rate="0.75"/>
   </tiers>
   <skuSet>
+    <sku>SRM-030</sku>
+    <sku>LIP-004</sku>
     <sku>EDP-050</sku>
-    <sku>EDT-075</sku>
-    <sku>MSC-200</sku>
+    <sku>EDP-100</sku>
   </skuSet>
   <engineConfiguredSkus>
+    <sku>SRM-030</sku>
+    <sku>LIP-004</sku>
     <sku>EDP-050</sku>
-    <sku>EDT-075</sku>
-    <sku>MSC-200</sku>
+    <sku>EDP-100</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>
   </currencies>
   <countries>
-    <country>CZ</country>
+    <country>PL</country>
   </countries>
   <clauses>
     <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>

@@ -1,37 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-018</agreementId>
-  <supplierId>SUP-LUMIERE</supplierId>
-  <supplierName>Lumière Cosmetics SA</supplierName>
+  <supplierId>SUP-ORIENT</supplierId>
+  <supplierName>Orient Essence Trading</supplierName>
   <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
   <basis>UNITS</basis>
   <period>MONTH</period>
   <scope>PAN_EU</scope>
   <retrospectiveReach>WITHIN_PERIOD</retrospectiveReach>
-  <tierMeasure>PER_SKU</tierMeasure>
+  <tierMeasure>COMBINED</tierMeasure>
   <windowType>MONTH</windowType>
   <contractRef>CTR-2026-0018</contractRef>
-  <effectiveFrom>2026-04-01</effectiveFrom>
-  <effectiveTo>2026-04-30</effectiveTo>
-  <signatory>Mgr. Jana Kučerová</signatory>
+  <effectiveFrom>2026-01-01</effectiveFrom>
+  <effectiveTo>2026-01-31</effectiveTo>
+  <signatory>Ing. Tomáš Blocal</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-04-01</signedDate>
+  <signedDate>2026-01-01</signedDate>
   <governingLaw>Slovak Republic</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.01"/>
-    <tier threshold="5000" rate="0.015"/>
-    <tier threshold="10000" rate="0.02"/>
-    <tier threshold="20000" rate="0.025"/>
+    <tier threshold="0" rate="0.012"/>
+    <tier threshold="6000" rate="0.02"/>
+    <tier threshold="12000" rate="0.03"/>
   </tiers>
   <skuSet>
-    <sku>MSC-200</sku>
     <sku>EDT-075</sku>
-    <sku>SRM-030</sku>
+    <sku>CRM-050</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>MSC-200</sku>
     <sku>EDT-075</sku>
-    <sku>SRM-030</sku>
+    <sku>CRM-050</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>PLN</currency>

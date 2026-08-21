@@ -11,11 +11,11 @@
   <tierMeasure>COMBINED</tierMeasure>
   <windowType>MONTH</windowType>
   <contractRef>CTR-2026-0021</contractRef>
-  <effectiveFrom>2026-08-01</effectiveFrom>
-  <effectiveTo>2026-08-31</effectiveTo>
+  <effectiveFrom>2026-03-01</effectiveFrom>
+  <effectiveTo>2026-03-31</effectiveTo>
   <signatory>Dr. Martin Svoboda</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-08-01</signedDate>
+  <signedDate>2026-03-01</signedDate>
   <governingLaw>Poland</governingLaw>
   <tiers>
     <tier threshold="0" rate="0.008"/>
@@ -24,21 +24,19 @@
   </tiers>
   <skuSet>
     <sku>EDP-100</sku>
-    <sku>MSC-200</sku>
-    <sku>SRM-030</sku>
-    <sku>GFT-SET</sku>
+    <sku>LIP-004</sku>
+    <sku>EDT-075</sku>
   </skuSet>
   <engineConfiguredSkus>
     <sku>EDP-100</sku>
-    <sku>MSC-200</sku>
-    <sku>SRM-030</sku>
-    <sku>GFT-SET</sku>
+    <sku>LIP-004</sku>
+    <sku>EDT-075</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>
   </currencies>
   <countries>
-    <country>PL</country>
+    <country>SK</country>
   </countries>
   <clauses>
     <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>

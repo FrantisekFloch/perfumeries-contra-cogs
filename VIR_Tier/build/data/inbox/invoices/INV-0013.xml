@@ -4,49 +4,34 @@
     <invoiceNumber>INV-0013</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-007</agreementId>
-    <distributor id="SUP-BOTANI" name="Botanika Naturals"/>
-    <country>CZ</country>
-    <poReference>PO-2026-5961</poReference>
-    <invoiceDate>2026-06-08</invoiceDate>
-    <shipDate>2026-06-08</shipDate>
+    <distributor id="SUP-LUMIERE" name="Lumière Cosmetics SA"/>
+    <country>PL</country>
+    <poReference>PO-2026-1882</poReference>
+    <invoiceDate>2026-03-08</invoiceDate>
+    <shipDate>2026-03-08</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="5000" pct="1"/>
-      <tier minQty="5001" maxQty="10000" pct="1.5"/>
-      <tier minQty="10001" maxQty="20000" pct="2"/>
-      <tier minQty="20001" maxQty="" pct="2.5"/>
+      <tier minQty="1" maxQty="6000" pct="1.2"/>
+      <tier minQty="6001" maxQty="12000" pct="2"/>
+      <tier minQty="12001" maxQty="" pct="3"/>
     </discount>
-    <totalValueStandard>122876.32</totalValueStandard>
+    <totalValueStandard>101569.16</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>EDT-075</stockId>
-      <description>Eau de Toilette 75ml</description>
-      <qtyInvoiced>1120</qtyInvoiced>
-      <unitPriceStandard>27.44</unitPriceStandard>
-      <targetStorage>WH-CZ-01</targetStorage>
+      <stockId>EDP-100</stockId>
+      <description>Eau de Parfum 100ml</description>
+      <qtyInvoiced>2356</qtyInvoiced>
+      <unitPriceStandard>21.56</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
-      <stockId>LIP-004</stockId>
-      <description>Lipstick 4g</description>
-      <qtyInvoiced>1120</qtyInvoiced>
-      <unitPriceStandard>27.44</unitPriceStandard>
-      <targetStorage>WH-CZ-01</targetStorage>
-    </line>
-    <line>
-      <stockId>EDP-050</stockId>
-      <description>Eau de Parfum 50ml</description>
-      <qtyInvoiced>1120</qtyInvoiced>
-      <unitPriceStandard>27.44</unitPriceStandard>
-      <targetStorage>WH-CZ-01</targetStorage>
-    </line>
-    <line>
-      <stockId>SRM-030</stockId>
-      <description>Serum 30ml</description>
-      <qtyInvoiced>1118</qtyInvoiced>
-      <unitPriceStandard>27.44</unitPriceStandard>
-      <targetStorage>WH-CZ-01</targetStorage>
+      <stockId>GFT-SET</stockId>
+      <description>Gift Set</description>
+      <qtyInvoiced>2355</qtyInvoiced>
+      <unitPriceStandard>21.56</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
     </line>
   </lines>
 </invoice>

@@ -176,8 +176,8 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
   const skuSetObjs = pickSkuSet();
   const skuSet = skuSetObjs.map((s) => s.id);
   // forgotten-SKU scenario: the internal engine was configured with a subset only.
-  const engineConfiguredSkus = scenario === 'forgotten_sku' || scenario === 'both_causes' || scenario === 'triple_threat'
-    ? skuSet.slice(0, Math.max(1, skuSet.length - between(1, Math.min(2, skuSet.length - 1))))
+  const engineConfiguredSkus = scenario === 'forgotten_sku' || scenario === 'both_causes' || scenario === 'tt_sku'
+    ? skuSet.slice(0, Math.max(1, skuSet.length - 1))  // exactly ONE SKU missing for tt_sku
     : skuSet.slice();
 
   const windowType = (scenario === 'backorder' || scenario === 'late' || scenario === 'expired_late') ? WindowType.MONTH
@@ -219,11 +219,12 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
   const topThreshold = tiers[tiers.length - 1].threshold || 10000;
   const tier1 = tiers[1] ? tiers[1].threshold : topThreshold; // first threshold above base tier
   // Tier-movement scenarios: base sits in the LOWEST tier so restored units lift it.
-  const tierMove = ['both_causes', 'forgotten_sku', 'found_pallet', 'expired_late', 'reroute', 'triple_threat'].includes(scenario);
+  const tierMove = ['both_causes', 'forgotten_sku', 'found_pallet', 'expired_late', 'reroute', 'tt_sku', 'tt_pallet'].includes(scenario);
   let perCountryBase;
-  if (scenario === 'triple_threat') {
-    // start LOW (well inside tier 1) so the stacked corrections jump two tiers.
-    perCountryBase = Math.max(200, Math.floor(tier1 * 0.6));
+  if (scenario === 'tt_sku' || scenario === 'tt_pallet') {
+    // single-cause pan-EU headline: base just inside tier 1 so the one correction
+    // (across 3 countries combined) lifts it one tier.
+    perCountryBase = Math.max(200, Math.floor(tier1 * 0.85));
   } else if (tierMove) {
     // put the engine-seen base just inside tier 1 (below the 2nd threshold); the
     // restored units from the scenario events then push it to a higher tier.
@@ -348,17 +349,19 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
     if (scenario === 'expired_late' && first) {
       events.push({ eventId: evId(), type: LeakageDriver.EXPIRED_WINDOW_LATE_DELIVERY, agreementId, supplierId: supplier.id, country, stockId: ev0, qty: between(300, 900), refIds: [pid], eventDate: monthAfter(effTo, 1) + '-10', intendedDate: orderDate });
     }
-    // TRIPLE THREAT — three stacked causes on the SAME agreement (a tough, high-
-    // stakes case that jumps two tiers): forgotten SKU(s) + found-later pallet +
-    // reroute/skipped-scan, applied to every country so the pan-EU combine is huge.
-    if (scenario === 'triple_threat') {
+    // Single-cause pan-EU headline cases — exactly ONE correction each so the
+    // finding stays compact (one row in the derivation table).
+    // AGR-001 (tt_sku): a contract SKU missing from the internal engine.
+    if (scenario === 'tt_sku' && first) {
       const band = (tiers[1] ? tiers[1].threshold : 4000);
       const missing = skuSet.filter((s) => !engineConfiguredSkus.includes(s));
-      for (const ms of missing) {
-        events.push({ eventId: evId(), type: LeakageDriver.FORGOTTEN_SKU, agreementId, supplierId: supplier.id, country, stockId: ms, qty: Math.round(band * 0.35) + between(0, 300), refIds: [pid], eventDate: orderDate });
-      }
-      events.push({ eventId: evId(), type: LeakageDriver.FOUND_LATER_PALLET, agreementId, supplierId: supplier.id, country, stockId: ev0, qty: Math.round(band * 0.3) + between(0, 300), refIds: [pid], eventDate: monthAfter(orderDate, 1) + '-05', intendedDate: orderDate });
-      events.push({ eventId: evId(), type: LeakageDriver.REROUTE_SKIPPED_SCAN, agreementId, supplierId: supplier.id, country, stockId: ev0, qty: Math.round(band * 0.25) + between(0, 300), refIds: [pid], eventDate: `${year}-${orderMonth}-18` });
+      const ms = missing[0];
+      if (ms) events.push({ eventId: evId(), type: LeakageDriver.FORGOTTEN_SKU, agreementId, supplierId: supplier.id, country, stockId: ms, qty: Math.round(band * 0.6) + between(0, 400), refIds: [pid], eventDate: orderDate });
+    }
+    // AGR-002 (tt_pallet): a pallet located after an initial short-scan.
+    if (scenario === 'tt_pallet' && first) {
+      const band = (tiers[1] ? tiers[1].threshold : 4000);
+      events.push({ eventId: evId(), type: LeakageDriver.FOUND_LATER_PALLET, agreementId, supplierId: supplier.id, country, stockId: ev0, qty: Math.round(band * 0.6) + between(0, 400), refIds: [pid], eventDate: monthAfter(orderDate, 1) + '-05', intendedDate: orderDate });
     }
     if (scenario === 'reroute' && first) {
       events.push({ eventId: evId(), type: LeakageDriver.REROUTE_SKIPPED_SCAN, agreementId, supplierId: supplier.id, country, stockId: ev0, qty: between(200, 700), refIds: [pid], eventDate: `${year}-${orderMonth}-16` });
@@ -448,8 +451,10 @@ function buildAll() {
   // Volume reduced ~60% (was 48). One base year, 2 reps per scenario (16), plus a
   // 3rd rep for the three headline scenarios (pan_eu, mixed_fx, retro) => 19 cases.
   const scenarios = [
-    // new real-world CCOGS-loss situations (headline)
-    'triple_threat', 'found_pallet', 'forgotten_sku', 'both_causes', 'expired_late', 'reroute',
+    // headline single-cause pan-EU cases (one clear correction each):
+    //   tt_sku    -> AGR-001: a contract SKU missing from the engine
+    //   tt_pallet -> AGR-002: a pallet located after an initial short-scan
+    'tt_sku', 'tt_pallet', 'found_pallet', 'forgotten_sku', 'both_causes', 'expired_late', 'reroute',
     // original coverage
     'pan_eu', 'return_rejection', 'overage', 'backorder', 'late', 'retro', 'mixed_fx', 'zero_variance',
     // clean, fully-closed deliveries with NO issue found (padding realism so the
@@ -458,7 +463,7 @@ function buildAll() {
   ];
   // clean gets the most reps so most deliveries are healthy; a few headline
   // loss scenarios repeat so the suggestions list stays rich.
-  const repCount = { clean: 7, triple_threat: 2, both_causes: 2, reroute: 2, expired_late: 2, pan_eu: 2 };
+  const repCount = { clean: 7, tt_sku: 1, tt_pallet: 1, both_causes: 2, reroute: 2, expired_late: 2, pan_eu: 2 };
   const year = 2026;
   let rot = 0;
   for (const scenario of scenarios) {
@@ -466,14 +471,14 @@ function buildAll() {
     for (let rep = 0; rep < reps; rep++) {
       rot++;
       // scenarios whose whole point is a TIER MOVEMENT must use a tiered structure
-      const tierMoveScenario = ['triple_threat', 'both_causes', 'forgotten_sku', 'found_pallet', 'expired_late', 'reroute', 'pan_eu', 'mixed_fx'].includes(scenario);
+      const tierMoveScenario = ['tt_sku', 'tt_pallet', 'both_causes', 'forgotten_sku', 'found_pallet', 'expired_late', 'reroute', 'pan_eu', 'mixed_fx'].includes(scenario);
       const structure = tierMoveScenario ? RebateStructure.RETROSPECTIVE_TIERED : STRUCTURES[rot % STRUCTURES.length];
       // mixed_fx: UNITS basis (avoids value-scale ambiguity) but mixed currencies
       // on a pan-EU deal so the recovered amount is FX-converted to EUR.
       const basis = tierMoveScenario ? Basis.UNITS : BASES[rot % BASES.length];
       const period = scenario === 'backorder' || scenario === 'late' ? Period.MONTH : PERIODS[rot % PERIODS.length];
       let scope, countries, currencies;
-      if (scenario === 'pan_eu' || scenario === 'mixed_fx' || scenario === 'triple_threat') {
+      if (scenario === 'pan_eu' || scenario === 'mixed_fx' || scenario === 'tt_sku' || scenario === 'tt_pallet') {
         scope = Scope.PAN_EU; countries = ['SK', 'PL', 'CZ'];
         currencies = scenario === 'mixed_fx' ? ['PLN', 'EUR'] : ['EUR'];
       } else if (scenario === 'clean') {

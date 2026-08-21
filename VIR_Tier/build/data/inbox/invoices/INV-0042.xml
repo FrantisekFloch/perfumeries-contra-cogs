@@ -4,46 +4,32 @@
     <invoiceNumber>INV-0042</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-026</agreementId>
-    <distributor id="SUP-NORD" name="Nordica Beauty Group"/>
-    <country>SK</country>
-    <poReference>PO-2026-3155</poReference>
-    <invoiceDate>2026-01-19</invoiceDate>
-    <shipDate>2026-01-19</shipDate>
+    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <country>PL</country>
+    <poReference>PO-2026-7379</poReference>
+    <invoiceDate>2026-01-08</invoiceDate>
+    <shipDate>2026-01-08</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="" pct="2.5"/>
+      <tier minQty="1" maxQty="" pct="3"/>
     </discount>
-    <totalValueStandard>261585.66</totalValueStandard>
+    <totalValueStandard>247449.75</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>LIP-004</stockId>
-      <description>Lipstick 4g</description>
-      <qtyInvoiced>2866</qtyInvoiced>
-      <unitPriceStandard>22.82</unitPriceStandard>
-      <targetStorage>WH-SK-01</targetStorage>
-    </line>
-    <line>
-      <stockId>EDP-050</stockId>
-      <description>Eau de Parfum 50ml</description>
-      <qtyInvoiced>2866</qtyInvoiced>
-      <unitPriceStandard>22.82</unitPriceStandard>
-      <targetStorage>WH-SK-01</targetStorage>
-    </line>
-    <line>
       <stockId>GFT-SET</stockId>
       <description>Gift Set</description>
-      <qtyInvoiced>2866</qtyInvoiced>
-      <unitPriceStandard>22.82</unitPriceStandard>
-      <targetStorage>WH-SK-01</targetStorage>
+      <qtyInvoiced>6743</qtyInvoiced>
+      <unitPriceStandard>18.35</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
-      <stockId>MSC-200</stockId>
-      <description>Body Mist 200ml</description>
-      <qtyInvoiced>2865</qtyInvoiced>
-      <unitPriceStandard>22.82</unitPriceStandard>
-      <targetStorage>WH-SK-01</targetStorage>
+      <stockId>EDP-100</stockId>
+      <description>Eau de Parfum 100ml</description>
+      <qtyInvoiced>6742</qtyInvoiced>
+      <unitPriceStandard>18.35</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
     </line>
   </lines>
 </invoice>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-017</agreementId>
-  <supplierId>SUP-ORIENT</supplierId>
-  <supplierName>Orient Essence Trading</supplierName>
+  <supplierId>SUP-BOTANI</supplierId>
+  <supplierName>Botanika Naturals</supplierName>
   <rebateStructure>SLIDING_INCREMENTAL</rebateStructure>
   <basis>WEIGHT</basis>
   <period>YEAR</period>
@@ -13,22 +13,25 @@
   <contractRef>CTR-2026-0017</contractRef>
   <effectiveFrom>2026-01-01</effectiveFrom>
   <effectiveTo>2026-12-31</effectiveTo>
-  <signatory>Ing. Tomáš Blocal</signatory>
+  <signatory>Mgr. Jana Kučerová</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
   <signedDate>2026-01-01</signedDate>
-  <governingLaw>Slovak Republic</governingLaw>
+  <governingLaw>Poland</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.012"/>
-    <tier threshold="6000" rate="0.02"/>
-    <tier threshold="12000" rate="0.03"/>
+    <tier threshold="0" rate="0.01"/>
+    <tier threshold="5000" rate="0.015"/>
+    <tier threshold="10000" rate="0.02"/>
+    <tier threshold="20000" rate="0.025"/>
   </tiers>
   <skuSet>
-    <sku>EDT-075</sku>
     <sku>CRM-050</sku>
+    <sku>EDT-075</sku>
+    <sku>LIP-004</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>EDT-075</sku>
     <sku>CRM-050</sku>
+    <sku>EDT-075</sku>
+    <sku>LIP-004</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>

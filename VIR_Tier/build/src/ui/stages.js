@@ -5,6 +5,7 @@
 import { t } from '../lib/i18n.js';
 import { Scope } from '../lib/enums.js';
 import { hintSpan } from './tooltip.js';
+import { renderIngestFlow, FLOW_NODES } from './ingestflow.js';
 
 const nf = (v) => (v == null ? '' : Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 }));
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
@@ -45,6 +46,7 @@ export function renderInputs(state) {
     </div>`;
   }).join('');
   return `
+    <button class="btn tint-green back-btn" data-sub="summary">← ${t('backToSummary')}</button>
     <p class="lead">${t('filesLead')}</p>
     <div class="filecats">${tabs}</div>
     <div class="doclist">${cards || `<div class="small">—</div>`}</div>
@@ -76,34 +78,30 @@ export function renderInputsSummary(state) {
   const cleanN = ba.filter((b) => !b.recoverable).length;
   const recoverEur = ba.reduce((s, b) => s + (b.eurEquivalent != null && b.currency !== 'EUR' ? b.eurEquivalent : (b.costOfInaction || 0)), 0);
 
-  const tiles = counts.map((c) =>
-    `<button class="sum-tile" data-sub="${c.key}">
-      <div class="sum-ico">${sumIcon(c.key)}</div>
-      <div class="sum-tile-txt"><div class="sum-n">${nf(c.n)}</div><div class="sum-l">${esc(c.label)}</div></div>
-    </button>`).join('');
+  // counts keyed by flow-node key (same keys as the store collections)
+  const flowCounts = {};
+  for (const n of FLOW_NODES) { const cat = DOC_CATS.find((c) => c.key === n.key); flowCounts[n.key] = cat ? state.store.all(cat.coll).length : 0; }
+
+  // The results block (KPIs + note + continue) is revealed only after the
+  // ingest animation completes. On return visits (state.ingestDone) it's shown
+  // immediately and the flow renders in its finished static state.
+  const done = !!state.ingestDone;
 
   return `
     <p class="lead">${t('summaryLead')}</p>
 
-    <div class="sum-hero">
-      <div class="sum-hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-      <div>
-        <div class="sum-hero-h">${t('summaryDone')}</div>
-        <div class="sum-hero-sub">${t('summaryDoneSub', { total: nf(total) })}</div>
-      </div>
-    </div>
+    ${renderIngestFlow(flowCounts, { done })}
 
-    <h3 class="sum-h">${t('summaryIngested')}</h3>
-    <div class="sum-grid">${tiles}</div>
-
-    <div class="sum-result">
+    <div class="sum-result${done ? '' : ' sum-result-hidden'}" id="sumResult">
       <div class="sum-result-row">
         <div class="sum-kpi"><div class="n">${nf(findN)}</div><div class="l">${t('summaryDiscrepancies')}</div></div>
         <div class="sum-kpi"><div class="n">${nf(cleanN)}</div><div class="l">${t('summaryClean')}</div></div>
         <div class="sum-kpi"><div class="n gold">${nf(recoverEur)} EUR</div><div class="l">${t('summaryRecoverable')}</div></div>
       </div>
       <p class="small">${t('summaryMatchNote')}</p>
-      <button class="btn primary big" id="sum-continue">${t('summaryContinue')} →</button>
+      <div class="sum-cta">
+        <button class="btn dark big" id="sum-continue">${t('summaryContinue')} →</button>
+      </div>
     </div>
   `;
 }

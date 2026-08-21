@@ -4,41 +4,40 @@
     <invoiceNumber>INV-0016</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-008</agreementId>
-    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <distributor id="SUP-VELVET" name="Velvet &amp; Co. Fragrances"/>
     <country>CZ</country>
-    <poReference>PO-2026-1639</poReference>
-    <invoiceDate>2026-08-09</invoiceDate>
-    <shipDate>2026-08-09</shipDate>
+    <poReference>PO-2026-6808</poReference>
+    <invoiceDate>2026-08-19</invoiceDate>
+    <shipDate>2026-08-19</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="5000" pct="1"/>
-      <tier minQty="5001" maxQty="10000" pct="1.5"/>
-      <tier minQty="10001" maxQty="20000" pct="2"/>
-      <tier minQty="20001" maxQty="" pct="2.5"/>
+      <tier minQty="1" maxQty="8000" pct="0.8"/>
+      <tier minQty="8001" maxQty="16000" pct="1.4"/>
+      <tier minQty="16001" maxQty="" pct="2.2"/>
     </discount>
-    <totalValueStandard>115193.21</totalValueStandard>
+    <totalValueStandard>97552.66</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>MSC-200</stockId>
-      <description>Body Mist 200ml</description>
-      <qtyInvoiced>1492</qtyInvoiced>
-      <unitPriceStandard>25.73</unitPriceStandard>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>2280</qtyInvoiced>
+      <unitPriceStandard>14.26</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>1492</qtyInvoiced>
-      <unitPriceStandard>25.73</unitPriceStandard>
+      <qtyInvoiced>2280</qtyInvoiced>
+      <unitPriceStandard>14.26</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
-      <stockId>CRM-050</stockId>
-      <description>Face Cream 50ml</description>
-      <qtyInvoiced>1493</qtyInvoiced>
-      <unitPriceStandard>25.73</unitPriceStandard>
+      <stockId>MSC-200</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>2281</qtyInvoiced>
+      <unitPriceStandard>14.26</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
   </lines>

@@ -1,42 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-026</agreementId>
-  <supplierId>SUP-NORD</supplierId>
-  <supplierName>Nordica Beauty Group</supplierName>
+  <supplierId>SUP-ORIENT</supplierId>
+  <supplierName>Orient Essence Trading</supplierName>
   <rebateStructure>FLAT_PERCENTAGE</rebateStructure>
   <basis>WEIGHT</basis>
   <period>YEAR</period>
   <scope>PER_COUNTRY</scope>
   <retrospectiveReach>WITHIN_PERIOD</retrospectiveReach>
   <tierMeasure>COMBINED</tierMeasure>
-  <windowType>YEAR</windowType>
+  <windowType>HALF_YEAR</windowType>
   <contractRef>CTR-2026-0026</contractRef>
   <effectiveFrom>2026-01-01</effectiveFrom>
-  <effectiveTo>2026-12-31</effectiveTo>
-  <signatory>Dr. Martin Svoboda</signatory>
+  <effectiveTo>2026-06-30</effectiveTo>
+  <signatory>Ing. Tomáš Blocal</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
   <signedDate>2026-01-01</signedDate>
-  <governingLaw>Slovak Republic</governingLaw>
+  <governingLaw>Poland</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.025"/>
+    <tier threshold="0" rate="0.03"/>
   </tiers>
   <skuSet>
-    <sku>LIP-004</sku>
-    <sku>EDP-050</sku>
     <sku>GFT-SET</sku>
-    <sku>MSC-200</sku>
+    <sku>EDP-100</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>LIP-004</sku>
-    <sku>EDP-050</sku>
     <sku>GFT-SET</sku>
-    <sku>MSC-200</sku>
+    <sku>EDP-100</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>
   </currencies>
   <countries>
-    <country>SK</country>
+    <country>PL</country>
   </countries>
   <clauses>
     <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>

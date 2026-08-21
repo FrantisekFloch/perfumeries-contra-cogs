@@ -4,40 +4,40 @@
     <invoiceNumber>INV-0018</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-010</agreementId>
-    <distributor id="SUP-LUMIERE" name="Lumière Cosmetics SA"/>
+    <distributor id="SUP-VELVET" name="Velvet &amp; Co. Fragrances"/>
     <country>SK</country>
-    <poReference>PO-2026-2608</poReference>
-    <invoiceDate>2026-01-04</invoiceDate>
-    <shipDate>2026-01-04</shipDate>
+    <poReference>PO-2026-8048</poReference>
+    <invoiceDate>2026-01-18</invoiceDate>
+    <shipDate>2026-01-18</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="8000" pct="0.8"/>
-      <tier minQty="8001" maxQty="16000" pct="1.4"/>
-      <tier minQty="16001" maxQty="" pct="2.2"/>
+      <tier minQty="1" maxQty="6000" pct="1.2"/>
+      <tier minQty="6001" maxQty="12000" pct="2"/>
+      <tier minQty="12001" maxQty="" pct="3"/>
     </discount>
-    <totalValueStandard>91191.15</totalValueStandard>
+    <totalValueStandard>84181.06</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>EDP-050</stockId>
-      <description>Eau de Parfum 50ml</description>
-      <qtyInvoiced>2179</qtyInvoiced>
-      <unitPriceStandard>13.95</unitPriceStandard>
-      <targetStorage>WH-PO</targetStorage>
-    </line>
-    <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>2179</qtyInvoiced>
-      <unitPriceStandard>13.95</unitPriceStandard>
+      <qtyInvoiced>1687</qtyInvoiced>
+      <unitPriceStandard>16.63</unitPriceStandard>
       <targetStorage>WH-PO</targetStorage>
     </line>
     <line>
-      <stockId>GFT-SET</stockId>
-      <description>Gift Set</description>
-      <qtyInvoiced>2179</qtyInvoiced>
-      <unitPriceStandard>13.95</unitPriceStandard>
+      <stockId>EDP-100</stockId>
+      <description>Eau de Parfum 100ml</description>
+      <qtyInvoiced>1687</qtyInvoiced>
+      <unitPriceStandard>16.63</unitPriceStandard>
+      <targetStorage>WH-PO</targetStorage>
+    </line>
+    <line>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>1688</qtyInvoiced>
+      <unitPriceStandard>16.63</unitPriceStandard>
       <targetStorage>WH-PO</targetStorage>
     </line>
   </lines>

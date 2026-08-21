@@ -1,2 +1,2 @@
 outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
-ENG-0026,AGR-026,SUP-NORD,SK,2026,WEIGHT,5043.610000000001,0.025,126.09,EUR,CCOGS_INVOICE,INV-0042,DN-0026,RCP-0130|RCP-0131|RCP-0132|RCP-0133,5044 weight @ 2.50% = 126.09 EUR (full combined volume; no leakage)
+ENG-0026,AGR-026,SUP-ORIENT,PL,2026,WEIGHT,9170.02,0.03,275.1,EUR,CCOGS_INVOICE,INV-0042,DN-0026,RCP-0127|RCP-0128,9170 weight @ 3.00% = 275.1 EUR (full combined volume; no leakage)

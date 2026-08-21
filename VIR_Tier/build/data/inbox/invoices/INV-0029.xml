@@ -4,39 +4,46 @@
     <invoiceNumber>INV-0029</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-015</agreementId>
-    <distributor id="SUP-BOTANI" name="Botanika Naturals"/>
-    <country>CZ</country>
-    <poReference>PO-2026-6658</poReference>
-    <invoiceDate>2026-02-09</invoiceDate>
-    <shipDate>2026-02-09</shipDate>
+    <distributor id="SUP-MAISON" name="Maison Aroma Distribution"/>
+    <country>PL</country>
+    <poReference>PO-2026-1955</poReference>
+    <invoiceDate>2026-09-15</invoiceDate>
+    <shipDate>2026-09-15</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="" pct="50"/>
+      <tier minQty="1" maxQty="" pct="75"/>
     </discount>
-    <totalValueStandard>284246.4</totalValueStandard>
+    <totalValueStandard>257424.7</totalValueStandard>
   </header>
   <lines>
     <line>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>3486</qtyInvoiced>
+      <unitPriceStandard>18.46</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>LIP-004</stockId>
+      <description>Lipstick 4g</description>
+      <qtyInvoiced>3486</qtyInvoiced>
+      <unitPriceStandard>18.46</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
       <stockId>EDP-050</stockId>
       <description>Eau de Parfum 50ml</description>
-      <qtyInvoiced>4084</qtyInvoiced>
-      <unitPriceStandard>23.2</unitPriceStandard>
-      <targetStorage>WH-CZ-01</targetStorage>
+      <qtyInvoiced>3486</qtyInvoiced>
+      <unitPriceStandard>18.46</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
-      <stockId>EDT-075</stockId>
-      <description>Eau de Toilette 75ml</description>
-      <qtyInvoiced>4084</qtyInvoiced>
-      <unitPriceStandard>23.2</unitPriceStandard>
-      <targetStorage>WH-CZ-01</targetStorage>
-    </line>
-    <line>
-      <stockId>MSC-200</stockId>
-      <description>Body Mist 200ml</description>
-      <qtyInvoiced>4084</qtyInvoiced>
-      <unitPriceStandard>23.2</unitPriceStandard>
-      <targetStorage>WH-CZ-01</targetStorage>
+      <stockId>EDP-100</stockId>
+      <description>Eau de Parfum 100ml</description>
+      <qtyInvoiced>3487</qtyInvoiced>
+      <unitPriceStandard>18.46</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
     </line>
   </lines>
 </invoice>

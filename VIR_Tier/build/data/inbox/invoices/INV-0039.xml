@@ -4,39 +4,46 @@
     <invoiceNumber>INV-0039</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-023</agreementId>
-    <distributor id="SUP-NORD" name="Nordica Beauty Group"/>
-    <country>CZ</country>
-    <poReference>PO-2026-5344</poReference>
-    <invoiceDate>2026-01-06</invoiceDate>
-    <shipDate>2026-01-06</shipDate>
+    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <country>PL</country>
+    <poReference>PO-2026-5095</poReference>
+    <invoiceDate>2026-01-18</invoiceDate>
+    <shipDate>2026-01-18</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="" pct="40"/>
+      <tier minQty="1" maxQty="" pct="50"/>
     </discount>
-    <totalValueStandard>109345.1</totalValueStandard>
+    <totalValueStandard>287213</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>EDT-075</stockId>
-      <description>Eau de Toilette 75ml</description>
-      <qtyInvoiced>4397</qtyInvoiced>
-      <unitPriceStandard>8.29</unitPriceStandard>
-      <targetStorage>WH-CZ-01</targetStorage>
-    </line>
-    <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>4397</qtyInvoiced>
-      <unitPriceStandard>8.29</unitPriceStandard>
-      <targetStorage>WH-CZ-01</targetStorage>
+      <qtyInvoiced>3144</qtyInvoiced>
+      <unitPriceStandard>22.84</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>MSC-200</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>3144</qtyInvoiced>
+      <unitPriceStandard>22.84</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
+      <stockId>EDT-075</stockId>
+      <description>Eau de Toilette 75ml</description>
+      <qtyInvoiced>3144</qtyInvoiced>
+      <unitPriceStandard>22.84</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>4396</qtyInvoiced>
-      <unitPriceStandard>8.29</unitPriceStandard>
-      <targetStorage>WH-CZ-01</targetStorage>
+      <qtyInvoiced>3143</qtyInvoiced>
+      <unitPriceStandard>22.84</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
     </line>
   </lines>
 </invoice>

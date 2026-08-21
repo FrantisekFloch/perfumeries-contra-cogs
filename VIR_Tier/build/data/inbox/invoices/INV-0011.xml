@@ -4,47 +4,48 @@
     <invoiceNumber>INV-0011</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-006</agreementId>
-    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <distributor id="SUP-VELVET" name="Velvet &amp; Co. Fragrances"/>
     <country>PL</country>
-    <poReference>PO-2026-2422</poReference>
-    <invoiceDate>2026-03-18</invoiceDate>
-    <shipDate>2026-03-18</shipDate>
+    <poReference>PO-2026-8291</poReference>
+    <invoiceDate>2026-05-15</invoiceDate>
+    <shipDate>2026-05-15</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="8000" pct="0.8"/>
-      <tier minQty="8001" maxQty="16000" pct="1.4"/>
-      <tier minQty="16001" maxQty="" pct="2.2"/>
+      <tier minQty="1" maxQty="5000" pct="1"/>
+      <tier minQty="5001" maxQty="10000" pct="1.5"/>
+      <tier minQty="10001" maxQty="20000" pct="2"/>
+      <tier minQty="20001" maxQty="" pct="2.5"/>
     </discount>
-    <totalValueStandard>142498.98</totalValueStandard>
+    <totalValueStandard>96896.94</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>EDP-050</stockId>
-      <description>Eau de Parfum 50ml</description>
-      <qtyInvoiced>1724</qtyInvoiced>
-      <unitPriceStandard>20.67</unitPriceStandard>
+      <stockId>MSC-200</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>1159</qtyInvoiced>
+      <unitPriceStandard>20.91</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>1724</qtyInvoiced>
-      <unitPriceStandard>20.67</unitPriceStandard>
+      <qtyInvoiced>1159</qtyInvoiced>
+      <unitPriceStandard>20.91</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
-      <stockId>MSC-200</stockId>
-      <description>Body Mist 200ml</description>
-      <qtyInvoiced>1724</qtyInvoiced>
-      <unitPriceStandard>20.67</unitPriceStandard>
+      <stockId>LIP-004</stockId>
+      <description>Lipstick 4g</description>
+      <qtyInvoiced>1159</qtyInvoiced>
+      <unitPriceStandard>20.91</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
-      <stockId>SRM-030</stockId>
-      <description>Serum 30ml</description>
-      <qtyInvoiced>1722</qtyInvoiced>
-      <unitPriceStandard>20.67</unitPriceStandard>
+      <stockId>GFT-SET</stockId>
+      <description>Gift Set</description>
+      <qtyInvoiced>1157</qtyInvoiced>
+      <unitPriceStandard>20.91</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
   </lines>

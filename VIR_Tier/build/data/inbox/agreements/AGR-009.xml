@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-009</agreementId>
-  <supplierId>SUP-NORD</supplierId>
-  <supplierName>Nordica Beauty Group</supplierName>
+  <supplierId>SUP-ORIENT</supplierId>
+  <supplierName>Orient Essence Trading</supplierName>
   <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
   <basis>UNITS</basis>
   <period>MONTH</period>
   <scope>PER_COUNTRY</scope>
   <retrospectiveReach>WITHIN_PERIOD</retrospectiveReach>
-  <tierMeasure>COMBINED</tierMeasure>
+  <tierMeasure>PER_SKU</tierMeasure>
   <windowType>MONTH</windowType>
   <contractRef>CTR-2026-0009</contractRef>
-  <effectiveFrom>2026-06-01</effectiveFrom>
-  <effectiveTo>2026-06-30</effectiveTo>
-  <signatory>Anna Wiśniewska</signatory>
+  <effectiveFrom>2026-08-01</effectiveFrom>
+  <effectiveTo>2026-08-31</effectiveTo>
+  <signatory>Ing. Tomáš Blocal</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-06-01</signedDate>
-  <governingLaw>Slovak Republic</governingLaw>
+  <signedDate>2026-08-01</signedDate>
+  <governingLaw>Czech Republic</governingLaw>
   <tiers>
     <tier threshold="0" rate="0.01"/>
     <tier threshold="5000" rate="0.015"/>
@@ -24,12 +24,14 @@
     <tier threshold="20000" rate="0.025"/>
   </tiers>
   <skuSet>
-    <sku>EDP-050</sku>
-    <sku>LIP-004</sku>
+    <sku>MSC-200</sku>
+    <sku>EDP-100</sku>
+    <sku>CRM-050</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>EDP-050</sku>
-    <sku>LIP-004</sku>
+    <sku>MSC-200</sku>
+    <sku>EDP-100</sku>
+    <sku>CRM-050</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>

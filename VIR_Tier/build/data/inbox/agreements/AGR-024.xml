@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-024</agreementId>
-  <supplierId>SUP-LUMIERE</supplierId>
-  <supplierName>Lumière Cosmetics SA</supplierName>
+  <supplierId>SUP-ORIENT</supplierId>
+  <supplierName>Orient Essence Trading</supplierName>
   <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
   <basis>UNITS</basis>
   <period>MONTH</period>
@@ -13,33 +13,30 @@
   <contractRef>CTR-2026-0024</contractRef>
   <effectiveFrom>2026-06-01</effectiveFrom>
   <effectiveTo>2026-06-30</effectiveTo>
-  <signatory>Ing. Tomáš Blocal</signatory>
+  <signatory>Anna Wiśniewska</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
   <signedDate>2026-06-01</signedDate>
-  <governingLaw>Slovak Republic</governingLaw>
+  <governingLaw>Poland</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.01"/>
-    <tier threshold="5000" rate="0.015"/>
-    <tier threshold="10000" rate="0.02"/>
-    <tier threshold="20000" rate="0.025"/>
+    <tier threshold="0" rate="0.008"/>
+    <tier threshold="8000" rate="0.014"/>
+    <tier threshold="16000" rate="0.022"/>
   </tiers>
   <skuSet>
-    <sku>CRM-050</sku>
-    <sku>MSC-200</sku>
+    <sku>EDP-100</sku>
     <sku>GFT-SET</sku>
-    <sku>LIP-004</sku>
+    <sku>CRM-050</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>CRM-050</sku>
-    <sku>MSC-200</sku>
+    <sku>EDP-100</sku>
     <sku>GFT-SET</sku>
-    <sku>LIP-004</sku>
+    <sku>CRM-050</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>
   </currencies>
   <countries>
-    <country>PL</country>
+    <country>SK</country>
   </countries>
   <clauses>
     <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>

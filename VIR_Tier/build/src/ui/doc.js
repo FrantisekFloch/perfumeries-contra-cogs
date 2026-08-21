@@ -16,6 +16,20 @@ const cur = (n, c) => `${(Number(n) || 0).toLocaleString(undefined, { minimumFra
 const VAT_RATE = 0.20;
 function addDays(dateStr, days) { const d = new Date(dateStr || Date.now()); if (Number.isNaN(d.getTime())) return dateStr || ''; d.setDate(d.getDate() + days); return d.toISOString().slice(0, 10); }
 
+// Enum-value label resolvers. Each maps a controlled enum VALUE to a localized
+// label via t(); if the key is missing (t() returns the key unchanged) we fall
+// back to a humanized version of the raw value so unknown values degrade
+// gracefully. Business DATA values are never mutated — only their display.
+const labelOr = (key, fallback) => { const v = t(key); return v === key ? String(fallback) : v; };
+const humanize = (s) => String(s ?? '').replace(/_/g, ' ');
+const dstLabel = (s) => (s == null || s === '' ? '—' : labelOr('dst' + s, humanize(s)));
+const drvLabel = (s) => labelOr('drv_' + s, humanize(s));
+const basisLabel = (s) => labelOr('basis_' + s, humanize(s).toLowerCase());
+const rsLabel = (s) => labelOr('rs_' + s, humanize(s).toLowerCase());
+const wtLabel = (s) => labelOr('wt_' + s, humanize(s).toLowerCase());
+const rrLabel = (s) => labelOr('rr_' + s, humanize(s).toLowerCase());
+const engDocTypeLabel = (s) => labelOr('engDoc_' + s, humanize(s));
+
 function party(title, p) {
   return `<div class="doc-party"><div class="doc-party-t">${title}</div>
     <strong>${esc(p.name)}</strong><br>${esc(p.street)}<br>${esc(p.city)}<br>${esc(p.country)}
@@ -176,19 +190,19 @@ function lineItemStorageSplit(inv, group) {
   }
   const storages = [...new Set(Object.values(qtyMap).flatMap((m) => Object.keys(m)))].sort();
   if (!storages.length) return '';
-  const head = `<th>Description</th>` + storages.map((s) => `<th class="num">${esc(s)}<div class="doc-sub-sku">${esc(warehouseInfo(s).city)}</div></th>`).join('') + `<th class="num">Total</th>`;
+  const head = `<th>${t('docDescription')}</th>` + storages.map((s) => `<th class="num">${esc(s)}<div class="doc-sub-sku">${esc(warehouseInfo(s).city)}</div></th>`).join('') + `<th class="num">${t('docTotal')}</th>`;
   const rows = inv.lines.map((l) => {
     const per = qtyMap[l.stockId] || {};
     const cells = storages.map((s) => `<td class="num">${per[s] ? qtyf(per[s]) : '—'}</td>`).join('');
     const total = storages.reduce((sum, s) => sum + (per[s] || 0), 0);
     return `<tr><td>${esc(productName(l.stockId, l.description))}<div class="doc-sub-sku">${esc(l.stockId)}</div></td>${cells}<td class="num">${qtyf(total)}</td></tr>`;
   }).join('');
-  const totalsRow = `<tr class="split-total"><td>Total / Spolu</td>` +
+  const totalsRow = `<tr class="split-total"><td>${t('docTotalRow')}</td>` +
     storages.map((s) => `<td class="num">${qtyf(inv.lines.reduce((sum, l) => sum + ((qtyMap[l.stockId] || {})[s] || 0), 0))}</td>`).join('') +
     `<td class="num">${qtyf(Object.values(qtyMap).reduce((a, m) => a + Object.values(m).reduce((x, y) => x + y, 0), 0))}</td></tr>`;
   return `<section class="doc-split">
-    <h4 class="doc-split-h">Line-item distribution by storage / Rozpis položiek podľa skladu</h4>
-    <p class="muted small">How each line item is allocated across the receiving warehouses (per delivery notes). Ako je každá položka rozdelená medzi prijímajúce sklady (podľa dodacích listov).</p>
+    <h4 class="doc-split-h">${t('docStorageSplitH')}</h4>
+    <p class="muted small">${t('docStorageSplitNote')}</p>
     <table class="doc-lines"><thead><tr>${head}</tr></thead><tbody>${rows}${totalsRow}</tbody></table>
   </section>`;
 }
@@ -210,31 +224,31 @@ export function invoiceDocHtml(inv, group = null) {
     <td class="num">${cur(r.net, c)}</td><td class="num">${cur(r.vat, c)}</td><td class="num">${cur(r.total, c)}</td></tr>`).join('');
   return `<article class="invoice-doc">
     <header class="doc-head"><div class="doc-brand">${esc(sup.name)}</div>
-      <div class="doc-title">${isProforma ? 'PROFORMA FAKTÚRA / PROFORMA INVOICE' : 'FAKTÚRA / INVOICE'}</div></header>
-    <div class="doc-parties">${party('Dodávateľ / Supplier', sup)}${party('Odberateľ / Buyer', BUYER)}</div>
+      <div class="doc-title">${isProforma ? t('docProformaTitle') : t('docInvoiceTitle')}</div></header>
+    <div class="doc-parties">${party(t('docSupplier'), sup)}${party(t('docBuyer'), BUYER)}</div>
     <div class="doc-meta">
-      <div><span>Invoice No.</span><strong>${esc(inv.invoiceNumber)}</strong></div>
-      <div><span>Issue date</span><strong>${esc(inv.invoiceDate ?? '')}</strong></div>
-      <div><span>Delivery</span><strong>${esc(inv.shipDate ?? inv.invoiceDate ?? '')}</strong></div>
-      <div><span>Due date</span><strong>${esc(addDays(inv.invoiceDate, 30))}</strong></div>
-      <div><span>PO ref.</span><strong>${esc(inv.poReference ?? '—')}</strong></div>
-      <div><span>Incoterms</span><strong>${esc(inv.incoterms ?? '—')}</strong></div>
+      <div><span>${t('docInvoiceNo')}</span><strong>${esc(inv.invoiceNumber)}</strong></div>
+      <div><span>${t('docIssueDate')}</span><strong>${esc(inv.invoiceDate ?? '')}</strong></div>
+      <div><span>${t('docDelivery')}</span><strong>${esc(inv.shipDate ?? inv.invoiceDate ?? '')}</strong></div>
+      <div><span>${t('docDueDate')}</span><strong>${esc(addDays(inv.invoiceDate, 30))}</strong></div>
+      <div><span>${t('docPoRef')}</span><strong>${esc(inv.poReference ?? '—')}</strong></div>
+      <div><span>${t('docIncoterms')}</span><strong>${esc(inv.incoterms ?? '—')}</strong></div>
     </div>
     <table class="doc-lines"><thead><tr>
-      <th>Description</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Net</th><th class="num">VAT 20%</th><th class="num">Total</th>
+      <th>${t('docDescription')}</th><th class="num">${t('docQty')}</th><th class="num">${t('docUnit')}</th><th class="num">${t('docNet')}</th><th class="num">${t('docVat20')}</th><th class="num">${t('docTotal')}</th>
     </tr></thead><tbody>${lineRows}</tbody></table>
     <div class="doc-totals">
-      <div><span>Subtotal</span><strong>${cur(subtotal, c)}</strong></div>
-      <div><span>VAT (20%)</span><strong>${cur(vatTotal, c)}</strong></div>
-      <div class="grand"><span>Total due</span><strong>${cur(grand, c)}</strong></div>
+      <div><span>${t('docSubtotal')}</span><strong>${cur(subtotal, c)}</strong></div>
+      <div><span>${t('docVatLine')}</span><strong>${cur(vatTotal, c)}</strong></div>
+      <div class="grand"><span>${t('docTotalDue')}</span><strong>${cur(grand, c)}</strong></div>
     </div>
     <div class="doc-pay">
-      <div><span>Bank</span> ${esc(sup.bank ?? '—')}</div>
-      <div><span>IBAN</span> ${esc(sup.iban ?? '—')}</div>
-      <div><span>Currency</span> ${esc(c)}</div>
+      <div><span>${t('docBank')}</span> ${esc(sup.bank ?? '—')}</div>
+      <div><span>${t('docIban')}</span> ${esc(sup.iban ?? '—')}</div>
+      <div><span>${t('docCurrency')}</span> ${esc(c)}</div>
     </div>
-    <p class="doc-reg">Contra COGS agreement: ${esc(inv.agreementId ?? '—')} · discount tiers on file</p>
-    <p class="doc-einv">🔒 Electronically issued e-invoice — valid without signature.</p>
+    <p class="doc-reg">${t('docContraNote', { id: esc(inv.agreementId ?? '—') })}</p>
+    <p class="doc-einv">${t('docEInvoiceBadge')}</p>
     ${lineItemStorageSplit(inv, group)}
     ${tierBlock(inv)}
   </article>`;
@@ -245,18 +259,23 @@ export function invoiceDocHtml(inv, group = null) {
 // settlement regulations. Line descriptions are framed for the supplier —
 // what is being claimed and why (rebate shortfall on delivered volume), not the
 // internal engine's technical leakage cause.
-const CONTRA_LINE_TEXT = {
-  TIER_UPLIFT: 'Volume rebate tier adjustment — qualifying purchases reached a higher rebate band',
-  REROUTE_SKIPPED_SCAN: 'Rebate on goods delivered to a regional warehouse (dispatch confirmed, awaiting central scan)',
-  EXPIRED_WINDOW_LATE_DELIVERY: 'Rebate on in-window orders delivered after period close (order date within contract term)',
-  FORGOTTEN_SKU: 'Rebate on contracted products not previously included in the volume calculation',
-  FOUND_LATER_PALLET: 'Rebate on a short-scanned pallet subsequently located and received',
-  RETURN_REJECTION: 'Rebate reinstated on returned goods later accepted back into qualifying volume',
-  OVERAGE: 'Rebate on additional delivered units in excess of the ordered quantity',
-  BACKORDERING: 'Rebate on backordered units delivered within the qualifying control period',
+// Driver -> i18n key for the supplier-facing rebate-claim clause. Resolved via
+// t() at render time. A driver has a mapped clause iff its key resolves.
+const CONTRA_LINE_KEY = {
+  TIER_UPLIFT: 'contraTIER_UPLIFT',
+  REROUTE_SKIPPED_SCAN: 'contraREROUTE_SKIPPED_SCAN',
+  EXPIRED_WINDOW_LATE_DELIVERY: 'contraEXPIRED_WINDOW_LATE_DELIVERY',
+  FORGOTTEN_SKU: 'contraFORGOTTEN_SKU',
+  FOUND_LATER_PALLET: 'contraFOUND_LATER_PALLET',
+  RETURN_REJECTION: 'contraRETURN_REJECTION',
+  OVERAGE: 'contraOVERAGE',
+  BACKORDERING: 'contraBACKORDERING',
 };
 function contraLineLabel(l) {
-  return l.cause && !CONTRA_LINE_TEXT[l.driver] ? l.cause : (CONTRA_LINE_TEXT[l.driver] || l.cause || 'Volume rebate adjustment on delivered goods');
+  const key = CONTRA_LINE_KEY[l.driver];
+  // If the driver has no mapped clause, prefer the itemized data cause verbatim.
+  if (!key) return l.cause || t('contraDefaultLine');
+  return t(key);
 }
 
 export function contraCogsInvoiceHtml(charge, group, reconstruction) {
@@ -268,7 +287,7 @@ export function contraCogsInvoiceHtml(charge, group, reconstruction) {
   // build line rows from the charge's itemized causes; framed for the supplier
   const lines = (charge.lines && charge.lines.length)
     ? charge.lines
-    : [{ cause: 'Volume rebate tier adjustment', driver: 'TIER_UPLIFT', qty: reconstruction?.totalQualifying || 0, fromPct: charge.tierFromPct, toPct: charge.tierToPct, deltaValue: charge.variance }];
+    : [{ cause: t('contraDefaultCause'), driver: 'TIER_UPLIFT', qty: reconstruction?.totalQualifying || 0, fromPct: charge.tierFromPct, toPct: charge.tierToPct, deltaValue: charge.variance }];
   const lineRows = lines.map((l) => `<tr>
     <td>${esc(contraLineLabel(l))}${l.note ? `<div class="doc-sub-sku">${esc(l.note)}</div>` : ''}</td>
     <td class="num">${qtyf(l.qty)}</td>
@@ -278,41 +297,41 @@ export function contraCogsInvoiceHtml(charge, group, reconstruction) {
 
   return `<article class="invoice-doc contra-doc">
     <header class="doc-head"><div class="doc-brand">${esc(BUYER.name)}</div>
-      <div class="doc-title">CONTRA-COGS DEBIT NOTE / DOBROPIS — VOLUME REBATE</div></header>
-    <div class="doc-parties">${party('Issued by / Vystavil (Buyer)', BUYER)}${party('Billed to / Adresát (Supplier)', sup)}</div>
+      <div class="doc-title">${t('docContraTitle')}</div></header>
+    <div class="doc-parties">${party(t('docIssuedByBuyer'), BUYER)}${party(t('docBilledToSupplier'), sup)}</div>
     <div class="doc-meta">
-      <div><span>Debit note No.</span><strong>${esc(docNo)}</strong></div>
-      <div><span>Issue date</span><strong>${esc(issueDate)}</strong></div>
-      <div><span>Agreement ref.</span><strong>${esc(charge.agreementId)}</strong></div>
-      <div><span>Scope</span><strong>${esc(charge.scopeKey)}</strong></div>
-      <div><span>Period</span><strong>${esc(charge.period)}</strong></div>
-      <div><span>Rebate basis</span><strong>${esc(charge.basis || 'UNITS')}</strong></div>
+      <div><span>${t('docDebitNo')}</span><strong>${esc(docNo)}</strong></div>
+      <div><span>${t('docIssueDate')}</span><strong>${esc(issueDate)}</strong></div>
+      <div><span>${t('docAgreementRef')}</span><strong>${esc(charge.agreementId)}</strong></div>
+      <div><span>${t('docScope')}</span><strong>${esc(charge.scopeKey)}</strong></div>
+      <div><span>${t('docPeriod')}</span><strong>${esc(charge.period)}</strong></div>
+      <div><span>${t('docRebateBasis')}</span><strong>${esc(basisLabel(charge.basis || 'UNITS'))}</strong></div>
     </div>
-    <p class="small">This debit note claims the volume rebate (Contra-COGS) due to ${esc(BUYER.name)} under agreement ${esc(charge.agreementId)}. The qualifying purchase volume reached a higher rebate band than originally settled; the difference is claimed below.</p>
+    <p class="small">${t('docContraIntro', { buyer: esc(BUYER.name), ref: esc(charge.agreementId) })}</p>
     <table class="doc-lines"><thead><tr>
-      <th>Rebate claim — description</th><th class="num">Qty</th><th class="num">Rebate rate</th><th class="num">Amount</th>
+      <th>${t('docRebateClaimDesc')}</th><th class="num">${t('docQty')}</th><th class="num">${t('docRebateRate')}</th><th class="num">${t('docAmount')}</th>
     </tr></thead><tbody>${lineRows}
-      <tr class="split-total"><td colspan="3">Total rebate claimed / Spolu</td><td class="num">${cur(subtotal, c)}</td></tr>
+      <tr class="split-total"><td colspan="3">${t('docTotalRebateClaimed')}</td><td class="num">${cur(subtotal, c)}</td></tr>
     </tbody></table>
     <div class="doc-totals">
-      <div><span>Rebate previously settled</span><strong>${cur(charge.claimedCcogs, c)}</strong></div>
-      <div><span>Rebate now due (recomputed)</span><strong>${cur(charge.entitledCcogs, c)}</strong></div>
-      <div class="grand"><span>Amount claimed on this note</span><strong>${cur(charge.variance, c)}${charge.eurEquivalent != null ? ` (${cur(charge.eurEquivalent, 'EUR')})` : ''}</strong></div>
+      <div><span>${t('docRebatePrevSettled')}</span><strong>${cur(charge.claimedCcogs, c)}</strong></div>
+      <div><span>${t('docRebateNowDue')}</span><strong>${cur(charge.entitledCcogs, c)}</strong></div>
+      <div class="grand"><span>${t('docAmountClaimed')}</span><strong>${cur(charge.variance, c)}${charge.eurEquivalent != null ? ` (${cur(charge.eurEquivalent, 'EUR')})` : ''}</strong></div>
     </div>
     <div class="doc-pay">
-      <div><span>Settlement</span> Set-off against next payable / credit note</div>
-      <div><span>Currency</span> ${esc(c)}</div>
-      <div><span>Reference</span> ${esc(charge.chargeId)}</div>
+      <div><span>${t('docSettlement')}</span> ${t('docSettlementValue')}</div>
+      <div><span>${t('docCurrency')}</span> ${esc(c)}</div>
+      <div><span>${t('docReference')}</span> ${esc(charge.chargeId)}</div>
     </div>
-    <p class="doc-reg">Contra-COGS volume rebate settlement — issued under the referenced Supplier Rebate Agreement. Rebate eligibility follows order/invoice date within the contract term.</p>
-    <p class="doc-einv">🔒 Electronically issued document — valid without signature.</p>
+    <p class="doc-reg">${t('docContraFooter')}</p>
+    <p class="doc-einv">${t('docEDocBadge')}</p>
   </article>`;
 }
 
 function tierBlock(inv) {
   if (!inv.discountTiers || !inv.discountTiers.length) return '';
   const rows = inv.discountTiers.map((tr) => `<tr><td class="num">${qtyf(tr.minQty)}</td><td class="num">${tr.maxQty ?? '∞'}</td><td class="num">${tr.pct}%</td></tr>`).join('');
-  return `<section class="doc-split"><h4 class="doc-split-h">Volume rebate tiers (VIR)</h4>
+  return `<section class="doc-split"><h4 class="doc-split-h">${t('docTierBlockH')}</h4>
     <table class="doc-lines"><thead><tr><th class="num">From</th><th class="num">To</th><th class="num">Rebate %</th></tr></thead><tbody>${rows}</tbody></table></section>`;
 }
 
@@ -332,25 +351,25 @@ export function deliveryNoteDocHtml(dn, group = null) {
   const fromWi = warehouseInfo(firstStore);
   const shipFrom = { name: fromWi.entity || BUYER.name, street: BUYER.street, city: fromWi.city || BUYER.city, country: dn.country || BUYER.country, ico: BUYER.ico, dic: BUYER.dic, vat: BUYER.vat };
   const shipTo = multi
-    ? { name: BUYER.name, street: BUYER.street, city: 'Multiple receiving warehouses', country: dn.country || BUYER.country, ico: BUYER.ico, dic: BUYER.dic, vat: BUYER.vat }
+    ? { name: BUYER.name, street: BUYER.street, city: t('docMultiWh'), country: dn.country || BUYER.country, ico: BUYER.ico, dic: BUYER.dic, vat: BUYER.vat }
     : { name: fromWi.entity || BUYER.name, street: BUYER.street, city: fromWi.city || BUYER.city, country: dn.country || BUYER.country, ico: BUYER.ico, dic: BUYER.dic, vat: BUYER.vat };
 
   // related receipts drive the process-journey strip at the bottom
   const receipts = (group?.receipts || []).filter((r) => invs.includes(r.invoiceRef) || (dn.targetStorageId && String(dn.targetStorageId).split('+').includes(r.storageId)));
 
   return `<article class="invoice-doc">
-    <header class="doc-head"><div class="doc-brand">${esc(fromWi.entity || BUYER.name)}</div><div class="doc-title">DODACÍ LIST / DELIVERY NOTE${multi ? ' — CONSOLIDATED' : ''}</div></header>
-    <div class="doc-parties">${party('Dispatched from / Sklad odoslania', shipFrom)}${party('Ship to / Príjemca', shipTo)}</div>
+    <header class="doc-head"><div class="doc-brand">${esc(fromWi.entity || BUYER.name)}</div><div class="doc-title">${t('docDeliveryTitle')}${multi ? t('docConsolidatedSuffix') : ''}</div></header>
+    <div class="doc-parties">${party(t('docDispatchedFrom'), shipFrom)}${party(t('docShipTo'), shipTo)}</div>
     <div class="doc-meta">
-      <div><span>Delivery note</span><strong>${esc(dn.deliveryNoteId)}</strong></div>
-      <div><span>Covers invoices</span><strong>${esc(invs.join(', '))}</strong></div>
-      <div><span>Ship date</span><strong>${esc(dn.shipDate ?? '—')}</strong></div>
-      <div><span>From store / DC</span><strong>${esc(firstStore)} · ${esc(fromWi.city)}</strong></div>
-      <div><span>Status</span><strong>${esc(dn.deliveryStatus ?? '—')}</strong></div>
-      <div><span>Total shipped</span><strong>${qtyf(totalShipped)}</strong></div>
+      <div><span>${t('docDeliveryNote')}</span><strong>${esc(dn.deliveryNoteId)}</strong></div>
+      <div><span>${t('docCoversInvoices')}</span><strong>${esc(invs.join(', '))}</strong></div>
+      <div><span>${t('docShipDate')}</span><strong>${esc(dn.shipDate ?? '—')}</strong></div>
+      <div><span>${t('docFromStore')}</span><strong>${esc(firstStore)} · ${esc(fromWi.city)}</strong></div>
+      <div><span>${t('docStatus')}</span><strong>${esc(dstLabel(dn.deliveryStatus ?? ''))}</strong></div>
+      <div><span>${t('docTotalShipped')}</span><strong>${qtyf(totalShipped)}</strong></div>
     </div>
-    <p class="small">${multi ? 'Consolidated dispatch covering multiple warehouses / invoices.' : 'Single-warehouse delivery.'}</p>
-    <table class="doc-lines"><thead><tr><th>Invoice</th><th>Warehouse</th><th>Description</th><th class="num">Qty shipped</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="small">${multi ? t('docConsolidatedNote') : t('docSingleWhNote')}</p>
+    <table class="doc-lines"><thead><tr><th>${t('docInvoice')}</th><th>${t('docWarehouse')}</th><th>${t('docDescription')}</th><th class="num">${t('docQtyShipped')}</th></tr></thead><tbody>${rows}</tbody></table>
     ${processJourney(receipts)}
   </article>`;
 }
@@ -359,33 +378,34 @@ export function deliveryNoteDocHtml(dn, group = null) {
 export function receiptDocHtml(r) {
   const wi = warehouseInfo(r.storageId || `WH-${r.country}-01`);
   const disc = (r.qtyOrdered != null && r.qtyReceived != null && r.qtyOrdered !== r.qtyReceived)
-    ? `${r.qtyReceived > r.qtyOrdered ? 'Overage' : 'Short'} by ${Math.abs(r.qtyReceived - r.qtyOrdered)}` : 'None';
+    ? t('docDiscBy', { word: t(r.qtyReceived > r.qtyOrdered ? 'docOverage' : 'docShort'), n: Math.abs(r.qtyReceived - r.qtyOrdered) })
+    : t('docNone');
   return `<article class="invoice-doc">
-    <header class="doc-head"><div class="doc-brand">${esc(wi.entity)}</div><div class="doc-title">GOODS RECEIVED NOTE (GRN)</div></header>
+    <header class="doc-head"><div class="doc-brand">${esc(wi.entity)}</div><div class="doc-title">${t('docGrnTitle')}</div></header>
     <div class="doc-meta">
-      <div><span>GRN No.</span><strong>${esc(r.grnNumber ?? r.receiptId)}</strong></div>
-      <div><span>PO ref.</span><strong>${esc(r.poRef ?? '—')}</strong></div>
-      <div><span>Invoice ref.</span><strong>${esc(r.invoiceRef ?? '—')}</strong></div>
-      <div><span>Warehouse</span><strong>${esc(r.storageId ?? wi.code)} · ${esc(wi.city)}</strong></div>
-      <div><span>Received date</span><strong>${esc(r.receiptDate)}</strong></div>
-      <div><span>Inspected by</span><strong>${esc(r.inspectedBy ?? '—')}</strong></div>
+      <div><span>${t('docGrnNo')}</span><strong>${esc(r.grnNumber ?? r.receiptId)}</strong></div>
+      <div><span>${t('docPoRef')}</span><strong>${esc(r.poRef ?? '—')}</strong></div>
+      <div><span>${t('docInvoiceRef')}</span><strong>${esc(r.invoiceRef ?? '—')}</strong></div>
+      <div><span>${t('docWarehouse')}</span><strong>${esc(r.storageId ?? wi.code)} · ${esc(wi.city)}</strong></div>
+      <div><span>${t('docReceivedDate')}</span><strong>${esc(r.receiptDate)}</strong></div>
+      <div><span>${t('docInspectedBy')}</span><strong>${esc(r.inspectedBy ?? '—')}</strong></div>
     </div>
     <table class="doc-lines"><thead><tr>
-      <th>Item</th><th class="num">Ordered</th><th class="num">Received</th><th class="num">Accepted</th><th class="num">Rejected</th><th>Condition</th>
+      <th>${t('docItem')}</th><th class="num">${t('docOrdered')}</th><th class="num">${t('docReceived')}</th><th class="num">${t('docAccepted')}</th><th class="num">${t('docRejected')}</th><th>${t('docCondition')}</th>
     </tr></thead><tbody>
       <tr><td>${esc(productName(r.stockId, r.stockId))}<div class="doc-sub-sku">${esc(r.stockId)}</div></td>
         <td class="num">${r.qtyOrdered != null ? qtyf(r.qtyOrdered) : '—'}</td>
         <td class="num">${qtyf(r.qtyReceived)}</td>
         <td class="num">${r.qtyAccepted != null ? qtyf(r.qtyAccepted) : '—'}</td>
         <td class="num">${r.qtyRejected != null ? qtyf(r.qtyRejected) : '0'}</td>
-        <td>${esc(r.condition ?? 'Good')}</td></tr>
+        <td>${esc(r.condition ?? t('docGood'))}</td></tr>
     </tbody></table>
     <div class="doc-pay">
-      <div><span>Discrepancy</span> ${esc(disc)}</div>
-      <div><span>Control period</span> <span class="hint" data-note="CONTROL_PERIOD">${esc(r.receiptDate)}</span></div>
-      <div><span>VAT tax point</span> ${r.vatTaxPointDate ? `<span class="hint" data-note="VAT_TAX_POINT">${esc(r.vatTaxPointDate)}</span>` : '—'}</div>
+      <div><span>${t('docDiscrepancy')}</span> ${esc(disc)}</div>
+      <div><span>${t('docControlPeriod')}</span> <span class="hint" data-note="CONTROL_PERIOD">${esc(r.receiptDate)}</span></div>
+      <div><span>${t('docVatTaxPoint')}</span> ${r.vatTaxPointDate ? `<span class="hint" data-note="VAT_TAX_POINT">${esc(r.vatTaxPointDate)}</span>` : '—'}</div>
     </div>
-    <p class="doc-reg">GR/EDI RECADV — matches invoice line against received quantity per warehouse.</p>
+    <p class="doc-reg">${t('docGrnFooter')}</p>
     ${processJourney([r])}
   </article>`;
 }
@@ -394,20 +414,20 @@ export function receiptDocHtml(r) {
 export function eventDocHtml(ev) {
   const n = regNote(ev.type);
   return `<article class="invoice-doc">
-    <header class="doc-head"><div class="doc-brand">${esc(BUYER.name)}</div><div class="doc-title">EXCEPTION / OSD NOTICE</div></header>
+    <header class="doc-head"><div class="doc-brand">${esc(BUYER.name)}</div><div class="doc-title">${t('docOsdTitle')}</div></header>
     <div class="doc-meta">
-      <div><span>Exception ID</span><strong>${esc(ev.eventId)}</strong></div>
-      <div><span>Reason code</span><strong>${esc(ev.type.replace(/_/g, ' '))}</strong></div>
-      <div><span>Country / WH</span><strong>${esc(ev.country)}</strong></div>
-      <div><span>SKU</span><strong>${esc(ev.stockId ?? '—')}</strong></div>
-      <div><span>Reported</span><strong>${esc(ev.eventDate ?? '—')}</strong></div>
-      <div><span>Intended date</span><strong>${esc(ev.intendedDate ?? '—')}</strong></div>
+      <div><span>${t('docExceptionId')}</span><strong>${esc(ev.eventId)}</strong></div>
+      <div><span>${t('docReasonCode')}</span><strong>${esc(drvLabel(ev.type))}</strong></div>
+      <div><span>${t('docCountryWh')}</span><strong>${esc(ev.country)}</strong></div>
+      <div><span>${t('docSku')}</span><strong>${esc(ev.stockId ?? '—')}</strong></div>
+      <div><span>${t('docReported')}</span><strong>${esc(ev.eventDate ?? '—')}</strong></div>
+      <div><span>${t('docIntendedDate')}</span><strong>${esc(ev.intendedDate ?? '—')}</strong></div>
     </div>
-    <table class="doc-lines"><thead><tr><th>Item</th><th class="num">Qty affected</th><th>Backorder?</th><th>Refs</th></tr></thead>
+    <table class="doc-lines"><thead><tr><th>${t('docItem')}</th><th class="num">${t('docQtyAffected')}</th><th>${t('docBackorderQ')}</th><th>${t('docRefs')}</th></tr></thead>
       <tbody><tr><td>${esc(productName(ev.stockId, ev.stockId))}</td><td class="num">${qtyf(ev.qty)}</td>
-        <td>${ev.type === 'BACKORDERING' ? 'Yes' : 'No'}</td><td class="mono">${esc((ev.refIds || []).join(', '))}</td></tr></tbody></table>
+        <td>${ev.type === 'BACKORDERING' ? t('docYes') : t('docNo')}</td><td class="mono">${esc((ev.refIds || []).join(', '))}</td></tr></tbody></table>
     <p class="doc-einv" style="background:#FBF3E2;border-color:#EAD9B0;color:#7a5a12">
-      <span class="hint" data-note="${esc(ev.type)}">Why this matters:</span> ${esc(n.short)}
+      <span class="hint" data-note="${esc(ev.type)}">${t('docWhyMatters')}</span> ${esc(n.short)}
     </p>
     <p class="doc-reg">${esc(n.regulation)} · ${esc(n.sourceLabel)}</p>
   </article>`;
@@ -438,7 +458,7 @@ export function agreementDocHtml(a, group = null, ba = []) {
   const pct = nextTier ? Math.min(100, Math.round(((achievedVol - bandStart) / Math.max(1, bandEnd - bandStart)) * 100)) : 100;
   const achievedRate = achievedIdx >= 0 ? tiers[achievedIdx].rate : 0;
 
-  const met = gap > 0.01 ? 'UNDER-CLAIMED' : 'ON TARGET';
+  const met = gap > 0.01 ? t('agrUnderClaimed') : t('agrOnTarget');
   const ribbonCls = gap > 0.01 ? 'agr-ribbon warn' : 'agr-ribbon ok';
 
   // SKU schedule (Schedule A). Prefer the contract's declared SKU set; fall back
@@ -450,7 +470,7 @@ export function agreementDocHtml(a, group = null, ba = []) {
   const skuRows = (skuList.length ? skuList : ['—']).map((s, i) => {
     const missing = a.skuSet && a.skuSet.length && !engineCfg.has(s);
     return `<tr><td class="num">${i + 1}</td><td class="mono">${esc(s)}</td><td>${esc(productName(s, s))}</td>
-      <td>${missing ? '<span class="pill warn">not in engine</span>' : '<span class="pill ok">tracked</span>'}</td></tr>`;
+      <td>${missing ? `<span class="pill warn">${t('agrPillNotEngine')}</span>` : `<span class="pill ok">${t('agrPillTracked')}</span>`}</td></tr>`;
   }).join('');
 
   // invoices applied under this agreement (Schedule C)
@@ -459,24 +479,24 @@ export function agreementDocHtml(a, group = null, ba = []) {
     const q = iv.lines.reduce((s2, l) => s2 + (l.qtyInvoiced || 0), 0);
     const inWin = a.effectiveFrom && a.effectiveTo && iv.invoiceDate && iv.invoiceDate >= a.effectiveFrom && iv.invoiceDate <= a.effectiveTo;
     return `<tr><td class="mono">${esc(iv.invoiceNumber)}</td><td>${esc(iv.country || '')}</td><td>${esc(iv.invoiceDate || '')}</td>
-      <td>${inWin ? '<span class="pill ok">in-window</span>' : '<span class="pill warn">outside</span>'}</td>
+      <td>${inWin ? `<span class="pill ok">${t('agrPillInWindow')}</span>` : `<span class="pill warn">${t('agrPillOutside')}</span>`}</td>
       <td class="num">${qtyf(q)}</td><td class="num">${cur(iv.totalValue || 0, iv.currency || c)}</td></tr>`;
   }).join('');
   const invTotalQ = invs.reduce((s2, iv) => s2 + iv.lines.reduce((a2, l) => a2 + (l.qtyInvoiced || 0), 0), 0);
   const invTotalV = invs.reduce((s2, iv) => s2 + (iv.totalValue || 0), 0);
 
   const tierScheduleRows = tiers.map((tr, i) => {
-    const to = tiers[i + 1] ? qtyf(tiers[i + 1].threshold - 1) : 'and above';
+    const to = tiers[i + 1] ? qtyf(tiers[i + 1].threshold - 1) : t('agrAndAbove');
     return `<tr class="${i === achievedIdx ? 'tier-row achieved' : 'tier-row'}">
-      <td>Tier ${i + 1}${i === achievedIdx ? ' <span class="pill ok">achieved</span>' : ''}</td>
+      <td>${t('agrTierWord')} ${i + 1}${i === achievedIdx ? ` <span class="pill ok">${t('agrPillAchieved')}</span>` : ''}</td>
       <td class="num">${qtyf(tr.threshold === 0 ? 1 : tr.threshold)}</td><td class="num">${to}</td>
       <td class="num">${(tr.rate * 100).toFixed(2)}%</td></tr>`;
   }).join('');
 
   const measureTxt = a.tierMeasure === 'PER_SKU'
-    ? 'each Eligible Product measured individually against the thresholds'
-    : 'the combined volume of all Eligible Products in Schedule A measured against the thresholds';
-  const windowTxt = (a.windowType || 'YEAR').replace(/_/g, '-').toLowerCase();
+    ? t('agrDefMeasPerSku')
+    : t('agrDefMeasCombined');
+  const windowTxt = wtLabel(a.windowType || 'YEAR');
   const clauseTier = a.clauseRefs?.tier || 'Clause 4 — Rebate Schedule';
   const supName = esc(sup.name);
   const buyName = esc(BUYER.name);
@@ -484,80 +504,80 @@ export function agreementDocHtml(a, group = null, ba = []) {
   return `<article class="contract-doc">
     <div class="${ribbonCls}">${met}</div>
     <div class="ct-head">
-      <div class="ct-kicker">Contra COGS / Volume Incentive Rebate Agreement</div>
-      <h1 class="ct-title">SUPPLIER REBATE AGREEMENT</h1>
-      <div class="ct-ref">Ref. ${esc(a.contractRef || a.agreementId)} &nbsp;·&nbsp; Governing law: ${esc(a.governingLaw || 'Slovak Republic')}</div>
+      <div class="ct-kicker">${t('agrKicker')}</div>
+      <h1 class="ct-title">${t('agrTitle')}</h1>
+      <div class="ct-ref">${t('agrRefLabel')} ${esc(a.contractRef || a.agreementId)} &nbsp;·&nbsp; ${t('agrGoverningLaw')}: ${esc(a.governingLaw || 'Slovak Republic')}</div>
     </div>
 
-    <p class="ct-recital">THIS AGREEMENT is made ${a.signedDate ? 'on ' + esc(a.signedDate) : ''} <strong>BETWEEN</strong>
-      <span class="ct-party">${supName}</span>${sup.city ? ' of ' + esc(sup.city) + ', ' + esc(sup.country) : ''}${sup.vat && sup.vat !== '—' ? ' (VAT ' + esc(sup.vat) + ')' : ''} (the <strong>“Supplier”</strong>)
-      <strong>AND</strong>
-      <span class="ct-party">${buyName}</span> of ${esc(BUYER.city)}, ${esc(BUYER.country)} (VAT ${esc(BUYER.vat)}) (the <strong>“Buyer”</strong>),
-      operating retail warehouses in ${esc((a.countries || []).join(', ') || 'SK, PL, CZ')}.</p>
-    <p class="ct-recital"><strong>WHEREAS</strong> the Supplier wishes to incentivise the Buyer’s purchase volumes of the products listed in Schedule A, the Parties agree as follows:</p>
+    <p class="ct-recital">${t('agrThisAgreement')} ${a.signedDate ? t('agrMadeOn') + ' ' + esc(a.signedDate) : ''} <strong>${t('agrBetween')}</strong>
+      <span class="ct-party">${supName}</span>${sup.city ? ' ' + t('agrOfCity') + ' ' + esc(sup.city) + ', ' + esc(sup.country) : ''}${sup.vat && sup.vat !== '—' ? ' (VAT ' + esc(sup.vat) + ')' : ''} (${t('agrTheParty', { role: t('agrSupplierRole') })})
+      <strong>${t('agrAnd')}</strong>
+      <span class="ct-party">${buyName}</span> ${t('agrOfCity')} ${esc(BUYER.city)}, ${esc(BUYER.country)} (VAT ${esc(BUYER.vat)}) (${t('agrTheParty', { role: t('agrBuyerRole') })}),
+      ${t('agrOperatingWh')} ${esc((a.countries || []).join(', ') || 'SK, PL, CZ')}.</p>
+    <p class="ct-recital">${t('agrWhereas')}</p>
 
-    <section class="ct-clause"><h3>1. Definitions</h3>
-      <p><strong>1.1 “Eligible Products”</strong> means the products (ASIN/SKU) set out in <em>Schedule A</em>.
-      <strong>1.2 “Qualifying Volume”</strong> means ${measureTxt}, measured on a ${esc((a.basis || 'UNITS').toLowerCase())} basis.
-      <strong>1.3 “Contract Period”</strong> means the term in Clause 2. <strong>1.4 “Rebate”</strong> means the contra-COGS percentage per <em>Schedule B</em>.</p>
+    <section class="ct-clause"><h3>${t('agrH1')}</h3>
+      <p><strong>1.1</strong> ${t('agrDef11')}
+      <strong>1.2</strong> ${t('agrDef12Pre')} ${measureTxt}, ${t('agrDef12Post', { basis: basisLabel(a.basis || 'UNITS') })}
+      <strong>1.3</strong> ${t('agrDef13')} <strong>1.4</strong> ${t('agrDef14')}</p>
     </section>
 
-    <section class="ct-clause"><h3>2. Term</h3>
-      <p><strong>2.1</strong> This Agreement is effective from <strong>${esc(a.effectiveFrom || '—')}</strong> to <strong>${esc(a.effectiveTo || '—')}</strong> (a ${esc(windowTxt)} term).
-      <strong>2.2</strong> Rebate eligibility is determined by the <u>order/invoice date</u> falling within the Contract Period; goods so ordered qualify <em>even where delivery or unloading occurs after expiry</em>.</p>
+    <section class="ct-clause"><h3>${t('agrH2')}</h3>
+      <p><strong>2.1</strong> ${t('agrTerm21', { from: `<strong>${esc(a.effectiveFrom || '—')}</strong>`, to: `<strong>${esc(a.effectiveTo || '—')}</strong>`, term: esc(windowTxt) })}
+      <strong>2.2</strong> ${t('agrTerm22')}</p>
     </section>
 
-    <section class="ct-clause"><h3>3. Eligible Products — Schedule A</h3>
-      <table class="ct-schedule"><thead><tr><th class="num">#</th><th>ASIN / SKU</th><th>Product</th><th>Internal engine</th></tr></thead>
+    <section class="ct-clause"><h3>${t('agrH3')}</h3>
+      <table class="ct-schedule"><thead><tr><th class="num">${t('agrColNum')}</th><th>${t('agrColAsin')}</th><th>${t('agrColProduct')}</th><th>${t('agrColEngine')}</th></tr></thead>
       <tbody>${skuRows}</tbody></table>
-      ${a.skuSet && [...new Set(a.skuSet)].some((s) => !engineCfg.has(s)) ? '<p class="ct-flag">⚠ One or more Eligible Products are not configured in the Buyer’s internal CCOGS engine — their volume is not being counted (see True-Up).</p>' : ''}
+      ${a.skuSet && [...new Set(a.skuSet)].some((s) => !engineCfg.has(s)) ? `<p class="ct-flag">${t('agrEngineFlag')}</p>` : ''}
     </section>
 
-    <section class="ct-clause"><h3>4. Rebate Schedule — Schedule B</h3>
-      <p><strong>4.1</strong> The Rebate is <strong>${esc((a.rebateStructure || '').replace(/_/g, ' ').toLowerCase())}</strong> and applies to the Qualifying Volume as follows:</p>
-      <table class="ct-schedule"><thead><tr><th>Tier</th><th class="num">From (qty)</th><th class="num">To (qty)</th><th class="num">Rebate %</th></tr></thead>
+    <section class="ct-clause"><h3>${t('agrH4')}</h3>
+      <p><strong>4.1</strong> ${t('agrRebate41Pre')} <strong>${esc(rsLabel(a.rebateStructure || ''))}</strong> ${t('agrRebate41Post')}</p>
+      <table class="ct-schedule"><thead><tr><th>${t('agrColTier')}</th><th class="num">${t('agrColFrom')}</th><th class="num">${t('agrColTo')}</th><th class="num">${t('agrColRebatePct')}</th></tr></thead>
       <tbody>${tierScheduleRows || '<tr><td colspan=4 class=small>—</td></tr>'}</tbody></table>
-      <p class="small">Tier measurement: ${a.tierMeasure === 'PER_SKU' ? 'per individual SKU' : 'combined across all Eligible Products'} · currencies: ${esc((a.currencies || []).join(', '))}.</p>
+      <p class="small">${t('agrTierMeasNote', { measure: a.tierMeasure === 'PER_SKU' ? t('agrMeasPerSku') : t('agrMeasCombined'), cur: esc((a.currencies || []).join(', ')) })}</p>
     </section>
 
-    <section class="ct-clause"><h3>5. Measurement &amp; Claim</h3>
-      <p><strong>5.1</strong> Qualifying Volume is aggregated ${a.scope === 'PAN_EU' ? 'across all covered countries (pan-EU)' : 'per country'}.
-      <strong>5.2</strong> Rebate is applied ${esc((a.retrospectiveReach || 'WITHIN_PERIOD').replace(/_/g, ' ').toLowerCase())}.
-      <strong>5.3</strong> Volume is recognised on transfer of control (goods received), while eligibility follows Clause 2.2.</p>
+    <section class="ct-clause"><h3>${t('agrH5')}</h3>
+      <p><strong>5.1</strong> ${t('agrMeas51Pre')} ${a.scope === 'PAN_EU' ? t('agrScopePanEu') : t('agrScopePerCountry')}.
+      <strong>5.2</strong> ${t('agrMeas52Pre')} ${esc(rrLabel(a.retrospectiveReach || 'WITHIN_PERIOD'))}.
+      <strong>5.3</strong> ${t('agrMeas53')}</p>
       <div class="ct-cards">
-        <div class="mc"><div class="mc-n">${qtyf(achievedVol)}</div><div class="mc-l">Qualifying volume achieved</div></div>
-        <div class="mc"><div class="mc-n">${(achievedRate * 100).toFixed(2)}%</div><div class="mc-l">Rebate rate reached</div></div>
-        <div class="mc"><div class="mc-n">${cur(entitled, c)}</div><div class="mc-l">Entitled CCOGS</div></div>
-        <div class="mc ${gap > 0.01 ? 'loss' : ''}"><div class="mc-n">${cur(gap, c)}</div><div class="mc-l">Under-claimed (True-Up)</div></div>
+        <div class="mc"><div class="mc-n">${qtyf(achievedVol)}</div><div class="mc-l">${t('agrCardVol')}</div></div>
+        <div class="mc"><div class="mc-n">${(achievedRate * 100).toFixed(2)}%</div><div class="mc-l">${t('agrCardRate')}</div></div>
+        <div class="mc"><div class="mc-n">${cur(entitled, c)}</div><div class="mc-l">${t('agrCardEntitled')}</div></div>
+        <div class="mc ${gap > 0.01 ? 'loss' : ''}"><div class="mc-n">${cur(gap, c)}</div><div class="mc-l">${t('agrCardUnderclaimed')}</div></div>
       </div>
       <div class="tier-progress">
-        <div class="tp-head"><span>Tier ${achievedIdx + 1} of ${tiers.length}${nextTier ? ` — ${qtyf(bandEnd - achievedVol)} to next tier (${(nextTier.rate * 100).toFixed(1)}%)` : ' — top tier reached'}</span><span>${pct}%</span></div>
+        <div class="tp-head"><span>${t('agrTierWord')} ${achievedIdx + 1} ${t('agrTierOf')} ${tiers.length}${nextTier ? t('agrToNextTier', { qty: qtyf(bandEnd - achievedVol), rate: (nextTier.rate * 100).toFixed(1) }) : t('agrTopTier')}</span><span>${pct}%</span></div>
         <div class="tp-bar"><i style="width:${pct}%"></i></div>
       </div>
     </section>
 
-    <section class="ct-clause"><h3>6. Settlement</h3>
-      <p><strong>6.1</strong> Method: ${esc(settle.method)}. <strong>6.2</strong> Frequency: ${esc(settle.frequency)}.
-      <strong>6.3</strong> Instrument: ${esc(settle.instrument)}. <strong>6.4</strong> Reconciliation: ${esc(settle.reconciliation)}.
-      <strong>6.5</strong> Shortfalls identified after settlement are recovered by a CCOGS True-Up debit note.</p>
+    <section class="ct-clause"><h3>${t('agrH6')}</h3>
+      <p><strong>6.1</strong> ${t('agrMethod')}: ${esc(settle.method)}. <strong>6.2</strong> ${t('agrFrequency')}: ${esc(settle.frequency)}.
+      <strong>6.3</strong> ${t('agrInstrument')}: ${esc(settle.instrument)}. <strong>6.4</strong> ${t('agrReconciliation')}: ${esc(settle.reconciliation)}.
+      <strong>6.5</strong> ${t('agrShortfalls')}</p>
     </section>
 
-    <section class="ct-clause"><h3>7. Orders placed under this Agreement — Schedule C</h3>
-      <table class="ct-schedule"><thead><tr><th>Invoice</th><th>Country</th><th>Order/Invoice date</th><th>Window</th><th class="num">Qty</th><th class="num">Value</th></tr></thead>
+    <section class="ct-clause"><h3>${t('agrH7')}</h3>
+      <table class="ct-schedule"><thead><tr><th>${t('docInvoice')}</th><th>${t('agrColCountry')}</th><th>${t('agrColOrderDate')}</th><th>${t('agrColWindow')}</th><th class="num">${t('docQty')}</th><th class="num">${t('agrColValue')}</th></tr></thead>
       <tbody>${invRows || '<tr><td colspan=6 class=small>—</td></tr>'}
-        <tr class="ct-total"><td colspan="4">Total</td><td class="num">${qtyf(invTotalQ)}</td><td class="num">${cur(invTotalV, c)}</td></tr>
+        <tr class="ct-total"><td colspan="4">${t('docTotal')}</td><td class="num">${qtyf(invTotalQ)}</td><td class="num">${cur(invTotalV, c)}</td></tr>
       </tbody></table>
     </section>
 
-    <section class="ct-clause"><h3>8. General</h3>
-      <p><strong>8.1 Confidentiality.</strong> The commercial terms are confidential. <strong>8.2 Disputes.</strong> Resolved amicably, failing which under the governing law in the reference block. <strong>8.3 Entire agreement.</strong> Schedules A–C form part of this Agreement.</p>
+    <section class="ct-clause"><h3>${t('agrH8')}</h3>
+      <p><strong>8.1 ${t('agrConfidentiality')}</strong> ${t('agrConfidentialityBody')} <strong>8.2 ${t('agrDisputes')}</strong> ${t('agrDisputesBody')} <strong>8.3 ${t('agrEntire')}</strong> ${t('agrEntireBody')}</p>
     </section>
 
     <div class="ct-sign">
-      <div class="ct-sig"><div class="ct-sig-line"></div><div>For and on behalf of the <strong>Supplier</strong><br>${supName}<br><span class="small">${esc(contact.rep)} · ${esc(contact.role)}</span></div></div>
-      <div class="ct-sig"><div class="ct-sig-line"></div><div>For and on behalf of the <strong>Buyer</strong><br>${buyName}<br><span class="small">${esc(a.signatory || 'Head of Procurement')} · ${esc(a.signatoryTitle || 'Authorised signatory')}</span></div></div>
+      <div class="ct-sig"><div class="ct-sig-line"></div><div>${t('agrForSupplier')} <strong>${t('agrSupplierRole')}</strong><br>${supName}<br><span class="small">${esc(contact.rep)} · ${esc(contact.role)}</span></div></div>
+      <div class="ct-sig"><div class="ct-sig-line"></div><div>${t('agrForSupplier')} <strong>${t('agrBuyerRole')}</strong><br>${buyName}<br><span class="small">${esc(a.signatory || t('agrDefaultSignatory'))} · ${esc(a.signatoryTitle || t('agrDefaultSignatoryTitle'))}</span></div></div>
     </div>
-    <p class="ct-foot">${esc(clauseTier)} · Ref. ${esc(a.contractRef || a.agreementId)} · This is a demo document generated by VIR_Tier.</p>
+    <p class="ct-foot">${esc(clauseTier)} · ${t('agrRefLabel')} ${esc(a.contractRef || a.agreementId)} · ${t('agrFootDemo')}</p>
   </article>`;
 }
 
@@ -566,24 +586,24 @@ export function engineDocHtml(eng) {
   const refs = (arr) => (arr && arr.length ? arr.map((x) => `<span class="mono">${esc(x)}</span>`).join(', ') : '—');
   const sup = supplierFor(eng.supplierId);
   return `<article class="invoice-doc">
-    <header class="doc-head"><div class="doc-brand">CCOGS Engine</div><div class="doc-title">${esc(eng.documentType.replace(/_/g, ' '))}</div></header>
+    <header class="doc-head"><div class="doc-brand">CCOGS Engine</div><div class="doc-title">${esc(engDocTypeLabel(eng.documentType))}</div></header>
     <div class="doc-meta">
-      <div><span>Document</span><strong>${esc(eng.outputId)}</strong></div>
-      <div><span>Supplier</span><strong>${esc(sup.name)}</strong></div>
-      <div><span>Scope</span><strong>${esc(eng.scopeKey)}</strong></div>
-      <div><span>Period</span><strong>${esc(eng.period)}</strong></div>
-      <div><span>Basis</span><strong>${esc(eng.basis ?? '—')}</strong></div>
-      <div><span>Tier applied</span><strong>${esc(eng.tierApplied ?? '—')}</strong></div>
+      <div><span>${t('engDocument')}</span><strong>${esc(eng.outputId)}</strong></div>
+      <div><span>${t('docSupplier')}</span><strong>${esc(sup.name)}</strong></div>
+      <div><span>${t('docScope')}</span><strong>${esc(eng.scopeKey)}</strong></div>
+      <div><span>${t('docPeriod')}</span><strong>${esc(eng.period)}</strong></div>
+      <div><span>${t('engBasis')}</span><strong>${esc(eng.basis ?? '—')}</strong></div>
+      <div><span>${t('engTierApplied')}</span><strong>${esc(eng.tierApplied ?? '—')}</strong></div>
     </div>
-    <table class="doc-lines"><thead><tr><th>Engine volume counted</th><th class="num">CCOGS claimed</th></tr></thead>
+    <table class="doc-lines"><thead><tr><th>${t('engVolCounted')}</th><th class="num">${t('engCcogsClaimed')}</th></tr></thead>
       <tbody><tr><td>${qtyf(eng.engineVolume)}</td><td class="num">${cur(eng.amountClaimed, eng.currency)}</td></tr></tbody></table>
-    <section class="doc-split"><h4 class="doc-split-h">Calculation trail</h4>
+    <section class="doc-split"><h4 class="doc-split-h">${t('engCalcTrail')}</h4>
       <p class="small">${esc(eng.calcNote ?? '')}</p></section>
-    <section class="doc-split"><h4 class="doc-split-h">Linked source documents</h4>
+    <section class="doc-split"><h4 class="doc-split-h">${t('engLinkedDocs')}</h4>
       <div class="doc-meta" style="grid-template-columns:1fr">
-        <div><span>Invoices</span><strong>${refs(eng.invoiceRefs)}</strong></div>
-        <div><span>Delivery notes</span><strong>${refs(eng.deliveryNoteRefs)}</strong></div>
-        <div><span>Goods receipts</span><strong>${refs(eng.receiptRefs)}</strong></div>
+        <div><span>${t('engInvoices')}</span><strong>${refs(eng.invoiceRefs)}</strong></div>
+        <div><span>${t('engDeliveryNotes')}</span><strong>${refs(eng.deliveryNoteRefs)}</strong></div>
+        <div><span>${t('engGoodsReceipts')}</span><strong>${refs(eng.receiptRefs)}</strong></div>
       </div>
     </section>
   </article>`;

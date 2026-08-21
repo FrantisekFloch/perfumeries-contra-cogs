@@ -6,12 +6,12 @@
   <agreementId>AGR-006</agreementId>
   <targetStorageId>WH-SK-01+WH-PL-01+WH-CZ-01</targetStorageId>
   <country>SK</country>
-  <shipDate>2026-03-07</shipDate>
+  <shipDate>2026-05-05</shipDate>
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>EDP-050</stockId><qtyShipped>6454</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0010</invoiceRef></line>
-    <line><stockId>EDP-050</stockId><qtyShipped>6894</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0011</invoiceRef></line>
-    <line><stockId>EDP-050</stockId><qtyShipped>6806</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0012</invoiceRef></line>
+    <line><stockId>MSC-200</stockId><qtyShipped>4633</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0010</invoiceRef></line>
+    <line><stockId>MSC-200</stockId><qtyShipped>4634</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0011</invoiceRef></line>
+    <line><stockId>MSC-200</stockId><qtyShipped>4241</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0012</invoiceRef></line>
   </lines>
 </deliveryNote>
