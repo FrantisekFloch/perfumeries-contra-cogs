@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VIR_Tier — Contra-COGS flow concepts (review)</title>
+<style>
+  :root{
+    --page:#F5F6F8; --card:#fff; --ink:#1A1A1A; --muted:#6B6B6B; --line:#E5E7EB;
+    --accent:#00B67A; --accent-ink:#04150e; --accent-soft:#E6F7F0;
+    --blue:#0072B2; --blue-soft:#E7F0FB; --amber:#E69F00; --amber-soft:#FBEFE0;
+    --orange:#E8891A; --danger:#D55E00; --danger-soft:#FBEAE8; --purple:#7A4FBF;
+    --gold:#C77800; --radius:12px; --shadow:0 2px 10px rgba(0,0,0,.06); --shadow-lg:0 18px 50px rgba(0,0,0,.14);
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--page);color:var(--ink);}
+  .shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh;}
+  /* sidebar */
+  .side{background:#fff;border-right:1px solid var(--line);padding:18px 0;position:sticky;top:0;height:100vh;overflow:auto;}
+  .logo{font-weight:800;font-size:19px;padding:2px 20px 4px;}
+  .logo .tier{color:var(--accent)}
+  .side .cap{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);padding:14px 20px 6px;}
+  .navb{display:block;width:100%;text-align:left;border:0;background:none;font:inherit;padding:9px 20px;color:var(--ink);cursor:pointer;border-left:3px solid transparent;}
+  .navb:hover{background:#f3f4f6}
+  .navb.active{background:var(--accent-soft);color:#0a7a53;font-weight:600;border-left-color:var(--accent);}
+  .navb small{display:block;color:var(--muted);font-weight:400;font-size:11px;margin-top:1px}
+  .navb.active small{color:#4a8f76}
+  /* main */
+  .main{padding:26px 34px 80px;max-width:1180px}
+  .crumb{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  h1{font-size:22px;margin:4px 0 4px;letter-spacing:-.01em}
+  h2{font-size:16px;margin:26px 0 10px}
+  .lead{color:var(--muted);max-width:760px;line-height:1.55;margin:0 0 6px}
+  .src{font-size:11.5px;color:#8a8f98;margin:2px 0 18px}
+  .src a{color:var(--blue);text-decoration:none}
+  .panel{display:none}
+  .panel.active{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font:inherit;font-size:13px;cursor:pointer}
+  .btn:hover{border-color:#cfcfcf}
+  .btn.green{background:var(--accent);color:#fff;border-color:transparent;font-weight:600}
+  .btn.blue{background:var(--blue);color:#fff;border-color:transparent;font-weight:600}
+  .btn.orange{background:var(--orange);color:#fff;border-color:transparent;font-weight:600}
+  .btn.amber{background:#EBD9A6;color:#6b5312;border-color:#d9c384;font-weight:600}
+  .btn.big{padding:12px 20px;font-size:14px}
+  .muted{color:var(--muted)} .small{font-size:12.5px;color:var(--muted)}
+  .mono{font-family:var(--mono)}
+  .pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid transparent}
+  .pill.ok{background:var(--accent-soft);color:#0a7a53;border-color:#bfe8d8}
+  .pill.risk{background:var(--danger-soft);color:var(--danger);border-color:#f3c6bd}
+  .pill.q{background:var(--amber-soft);color:#8a5a12;border-color:#f0d9bc}
+  .euro{font-variant-numeric:tabular-nums}
+  .note{background:#FFF8E6;border:1px solid #F0E2B8;color:#6b5312;border-radius:10px;padding:10px 14px;font-size:13px;margin:14px 0}
+  .kbd{font-family:var(--mono);font-size:11px;background:#f1f1f1;border:1px solid #ddd;border-radius:5px;padding:1px 5px}
+
+  /* ---------- A1 live pipeline ---------- */
+  .pipe{display:flex;align-items:stretch;gap:0;margin:8px 0 6px;flex-wrap:wrap}
+  .pstep{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;position:relative;transition:.3s}
+  .pstep + .pstep{margin-left:26px}
+  .pstep::before{content:"";position:absolute;left:-26px;top:50%;width:26px;height:2px;background:var(--line)}
+  .pstep:first-child::before{display:none}
+  .pstep .ic{width:34px;height:34px;border-radius:9px;background:#f1f3f5;display:grid;place-items:center;color:var(--muted);margin-bottom:8px}
+  .pstep .t{font-weight:600;font-size:13px}
+  .pstep .s{font-size:12px;color:var(--muted);margin-top:3px;min-height:16px}
+  .pstep.run{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,114,178,.12)}
+  .pstep.run .ic{background:var(--blue-soft);color:var(--blue)}
+  .pstep.done{border-color:#bfe8d8}
+  .pstep.done .ic{background:var(--accent-soft);color:#0a7a53}
+  .pstep .bar{height:4px;background:#eef0f2;border-radius:3px;margin-top:9px;overflow:hidden}
+  .pstep .bar > i{display:block;height:100%;width:0;background:var(--blue);transition:width .25s}
+  .pstep.done .bar > i{background:var(--accent)}
+  .bootbig{margin:18px 0;background:linear-gradient(120deg,var(--accent-soft),#fff);border:1px solid #bfe8d8;border-radius:14px;padding:22px;display:flex;align-items:center;justify-content:space-between;opacity:0;transition:.5s}
+  .bootbig.show{opacity:1}
+  .bootbig .n{font-size:30px;font-weight:800;letter-spacing:-.02em}
+  .ticker{height:120px;overflow:hidden;background:#0e1b16;color:#c9f5e4;border-radius:10px;padding:10px 14px;font-family:var(--mono);font-size:12px;line-height:1.9;margin-top:12px}
+  .ticker div{opacity:.5}
+  .ticker div:last-child{opacity:1;color:#fff}
+
+  /* ---------- canvas ---------- */
+  .canvas{position:relative;height:430px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;background-image:radial-gradient(#eceef1 1px,transparent 1px);background-size:18px 18px}
+  .node{position:absolute;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;width:150px;box-shadow:var(--shadow);cursor:pointer;user-select:none;transition:.12s}
+  .node:hover{border-color:var(--blue)}
+  .node .nt{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .node .nid{font-weight:700;font-size:13px;font-family:var(--mono)}
+  .node .nm{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .node.inv{border-left:4px solid var(--blue)}
+  .node.dn{border-left:4px solid var(--purple)}
+  .node.grn{border-left:4px solid var(--accent)}
+  .node.evt{border-left:4px solid var(--danger)}
+  .node.sel{outline:3px solid rgba(0,182,122,.28);border-color:var(--accent)}
+  .node.excluded{opacity:.4;filter:grayscale(1)}
+  .node .chk{position:absolute;top:-9px;right:-9px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:13px;border:2px solid #fff}
+  .node.excluded .chk{background:#bbb}
+  svg.wires{position:absolute;inset:0;pointer-events:none}
+  .wire{stroke:var(--accent);stroke-width:2.5;fill:none}
+  .wire.broken{stroke:var(--danger);stroke-dasharray:6 5}
+  .canvas-foot{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:14px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0 0;font-size:12px;color:var(--muted)}
+  .legend b{display:inline-block;width:22px;height:0;border-top:2.5px solid var(--accent);vertical-align:middle;margin-right:4px}
+  .legend b.br{border-top:2.5px dashed var(--danger)}
+
+  /* ---------- basket / cart ---------- */
+  .findrow{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:8px}
+  .findrow.added{border-color:#bfe8d8;background:#fbfffd}
+  .findrow .amt{font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+  .basket{position:sticky;bottom:14px;margin-top:16px;background:#0e1b16;color:#fff;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow-lg)}
+  .basket .cnt{background:var(--accent);color:#04150e;font-weight:800;border-radius:999px;padding:3px 11px}
+  .basket .tot{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+  .basket .sp{flex:1}
+
+  /* ---------- reconciliation board ---------- */
+  .board{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .bcol{padding:0}
+  .bcol h3{margin:0;padding:12px 16px;font-size:13px;background:#f7f8fa;border-bottom:1px solid var(--line)}
+  .bcol.left h3{color:var(--muted)}
+  .bcol.right h3{color:#0a7a53;background:var(--accent-soft)}
+  .brow{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line);font-size:13px}
+  .brow:last-child{border-bottom:0}
+  .brow .v{font-variant-numeric:tabular-nums;font-weight:600}
+  .bcol.left{border-right:1px solid var(--line)}
+  .boardfoot{display:flex;align-items:center;gap:14px;padding:12px 16px;border-top:2px solid var(--ink);background:#fafafa}
+
+  /* ---------- consolidated builder ---------- */
+  .supgrp{border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+  .suphead{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f7f8fa;border-bottom:1px solid var(--line)}
+  .suphead .sn{font-weight:700}
+  .suphead .st{margin-left:auto;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 16px;border-bottom:1px solid var(--line)}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr.off td{opacity:.4;text-decoration:line-through}
+  .docprev{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;max-width:560px;box-shadow:var(--shadow)}
+  .docprev h4{margin:0 0 2px} .docprev .dh{display:flex;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:10px}
+
+  /* ---------- wizard ---------- */
+  .wsteps{display:flex;gap:0;margin:6px 0 18px;counter-reset:w}
+  .wstep{flex:1;text-align:center;position:relative;color:var(--muted);font-size:13px}
+  .wstep::before{counter-increment:w;content:counter(w);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#eef0f2;color:var(--muted);margin:0 auto 6px;font-weight:700}
+  .wstep::after{content:"";position:absolute;top:15px;left:-50%;width:100%;height:2px;background:var(--line);z-index:-1}
+  .wstep:first-child::after{display:none}
+  .wstep.active{color:var(--ink);font-weight:600}
+  .wstep.active::before{background:var(--accent);color:#04150e}
+  .wstep.done::before{background:var(--accent);color:#04150e;content:"✓"}
+  .wbody{min-height:180px}
+
+  /* sticky footer idea */
+  .stickyft{position:sticky;bottom:0;margin:16px -34px -80px;background:#fff;border-top:1px solid var(--line);padding:14px 34px;display:flex;align-items:center;gap:14px;box-shadow:0 -4px 16px rgba(0,0,0,.05)}
+  .rec-tag{display:inline-block;background:var(--accent-soft);color:#0a7a53;border:1px solid #bfe8d8;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:700;margin-left:8px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="logo">VIR<span class="tier">_Tier</span></div>
+    <div class="small" style="padding:0 20px;color:#9aa">flow concepts — review</div>
+    <div class="cap">A · Loading as process</div>
+    <button class="navb active" data-p="a1">A1 · Live evidence pipeline</button>
+    <button class="navb" data-p="a2">A2 · Boot builds the graph</button>
+    <div class="cap">B · Where Contra-COGS is generated</div>
+    <button class="navb" data-p="b2">B2 · Recovery basket / cart <small>recommended</small></button>
+    <button class="navb" data-p="b1">B1 · Connect-the-dots canvas</button>
+    <button class="navb" data-p="b3">B3 · Consolidated supplier debit</button>
+    <button class="navb" data-p="b4">B4 · Reconciliation board</button>
+    <button class="navb" data-p="b5">B5 · "Claim Builder" stage</button>
+    <button class="navb" data-p="b6">B6 · Guided wizard</button>
+    <button class="navb" data-p="b7">B7 · Sticky-footer (minimal)</button>
+    <div class="cap">Overview</div>
+    <button class="navb" data-p="rec">★ Recommended flow</button>
+  </aside>
+
+  <main class="main">
+
+    <!-- ============ A1 ============ -->
+    <section class="panel active" id="p-a1">
+      <div class="crumb">A · Loading as process</div>
+      <h1>A1 — Live evidence pipeline</h1>
+      <p class="lead">Replace the loading spinner with a pipeline that lights up as it actually runs — connect, ingest, match, reconstruct, re-check tiers — streaming live counters, then lands on a headline of what was found. The user watches the machine work, so trust is built before any action is asked.</p>
+      <p class="src">Pattern from live pipeline-run UIs: Databricks Lakeflow, <a href="https://trigger.dev/docs/guides/use-cases/data-processing-etl">trigger.dev (row-by-row status)</a>, <a href="https://www.workflowbuilder.io/blog/live-workflow-execution-visualization">workflowbuilder.io</a>. Content rephrased for compliance.</p>
+
+      <div class="card">
+        <div class="pipe" id="pipe">
+          <div class="pstep" data-i="0"><div class="ic">🔌</div><div class="t">Connect sources</div><div class="s"></div><div class="bar"><i></i></div></div>
+          <div class="pstep" data-i="1"><div class="ic">📥</div><div class="t">Ingest documents</div><div class="s"></div><div class="bar"><i></i></div></div>
+          <div class="pstep" data-i="2"><div class="ic">🔗</div><div class="t">Match invoices ↔ receipts</div><div class="s"></div><div class="bar"><i></i></div></div>
+          <div class="pstep" data-i="3"><div class="ic">📐</div><div class="t">Reconstruct volume</div><div class="s"></div><div class="bar"><i></i></div></div>
+          <div class="pstep" data-i="4"><div class="ic">🎯</div><div class="t">Re-check rebate tiers</div><div class="s"></div><div class="bar"><i></i></div></div>
+        </div>
+        <div class="ticker" id="ticker"></div>
+        <div class="bootbig" id="bootbig">
+          <div>
+            <div class="small" style="color:#0a7a53;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Analysis complete</div>
+            <div>15 recoverable Contra-COGS opportunities found across 26 agreements</div>
+          </div>
+          <div style="text-align:right">
+            <div class="n euro">€3,491</div>
+            <button class="btn green big" style="margin-top:6px">Open the recoveries →</button>
+          </div>
+        </div>
+        <div style="margin-top:12px"><button class="btn" onclick="runPipe()">▶ Replay the loading sequence</button></div>
+      </div>
+    </section>
+
+    <!-- ============ A2 ============ -->
+    <section class="panel" id="p-a2">
+      <div class="crumb">A · Loading as process</div>
+      <h1>A2 — Boot builds the relationship graph</h1>
+      <p class="lead">During load, the evidence map assembles itself: documents fly in and the connections draw between them. By the time it settles, the user is already looking at the "connected dots" and understands the tool linked everything together.</p>
+      <p class="src">Pattern from node-graph canvases: <a href="https://reactflow.dev/learn/concepts/introduction">React Flow</a>, <a href="https://github.com/aliyun/react-lineage-dag">lineage DAGs</a>.</p>
+      <div class="card">
+        <div class="canvas" id="a2canvas"><svg class="wires" id="a2wires"></svg></div>
+        <div style="margin-top:12px"><button class="btn" onclick="buildGraph()">▶ Replay graph assembly</button></div>
+      </div>
+    </section>
+
+    <!-- ============ B2 basket ============ -->
+    <section class="panel" id="p-b2">
+      <div class="crumb">B · Where Contra-COGS is generated <span class="rec-tag">RECOMMENDED</span></div>
+      <h1>B2 — Recovery basket / cart</h1>
+      <p class="lead">Every finding has an <b>Add to claim</b> action. A basket accumulates the selected lines with a live count and total. When ready, the user opens the basket, reviews the exact lines, unchecks anything to exclude, and hits one obvious <b>Generate Contra-COGS</b>. "Where do I generate it?" now has an always-visible answer.</p>
+      <p class="src">Combines the "stage then commit" human-in-the-loop rule (<a href="https://www.workflowbuilder.io/blog/human-in-the-loop-ai-agent-workflow-builder">workflowbuilder.io</a>) with reconciliation "select then post" gating (<a href="https://learn.continia.com/get-started-using-continia-banking/reconciliation/completing-the-bank-account-reconciliation">Continia</a>, <a href="https://docs.oracle.com/en/cloud/saas/account-reconcile-cloud/raarc/reconcile_trans_match_manual_match_example.html">Oracle ARCS</a>). Rephrased for compliance.</p>
+      <div id="basketList"></div>
+      <div class="basket">
+        <span class="cnt" id="bkCnt">0</span>
+        <span>lines staged for claim</span>
+        <span class="sp"></span>
+        <span class="small" style="color:#a9c8bd">Total recoverable</span>
+        <span class="tot euro" id="bkTot">€0</span>
+        <button class="btn blue big" id="bkGen" disabled onclick="alert('Opens the claim review → Generate Contra-COGS')">Review &amp; Generate Contra-COGS</button>
+      </div>
+    </section>
+
+    <!-- ============ B1 canvas ============ -->
+    <section class="panel" id="p-b1">
+      <div class="crumb">B · Where Contra-COGS is generated</div>
+      <h1>B1 — Connect-the-dots canvas</h1>
+      <p class="lead">A per-supplier canvas of invoices, delivery notes, goods receipts and events. Solid green edges = matched / qualifying; dashed red = broken / at-risk (missed scan, forgotten SKU, late vs window). Click any node to include or exclude it from the claim — the running total updates. Generate is only enabled once the selection is confirmed.</p>
+      <p class="src">Your idea, expanded. Canvas conventions from <a href="https://reactflow.dev/learn/concepts/introduction">React Flow</a> / <a href="https://azimuahamed.medium.com/react-flow-pipeline-flow-visualizing-data-pipelines-and-etl-processes-b692ff8adf49">ETL flow diagrams</a>.</p>
+      <div class="card" style="padding:0">
+        <div class="canvas" id="b1canvas"><svg class="wires" id="b1wires"></svg>
+          <div class="canvas-foot">
+            <span class="small">Click nodes to include / exclude · dashed red = at-risk link</span>
+            <span class="sp" style="flex:1"></span>
+            <span class="small">Qualifying True-Up</span>
+            <span class="tot euro" id="b1tot" style="font-size:18px;font-weight:800;color:var(--gold)">€1,763</span>
+            <button class="btn green">Generate Contra-COGS</button>
+          </div>
+        </div>
+      </div>
+      <div class="legend"><span><b></b> matched / qualifying</span><span><b class="br"></b> broken / at-risk (excluded goods still delivered)</span></div>
+    </section>
+
+    <!-- ============ B3 consolidated ============ -->
+    <section class="panel" id="p-b3">
+      <div class="crumb">B · Where Contra-COGS is generated</div>
+      <h1>B3 — Consolidated per-supplier debit</h1>
+      <p class="lead">Group the selected findings by supplier and merge their lines into one consolidated debit statement — tick the lines to include, untick to drop — with every source finding kept as a traceable sub-line. One clean statement per supplier instead of many little ones.</p>
+      <p class="src">Your idea, expanded. Standard consolidated-document pattern: <a href="https://apps.odoo.com/apps/modules/19.0/atliis_invoice_merge">Odoo (merge → auto credit notes + batch tracking)</a>, <a href="https://docs.oracle.com/en/cloud/saas/readiness/erp/25d/fins25d/25D-fin-wn-f40538.htm">Oracle ERP (consolidate charge lines)</a>, <a href="https://help.octopuspro.com/combine-merge-invoices">Octopus</a>.</p>
+      <div class="grid2" style="align-items:start">
+        <div>
+          <div class="supgrp">
+            <div class="suphead"><span class="sn">Lumière Cosmetics SA</span><span class="pill q">Quarterly + Half-year</span><span class="st euro" id="cs1tot">€1,404</span></div>
+            <table id="cs1">
+              <thead><tr><th style="width:34px"></th><th>Finding</th><th>Cause</th><th class="num">Amount</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="supgrp">
+            <div class="suphead"><span class="sn">Orient Essence Trading</span><span class="pill q">Monthly</span><span class="st euro">€742</span></div>
+            <table>
+              <thead><tr><th style="width:34px"></th><th>Finding</th><th>Cause</th><th class="num">Amount</th></tr></thead>
+              <tbody>
+                <tr><td><input type="checkbox" checked></td><td class="mono">AGR-006</td><td>Tier uplift</td><td class="num">€742</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="btn blue big" style="margin-top:4px">Consolidate into one debit per supplier →</button>
+        </div>
+        <div class="docprev">
+          <div class="dh"><div><h4>CONTRA-COGS DEBIT NOTE</h4><div class="small">Consolidated · CN-LUMIERE-2026</div></div><div class="small" style="text-align:right">Issued by<br><b>Perfumé Retail Group SE</b></div></div>
+          <div class="small" style="margin-bottom:8px">Billed to: <b>Lumière Cosmetics SA</b></div>
+          <table>
+            <thead><tr><th>Rebate claim</th><th class="num">Amount</th></tr></thead>
+            <tbody id="docLines"></tbody>
+            <tbody><tr><td style="font-weight:700;border-top:2px solid var(--ink)">Total claimed</td><td class="num" style="font-weight:800;border-top:2px solid var(--ink);color:var(--gold)" id="docTot">€1,404</td></tr></tbody>
+          </table>
+          <div class="small" style="margin-top:10px">Each line traces back to its source finding &amp; agreement.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ B4 board ============ -->
+    <section class="panel" id="p-b4">
+      <div class="crumb">B · Where Contra-COGS is generated</div>
+      <h1>B4 — Two-panel reconciliation board</h1>
+      <p class="lead">Left = what the engine counted. Right = what VIR_Tier reconstructed, itemized by driver. Tick the reconstructed chunks to accept or exclude each one; the footer shows what's ready to claim, and Generate posts it. This is the matched-vs-unmatched screen finance people already know.</p>
+      <p class="src">Reconciliation board pattern: <a href="https://help-accessfinancials.theaccessgroup.com/en/articles/12459675">Access Financials (accept/reject)</a>, <a href="https://docs.oracle.com/en/cloud/saas/account-reconcile-cloud/raarc/reconcile_trans_match_manual_match_features.html">Oracle ARCS</a>. Rephrased for compliance.</p>
+      <div class="board">
+        <div class="bcol left">
+          <h3>CCOGS Engine counted (before)</h3>
+          <div class="brow"><span>Base receipts · SK/PL/CZ</span><span class="v euro">14,140 units</span></div>
+          <div class="brow"><span>Rebate rate reached</span><span class="v">1.0%</span></div>
+          <div class="brow"><span>Claimed CCOGS</span><span class="v euro">€1,589</span></div>
+        </div>
+        <div class="bcol right">
+          <h3>VIR_Tier reconstructed (accept to claim)</h3>
+          <div class="brow"><label><input type="checkbox" checked class="rc" data-v="742"> Forgotten SKU · not in engine</label><span class="v euro">+ €742</span></div>
+          <div class="brow"><label><input type="checkbox" checked class="rc" data-v="410"> Found-later pallet</label><span class="v euro">+ €410</span></div>
+          <div class="brow"><label><input type="checkbox" checked class="rc" data-v="293"> Rerouted — scan skipped</label><span class="v euro">+ €293</span></div>
+          <div class="brow"><label><input type="checkbox" class="rc" data-v="318"> Tier uplift on base <span class="pill risk">review</span></label><span class="v euro">+ €318</span></div>
+        </div>
+      </div>
+      <div class="boardfoot">
+        <span class="small">Accepted reconstructions become the claim.</span>
+        <span class="sp" style="flex:1"></span>
+        <span class="small">Ready to claim</span>
+        <span class="tot euro" id="b4tot" style="font-size:18px;font-weight:800;color:var(--gold)">€1,445</span>
+        <button class="btn green">Generate Contra-COGS</button>
+      </div>
+    </section>
+
+    <!-- ============ B5 stage ============ -->
+    <section class="panel" id="p-b5">
+      <div class="crumb">B · Where Contra-COGS is generated</div>
+      <h1>B5 — A dedicated "Claim Builder" stage</h1>
+      <p class="lead">Add a 4th pipeline stage between ML Discovery and Finance Overview. Findings flow in as a worklist; the user triages (include / exclude / park), optionally consolidates, previews, and generates. The generate action lives here as the stage's entire purpose — impossible to miss.</p>
+      <p class="src">Staged recovery journey from deduction platforms: <a href="https://www.highradius.com/resources/Blog/deductions/">HighRadius 9-step deductions</a>. Rephrased for compliance.</p>
+      <div class="card">
+        <div style="display:flex;gap:0;margin-bottom:16px">
+          <div class="pstep done" style="flex:1"><div class="ic">📥</div><div class="t">Inputs &amp; Collection</div></div>
+          <div class="pstep done" style="flex:1;margin-left:26px"><div class="ic">🔍</div><div class="t">ML Discovery</div></div>
+          <div class="pstep run" style="flex:1;margin-left:26px"><div class="ic">🧾</div><div class="t">Claim Builder</div><div class="s">triage · consolidate · generate</div></div>
+          <div class="pstep" style="flex:1;margin-left:26px"><div class="ic">📊</div><div class="t">Finance Overview</div></div>
+        </div>
+        <div class="grid2" style="align-items:start">
+          <div>
+            <h2 style="margin-top:0">Worklist</h2>
+            <div class="findrow added"><span class="pill ok">include</span><span><b>Orient Essence</b> <span class="mono small">AGR-006</span></span><span></span><span></span><span class="amt euro">€742</span></div>
+            <div class="findrow added"><span class="pill ok">include</span><span><b>Lumière</b> <span class="mono small">AGR-010</span></span><span></span><span></span><span class="amt euro">€577</span></div>
+            <div class="findrow"><span class="pill q">parked</span><span><b>Nordica</b> <span class="mono small">AGR-004</span></span><span></span><span></span><span class="amt euro">€522</span></div>
+            <div class="findrow" style="opacity:.5"><span class="pill risk">excluded</span><span><b>Lumière</b> <span class="mono small">AGR-001</span> <span class="small">too many rows</span></span><span></span><span></span><span class="amt euro">€701</span></div>
+          </div>
+          <div class="card" style="background:#fbfffd;border-color:#bfe8d8">
+            <h2 style="margin-top:0">Staged for this run</h2>
+            <div class="brow" style="padding-left:0;padding-right:0"><span>2 findings included</span><span class="v euro">€1,319</span></div>
+            <div class="brow" style="padding-left:0;padding-right:0"><span>Consolidate per supplier</span><span><input type="checkbox"></span></div>
+            <button class="btn blue big" style="width:100%;margin-top:12px">Preview &amp; Generate Contra-COGS →</button>
+            <div class="small" style="margin-top:8px">Parked items stay for next run. Excluded items leave the suggestion list.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ B6 wizard ============ -->
+    <section class="panel" id="p-b6">
+      <div class="crumb">B · Where Contra-COGS is generated</div>
+      <h1>B6 — Guided wizard</h1>
+      <p class="lead">For less confident users: a 3-step guided modal. Confirm the findings, choose consolidate or per-agreement, preview and generate. Lowest learning curve — the generate button is the explicit end of a guided path.</p>
+      <p class="src">Human-in-the-loop staged approval: <a href="https://aiuxplayground.substack.com/p/how-to-design-human-in-the-loophitl">model proposes → person reviews → approve</a>. Rephrased for compliance.</p>
+      <div class="card" style="max-width:640px">
+        <div class="wsteps">
+          <div class="wstep done" data-w="1">Confirm findings</div>
+          <div class="wstep active" data-w="2">Choose format</div>
+          <div class="wstep" data-w="3">Preview &amp; generate</div>
+        </div>
+        <div class="wbody" id="wbody"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn" onclick="wizStep(-1)">Back</button>
+          <span style="flex:1"></span>
+          <button class="btn green" id="wnext" onclick="wizStep(1)">Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ B7 sticky ============ -->
+    <section class="panel" id="p-b7">
+      <div class="crumb">B · Where Contra-COGS is generated</div>
+      <h1>B7 — Sticky-footer (minimal effort)</h1>
+      <p class="lead">Cheapest fix for discoverability: keep the current findings list, but the moment a user selects anything a sticky action bar appears at the bottom — "3 findings selected · €1,763 — Review &amp; Generate Contra-COGS." No new view, just a persistent, obvious call to action.</p>
+      <p class="src">Bulk-action / select-then-act bar, common across reconciliation &amp; batch-invoice UIs (<a href="https://ravebuild.freshdesk.com/support/solutions/articles/51000326628-create-a-charge-up-client-invoice-credit-note-from-multiple-bills">RaveBuild bulk action bar</a>).</p>
+      <div class="card">
+        <label class="findrow" style="cursor:pointer"><input type="checkbox" class="s7" checked><span><b>Orient Essence</b> <span class="mono small">AGR-006</span></span><span></span><span></span><span class="amt euro">€742</span></label>
+        <label class="findrow" style="cursor:pointer"><input type="checkbox" class="s7" checked><span><b>Lumière</b> <span class="mono small">AGR-010</span></span><span></span><span></span><span class="amt euro">€577</span></label>
+        <label class="findrow" style="cursor:pointer"><input type="checkbox" class="s7"><span><b>Nordica</b> <span class="mono small">AGR-004</span></span><span></span><span></span><span class="amt euro">€522</span></label>
+      </div>
+      <div class="stickyft" id="ft7">
+        <span class="cnt pill ok" id="c7">2 findings selected</span>
+        <span class="sp" style="flex:1"></span>
+        <span class="small">Total</span><span class="euro" id="t7" style="font-weight:800;color:var(--gold);font-size:16px">€1,319</span>
+        <button class="btn green big">Review &amp; Generate Contra-COGS</button>
+      </div>
+    </section>
+
+    <!-- ============ Recommended ============ -->
+    <section class="panel" id="p-rec">
+      <div class="crumb">Overview</div>
+      <h1>★ Recommended combined flow</h1>
+      <p class="lead">Three pieces that reinforce each other, each mapping to a proven pattern.</p>
+      <div class="card" style="margin-bottom:14px">
+        <h2 style="margin-top:0">1 · Live evidence pipeline on load <span class="rec-tag">A1</span></h2>
+        <p class="muted" style="margin:0">The user watches connect → match → reconstruct → count, ending on "15 recoverable found · €3,491" that is the button into the workspace. Builds trust and context before any ask.</p>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <h2 style="margin-top:0">2 · "Claim Builder" stage driven by a recovery basket <span class="rec-tag">B5 + B2</span></h2>
+        <p class="muted" style="margin:0">Findings get an "Add to claim" action; a sticky basket shows count + total; the Claim Builder stage is where you review the staged lines, exclude what shouldn't be claimed, and generate. Makes "where is it generated?" self-evident.</p>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <h2 style="margin-top:0">3 · Consolidate per supplier inside the builder <span class="rec-tag">B3</span></h2>
+        <p class="muted" style="margin:0">A toggle that turns several selected findings for one supplier into a single consolidated debit with selectable lines.</p>
+      </div>
+      <div class="note">The <b>connect-the-dots canvas (B1)</b> is best slotted in as the <b>"expand a supplier"</b> drill-down inside the Claim Builder — the richest way to decide inclusion visually, without overwhelming users on first contact.</div>
+      <p class="small">All mockups here are static concepts for review — no data or logic is wired to the real tool.</p>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ---- nav ----
+document.querySelectorAll('.navb').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.navb').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('p-'+b.dataset.p).classList.add('active');
+  if(b.dataset.p==='a1') runPipe();
+  if(b.dataset.p==='a2') buildGraph();
+  if(b.dataset.p==='b1') drawB1();
+}));
+
+// ---- A1 pipeline ----
+const TICK=['SK-INV-0142 ↔ DN-0091 matched','CZ pallet located after short-scan — restored','SKU EDP-100 not configured in engine','PL-INV-0203 ordered in-window, delivered late — eligible','Reroute to town WH — main scan skipped','Pan-EU SK+PL+CZ combined → crosses tier 2','AGR-006 tier 1.0% → 2.0% · +€742'];
+function runPipe(){
+  const steps=[...document.querySelectorAll('#pipe .pstep')];
+  const subs=['3 sources online','151 documents','118 / 151 matched','reconstructed +9,204 units','15 tier moves'];
+  steps.forEach(s=>{s.className='pstep';s.querySelector('.bar>i').style.width='0';s.querySelector('.s').textContent='';});
+  document.getElementById('bootbig').classList.remove('show');
+  const tk=document.getElementById('ticker');tk.innerHTML='';
+  let i=0;
+  (function next(){
+    if(i>=steps.length){document.getElementById('bootbig').classList.add('show');return;}
+    const s=steps[i];s.classList.add('run');
+    let p=0;const iv=setInterval(()=>{p+=12;s.querySelector('.bar>i').style.width=Math.min(100,p)+'%';
+      if(p>=100){clearInterval(iv);s.classList.remove('run');s.classList.add('done');s.querySelector('.s').textContent=subs[i]||'';
+        if(TICK[i]){const d=document.createElement('div');d.textContent='✓ '+TICK[i];tk.appendChild(d);}
+        if(TICK[i+ i===4?1:0]){}
+        i++;setTimeout(next,180);}
+    },90);
+  })();
+  // stream a couple extra ticker lines
+  setTimeout(()=>{[5,6].forEach((k,n)=>setTimeout(()=>{const d=document.createElement('div');d.textContent='✓ '+TICK[k];document.getElementById('ticker').appendChild(d);},600+n*500));},2200);
+}
+
+// ---- A2 / B1 canvas ----
+function place(canvas,nodes){canvas.querySelectorAll('.node').forEach(n=>n.remove());
+  nodes.forEach(n=>{const el=document.createElement('div');el.className='node '+n.c;el.style.left=n.x+'px';el.style.top=n.y+'px';
+    el.innerHTML='<div class="nt">'+n.k+'</div><div class="nid">'+n.id+'</div><div class="nm">'+(n.m||'')+'</div>';
+    el.dataset.id=n.id;canvas.appendChild(el);});}
+function wirePath(a,b){return 'M '+(a.x+75)+' '+(a.y+30)+' C '+(a.x+75)+' '+((a.y+b.y)/2)+', '+(b.x+75)+' '+((a.y+b.y)/2)+', '+(b.x+75)+' '+(b.y+18);}
+
+const A2NODES=[
+  {id:'INV-0142',k:'Invoice',c:'inv',x:40,y:30,m:'SK · €14.1k'},
+  {id:'INV-0203',k:'Invoice',c:'inv',x:40,y:150,m:'PL · €9.2k'},
+  {id:'INV-0311',k:'Invoice',c:'inv',x:40,y:270,m:'CZ · €7.7k'},
+  {id:'DN-0091',k:'Delivery note',c:'dn',x:250,y:90,m:'consolidated'},
+  {id:'DN-0104',k:'Delivery note',c:'dn',x:250,y:230,m:'town WH'},
+  {id:'GRN-118',k:'Goods receipt',c:'grn',x:470,y:40,m:'scanned'},
+  {id:'GRN-131',k:'Goods receipt',c:'grn',x:470,y:150,m:'scanned'},
+  {id:'EVT-22',k:'Missing scan',c:'evt',x:470,y:270,m:'reroute'},
+];
+const A2EDGES=[['INV-0142','DN-0091'],['INV-0203','DN-0091'],['INV-0311','DN-0104'],['DN-0091','GRN-118'],['DN-0091','GRN-131'],['DN-0104','EVT-22']];
+function buildGraph(){const c=document.getElementById('a2canvas');const w=document.getElementById('a2wires');
+  place(c,A2NODES.map(n=>({...n})));w.innerHTML='';
+  const nodes=[...c.querySelectorAll('.node')];nodes.forEach((n,i)=>{n.style.opacity=0;n.style.transform='scale(.6)';n.style.transition='.4s';
+    setTimeout(()=>{n.style.opacity=1;n.style.transform='scale(1)';},120*i);});
+  setTimeout(()=>{A2EDGES.forEach((e,i)=>{const a=A2NODES.find(x=>x.id===e[0]),b=A2NODES.find(x=>x.id===e[1]);
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',wirePath(a,b));
+    p.setAttribute('class','wire'+(e[1]==='EVT-22'?' broken':''));p.style.opacity=0;p.style.transition='.5s';w.appendChild(p);
+    setTimeout(()=>p.style.opacity=1,120*i);});},120*A2NODES.length);
+}
+
+const B1NODES=[
+  {id:'INV-0142',k:'Invoice',c:'inv',x:40,y:30,m:'SK'},
+  {id:'INV-0203',k:'Invoice',c:'inv',x:40,y:150,m:'PL'},
+  {id:'INV-0311',k:'Invoice',c:'inv',x:40,y:270,m:'CZ'},
+  {id:'DN-0091',k:'Delivery',c:'dn',x:255,y:90,m:'consolidated'},
+  {id:'GRN-118',k:'Receipt',c:'grn',x:470,y:40,m:'qualifies'},
+  {id:'GRN-131',k:'Receipt',c:'grn',x:470,y:160,m:'qualifies'},
+  {id:'EVT-22',k:'Missed scan',c:'evt',x:470,y:290,m:'at risk'},
+];
+const B1EDGES=[['INV-0142','DN-0091',0],['INV-0203','DN-0091',0],['INV-0311','DN-0091',0],['DN-0091','GRN-118',0],['DN-0091','GRN-131',0],['DN-0091','EVT-22',1]];
+const B1VAL={'GRN-118':742,'GRN-131':703,'EVT-22':318};
+let b1state={};
+function drawB1(){const c=document.getElementById('b1canvas');const w=document.getElementById('b1wires');
+  place(c,B1NODES.map(n=>({...n})));
+  c.querySelectorAll('.node').forEach(n=>{const id=n.dataset.id; if(b1state[id]===undefined) b1state[id]=true;
+    if(B1VAL[id]!==undefined){const chk=document.createElement('div');chk.className='chk';chk.textContent='✓';n.appendChild(chk);
+      if(!b1state[id]) n.classList.add('excluded');
+      n.onclick=()=>{b1state[id]=!b1state[id];n.classList.toggle('excluded');chk.textContent=b1state[id]?'✓':'✕';b1sum();};}
+  });
+  w.innerHTML='';B1EDGES.forEach(e=>{const a=B1NODES.find(x=>x.id===e[0]),b=B1NODES.find(x=>x.id===e[1]);
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',wirePath(a,b));
+    p.setAttribute('class','wire'+(e[2]?' broken':''));w.appendChild(p);});
+  b1sum();
+}
+function b1sum(){let t=0;Object.keys(B1VAL).forEach(k=>{if(b1state[k])t+=B1VAL[k];});
+  document.getElementById('b1tot').textContent='€'+t.toLocaleString();}
+
+// ---- B2 basket ----
+const FINDINGS=[
+  {id:'AGR-006',sup:'Orient Essence Trading',dur:'Monthly',amt:742,cause:'Tier uplift'},
+  {id:'AGR-010',sup:'Lumière Cosmetics SA',dur:'Quarterly',amt:577,cause:'Forgotten SKU + found pallet'},
+  {id:'AGR-005',sup:'Velvet & Co. Fragrances',dur:'Yearly',amt:669,cause:'Reroute — scan skipped'},
+  {id:'AGR-004',sup:'Nordica Beauty Group',dur:'Quarterly',amt:522,cause:'Late vs window'},
+  {id:'AGR-008',sup:'Orient Essence Trading',dur:'Monthly',amt:559,cause:'Overage retained'},
+];
+let bk={};
+function renderBasket(){const el=document.getElementById('basketList');el.innerHTML='';
+  FINDINGS.forEach(f=>{const added=!!bk[f.id];
+    const row=document.createElement('div');row.className='findrow'+(added?' added':'');
+    row.innerHTML='<span class="pill '+(added?'ok':'q')+'">'+(added?'staged':'found')+'</span>'+
+      '<span><b>'+f.sup+'</b> <span class="mono small">'+f.id+'</span> · <span class="small">'+f.cause+'</span></span>'+
+      '<span class="pill q">'+f.dur+'</span><span class="amt euro">€'+f.amt+'</span>'+
+      '<button class="btn '+(added?'':'green')+'">'+(added?'Remove':'＋ Add to claim')+'</button>';
+    row.querySelector('button').onclick=()=>{bk[f.id]=!bk[f.id];renderBasket();};
+    el.appendChild(row);});
+  const ids=Object.keys(bk).filter(k=>bk[k]);const tot=ids.reduce((s,k)=>s+FINDINGS.find(f=>f.id===k).amt,0);
+  document.getElementById('bkCnt').textContent=ids.length;
+  document.getElementById('bkTot').textContent='€'+tot.toLocaleString();
+  document.getElementById('bkGen').disabled=ids.length===0;
+}
+renderBasket();
+
+// ---- B3 consolidated ----
+const CS1=[
+  {id:'AGR-010',cause:'Forgotten SKU + found pallet',amt:577,on:true},
+  {id:'AGR-001',cause:'Multi-cause (9 lines)',amt:701,on:true},
+  {id:'AGR-002',cause:'Tier uplift + reroute',amt:126,on:true},
+];
+function renderCS(){const tb=document.querySelector('#cs1 tbody');tb.innerHTML='';
+  CS1.forEach((r,i)=>{const tr=document.createElement('tr');if(!r.on)tr.className='off';
+    tr.innerHTML='<td><input type="checkbox" '+(r.on?'checked':'')+'></td><td class="mono">'+r.id+'</td><td>'+r.cause+'</td><td class="num">€'+r.amt+'</td>';
+    tr.querySelector('input').onchange=e=>{CS1[i].on=e.target.checked;renderCS();};tb.appendChild(tr);});
+  const tot=CS1.filter(r=>r.on).reduce((s,r)=>s+r.amt,0);
+  document.getElementById('cs1tot').textContent='€'+tot.toLocaleString();
+  document.getElementById('docTot').textContent='€'+tot.toLocaleString();
+  const dl=document.getElementById('docLines');dl.innerHTML='';
+  CS1.filter(r=>r.on).forEach(r=>{const tr=document.createElement('tr');tr.innerHTML='<td>Volume rebate — '+r.cause+' <span class="small mono">('+r.id+')</span></td><td class="num">€'+r.amt+'</td>';dl.appendChild(tr);});
+}
+renderCS();
+
+// ---- B4 board ----
+function b4(){let t=0;document.querySelectorAll('.rc').forEach(c=>{if(c.checked)t+=+c.dataset.v;});
+  document.getElementById('b4tot').textContent='€'+t.toLocaleString();}
+document.querySelectorAll('.rc').forEach(c=>c.addEventListener('change',b4));b4();
+
+// ---- B6 wizard ----
+let wstep=2;
+const WB={
+ 1:'<p class="muted">These findings will be included in this recovery run:</p><div class="findrow added"><span class="pill ok">✓</span><span><b>Orient Essence</b> AGR-006</span><span></span><span></span><span class="amt euro">€742</span></div><div class="findrow added"><span class="pill ok">✓</span><span><b>Lumière</b> AGR-010</span><span></span><span></span><span class="amt euro">€577</span></div>',
+ 2:'<p class="muted">How should the Contra-COGS be issued?</p><label class="findrow" style="cursor:pointer"><input type="radio" name="fmt" checked> One consolidated debit per supplier <span class="small">(recommended)</span></label><label class="findrow" style="cursor:pointer"><input type="radio" name="fmt"> Separate debit per agreement</label>',
+ 3:'<div class="docprev" style="box-shadow:none"><div class="dh"><div><h4>CONTRA-COGS DEBIT NOTE</h4><div class="small">CN-2026-0007</div></div><div class="small">€1,319</div></div><table><tbody><tr><td>Rebate — Orient Essence (AGR-006)</td><td class="num">€742</td></tr><tr><td>Rebate — Lumière (AGR-010)</td><td class="num">€577</td></tr></tbody></table></div>'
+};
+function renderWiz(){document.querySelectorAll('.wstep').forEach(s=>{const n=+s.dataset.w;s.classList.toggle('active',n===wstep);s.classList.toggle('done',n<wstep);});
+  document.getElementById('wbody').innerHTML=WB[wstep];
+  document.getElementById('wnext').textContent=wstep===3?'✓ Generate Contra-COGS':'Next →';
+  document.getElementById('wnext').className='btn '+(wstep===3?'blue':'green');}
+function wizStep(d){wstep=Math.max(1,Math.min(3,wstep+d));renderWiz();}
+renderWiz();
+
+// ---- B7 sticky ----
+function s7(){const on=[...document.querySelectorAll('.s7')].filter(c=>c.checked);
+  const amts=[742,577,522];let t=0;document.querySelectorAll('.s7').forEach((c,i)=>{if(c.checked)t+=amts[i];});
+  document.getElementById('ft7').style.display=on.length?'flex':'none';
+  document.getElementById('c7').textContent=on.length+' findings selected';
+  document.getElementById('t7').textContent='€'+t.toLocaleString();}
+document.querySelectorAll('.s7').forEach(c=>c.addEventListener('change',s7));s7();
+
+// initial
+runPipe();
+</script>
+</body>
+</html>
