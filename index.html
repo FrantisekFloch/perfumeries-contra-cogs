@@ -18,6 +18,7 @@
   --danger: #E74C3C;
   --danger-soft: #FBEAE8;
   --gold: #C77800;        /* leakage/attention (muted amber, not neon) */
+  --violet: #8b5cf6;      /* combination/mixing accent (mapping animation) */
   --radius: 12px;
   --shadow: 0 2px 10px rgba(0,0,0,.06);
   --shadow-lg: 0 8px 28px rgba(0,0,0,.12);
@@ -277,6 +278,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .au-kpi .v { font-size: 22px; font-weight: 700; letter-spacing: -.02em; } .au-kpi .v.gold { color: var(--gold); }
 .au-kpi .l { font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: 2px; }
 .au-fltbar { align-items: center; }
+.ov-fltbar { align-items: center; margin: 4px 0 14px; }
+.cf-fltbar { align-items: center; margin: 4px 0 14px; }
 .au-dates { gap: 6px; }
 .au-date { font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; background: #fff; }
 .au-table table { font-size: 13px; }
@@ -667,6 +670,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .tile-note { font-size: .76rem; color: var(--danger); margin-top: 2px; }
 .tile-note.incorporated { color: #0a7a53; }
 .tile-cta { margin-top: auto; padding-top: 8px; font-size: .74rem; color: var(--accent); font-weight: 600; }
+/* mailbox "Scan shared mailbox" — bigger + bold so the click-to-scan stands out */
+.tile-cta.tile-cta-strong { font-size: 1rem; font-weight: 800; color: var(--warn); letter-spacing: .01em; }
 /* kind accents (left border) */
 .sum-tile.tile-ok { border-left: 4px solid var(--accent); }
 .sum-tile.tile-info { border-left: 4px solid var(--info); }
@@ -692,7 +697,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* tile details modal */
 .td h2 { margin: 0 0 12px; }
 /* banners next to the detail title */
-.td-incorp { display: inline-block; font-size: .62rem; font-weight: 700; vertical-align: middle; margin-left: 8px; color: #0a7a53; background: var(--accent-soft); border: 1px solid #b7e6d3; border-radius: 999px; padding: 2px 10px; text-transform: none; letter-spacing: 0; }
+.td-incorp { display: inline-block; font-size: .95rem; font-weight: 700; vertical-align: middle; margin-left: 8px; color: #2f6fed; background: #e8f0fe; border: 1px solid #bcd3fb; border-radius: 999px; padding: 4px 14px; text-transform: none; letter-spacing: 0; }
 .td-action { display: inline-block; font-size: .62rem; font-weight: 700; vertical-align: middle; margin-left: 8px; color: var(--danger); background: var(--danger-soft); border: 1px solid #F3C6C1; border-radius: 999px; padding: 2px 10px; text-transform: none; letter-spacing: 0; }
 /* missing-invoice supplier-action flow */
 .mi-action { border: 1px solid #F3C6C1; background: #FDF6F5; border-radius: 10px; padding: 12px 14px; margin: 4px 0 16px; }
@@ -765,6 +770,17 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .as-src:hover { border-color: var(--accent); }
 .erp-logo-edi { background: #2f6fed; } .erp-logo-api { background: #6b3fd0; } .erp-logo-folder { background: #b7791f; font-size: 1rem; } .erp-logo-mailbox { background: #0a7a53; font-size: 1rem; }
 
+/* ---- Connect-source dialog (EDI / API / Folder) ---- */
+.cf-body { margin: 4px 0 14px; }
+.cf-grid { display: grid; grid-template-columns: 1fr; gap: 10px 14px; }
+.cf-grid.cf-2col { grid-template-columns: 1fr 1fr; }
+@media (max-width: 620px) { .cf-grid.cf-2col { grid-template-columns: 1fr; } }
+.cf-fld { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; }
+.cf-fld span { color: var(--muted); font-weight: 600; }
+.cf-fld input, .cf-fld select { font: inherit; font-size: .86rem; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); }
+.cf-fld input:focus, .cf-fld select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.cf-body .muted.small { margin-top: 10px; }
+
 /* ---- Mailbox one-click scanning window ---- */
 .mbx-scanning { text-align: center; padding: 26px 16px 20px; }
 .mbx-spinner { width: 40px; height: 40px; margin: 0 auto 12px; color: var(--info); }
@@ -792,8 +808,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .eml-doc { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .eml-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; background: #fafafa; border-bottom: 1px solid var(--line); }
 .eml-subj { font-weight: 700; }
-.eml-meta { color: var(--muted); font-size: .8rem; margin-top: 2px; }
-.eml-body { padding: 14px; font-size: .9rem; line-height: 1.6; }
+/* From line — bigger + glowing blue so it reads clearly as a real email header */
+.eml-meta { color: #2f6fed; font-size: 1rem; font-weight: 700; margin-top: 4px; text-shadow: 0 0 8px rgba(47,111,237,.45); }
+/* Email body — light pastel-blue panel so the message stands out in the window */
+.eml-body { padding: 14px 16px; font-size: .92rem; line-height: 1.65; background: #eef4ff; color: #17335e; border-top: 1px solid #cfe0fb; }
 
 @media (max-width: 1000px) {
   .sum-top { grid-template-columns: 1fr; }
@@ -996,11 +1014,18 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 /* ---- Scene switching: only the active scene layer is shown ---- */
-.mf-collect, .mf-nn, .mf-resultstage, .mf-nextsteps { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity .5s ease; }
+.mf-collect, .mf-web, .mf-resultstage, .mf-nextsteps { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity .5s ease; }
 .mf-screen[data-scene="a"] .mf-collect { opacity: 1; pointer-events: auto; }
-.mf-screen[data-scene="b"] .mf-nn { opacity: 1; pointer-events: auto; }
+.mf-screen[data-scene="b"] .mf-web { opacity: 1; pointer-events: auto; }
 .mf-screen[data-scene="c"] .mf-resultstage { opacity: 1; pointer-events: auto; }
 .mf-screen[data-scene="d"] .mf-nextsteps { opacity: 1; pointer-events: auto; }
+/* The collect layer (Scene A source windows) is ONLY for Scene A. Fully remove
+   it from the render tree in Scenes B and C so no stray/large window can ever
+   overlap the model chain or the results. */
+.mf-screen[data-scene="b"] .mf-collect,
+.mf-screen[data-scene="c"] .mf-collect,
+.mf-screen[data-scene="d"] .mf-collect { display: none !important; }
+.mf-screen[data-scene="b"] .mf-web { z-index: 3; }
 
 /* ============================ Scene A — collect ============================ */
 /* Source windows start centered/large; when .front they pop to the front; when
@@ -1019,31 +1044,88 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   z-index: 1;
 }
 .mf-srcwin.front { opacity: 1; transform: scale(1); z-index: 5; box-shadow: var(--shadow-lg); border-color: var(--accent); }
-/* parked: small card stacked vertically at top-left (slot index via --slot) */
+/* parked: small card stacked vertically on the RIGHT (slot index via --slot) */
 .mf-srcwin.parked {
   opacity: 1;
-  left: 130px; top: calc(46px + var(--slot) * 74px);
-  width: 210px; margin: 0 0 0 -105px;
+  left: auto; right: 26px; top: calc(30px + var(--slot) * 58px);
+  width: 176px; margin: 0;
   transform: scale(1);
-  padding: 8px 12px;
+  padding: 7px 11px;
   z-index: 2;
 }
+/* iconly: text/count/badge fade, only the icon remains (like the results-stage stack) */
+.mf-srcwin.iconly {
+  width: 116px;
+  padding: 7px 11px;
+}
 .mf-srcwin-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.mf-srcwin.parked .mf-srcwin-h { margin-bottom: 2px; }
+.mf-srcwin.parked .mf-srcwin-h { margin-bottom: 0; }
 .mf-srcwin-ico { width: 26px; height: 26px; color: var(--accent); flex: 0 0 auto; }
 .mf-srcwin.parked .mf-srcwin-ico { width: 18px; height: 18px; }
 .mf-srcwin-ico svg { width: 100%; height: 100%; }
-.mf-srcwin-t { font-weight: 700; font-size: 15px; }
-.mf-srcwin.parked .mf-srcwin-t { font-size: 12.5px; }
-.mf-sys { margin-left: auto; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; background: var(--accent-soft); color: #0a7a53; }
+.mf-srcwin-t { font-weight: 700; font-size: 15px; transition: opacity .35s ease; }
+.mf-srcwin.parked .mf-srcwin-t { font-size: 12px; }
+.mf-srcwin.iconly .mf-srcwin-t { opacity: 0; width: 0; overflow: hidden; }
+.mf-sys { margin-left: auto; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; background: var(--accent-soft); color: #0a7a53; transition: opacity .35s ease; }
 .mf-sys-edi { background: #eef2fb; color: #2f6fed; }
-.mf-srcwin-count { font-size: 40px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--ink); }
-.mf-srcwin.parked .mf-srcwin-count { font-size: 20px; }
+.mf-srcwin.parked .mf-sys { display: none; }
+.mf-srcwin-count { font-size: 40px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--ink); transition: opacity .35s ease, font-size .4s ease; }
+.mf-srcwin.parked .mf-srcwin-count { font-size: 18px; }
+.mf-srcwin.iconly .mf-srcwin-count { opacity: 0; height: 0; font-size: 0; }
 .mf-srcwin-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .mf-srcwin.parked .mf-srcwin-sub { display: none; }
-.mf-srcwin.collecting .mf-srcwin-sub::after { content: ''; }
 
-/* ============================ Scene B — neural net ========================= */
+/* ============================ Scene B — model chain ======================= */
+/* Named inputs → three model blocks (Ingest → Reconstruct → Classify), each
+   with an internal combining web → named outputs. Packets travel the chain. */
+.mf-web { display: block; background: radial-gradient(1000px 560px at 50% 45%, rgba(0,182,122,.05), transparent 70%); }
+.mf-web-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mf-web-cap { position: absolute; left: 24px; bottom: 16px; max-width: 380px; font-size: 12.5px; color: var(--muted); background: rgba(255,255,255,.82); padding: 6px 10px; border-radius: 8px; z-index: 2; }
+
+/* whole chain fades in when Scene B opens */
+.mf-chain { opacity: 0; animation: mfChainIn .5s ease forwards; }
+@keyframes mfChainIn { to { opacity: 1; } }
+
+/* HTML overlay tiles (inputs + outputs) — sit on top of the SVG, robust vs any
+   SVG sizing issues. Input tiles match the Scene C source-tile button style. */
+.mf-ch-tiles { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.mf-ch-intile, .mf-ch-outtile {
+  position: absolute; display: flex; align-items: center; justify-content: center; text-align: center;
+  border-radius: 9px; background: #fafbfc; border: 1px solid var(--line); box-shadow: var(--shadow);
+  font-weight: 600; color: var(--ink); padding: 4px 8px; line-height: 1.15; overflow: hidden; white-space: nowrap;
+}
+/* inputs: same neutral button look as .mf-bigsrc (Scene C) */
+.mf-ch-intile { font-size: clamp(10px, 1.35vw, 14px); }
+/* outputs: single line, coloured left border per result type, shrink to fit */
+.mf-ch-outtile { font-size: clamp(9px, 1.15vw, 12.5px); border-left-width: 4px; }
+.mf-ch-outtile.r-late { border-left-color: var(--warn); }
+.mf-ch-outtile.r-paneu { border-left-color: var(--info); }
+.mf-ch-outtile.r-scan { border-left-color: var(--violet); }
+.mf-ch-outtile.r-missing { border-left-color: var(--danger); }
+.mf-ch-outtile.r-complete { border-left-color: var(--accent); }
+
+/* model blocks (dashed rounded boxes) with a soft appear stagger */
+.mf-ch-block { opacity: 0; animation: mfChainIn .5s ease forwards; animation-delay: calc(.15s + var(--bi) * .5s); }
+.mf-ch-box { fill: rgba(0,182,122,.05); stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 6; }
+.mf-ch-blbl { fill: var(--accent); font-size: 15px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.mf-ch-weblink { stroke: var(--violet); stroke-width: 1; opacity: .4; }
+.mf-ch-webnode { fill: var(--gold); }
+
+
+/* travelling packets — EDI-style labelled chips, coloured by stage */
+.mf-ch-packet-box { fill: var(--card); stroke: var(--info); stroke-width: 1.4; }
+.mf-ch-packet-t { fill: var(--info); font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; }
+.mf-ch-packet[data-stage="mix"] .mf-ch-packet-box { stroke: var(--gold); }
+.mf-ch-packet[data-stage="mix"] .mf-ch-packet-t { fill: var(--gold); }
+.mf-ch-packet[data-stage="out"] .mf-ch-packet-box { stroke: var(--accent); }
+.mf-ch-packet[data-stage="out"] .mf-ch-packet-t { fill: var(--accent); }
+/* plain-dot phase (after the first 8s) — calmer on the eyes */
+.mf-ch-packet-dotc { fill: var(--info); }
+.mf-ch-packet-dot[data-stage="mix"] .mf-ch-packet-dotc { fill: var(--gold); }
+.mf-ch-packet-dot[data-stage="out"] .mf-ch-packet-dotc { fill: var(--accent); }
+
+/* (legacy classes kept harmless in case of reuse) */
+.mf-nn { display: none; }
 .mf-nn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
 .mf-nn-head { text-align: center; margin-bottom: 6px; }
 .mf-nn-kick { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
@@ -1063,18 +1145,18 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .mf-node { transform-box: fill-box; transform-origin: center; }
 
 /* ============================ Scene C — results =========================== */
-.mf-resultstage { display: grid; grid-template-columns: 250px 90px 1fr; align-items: center; gap: 8px; padding: 18px 22px; }
-.mf-stack { align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
-.mf-stack-cap { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-.mf-stack-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fafbfc; font-size: 12.5px; font-weight: 600; }
-.mf-stack-ico { width: 16px; height: 16px; color: var(--accent); flex: 0 0 auto; }
-.mf-stack-ico svg { width: 100%; height: 100%; }
+.mf-resultstage { display: grid; grid-template-columns: 220px 92px 1fr; align-items: center; gap: 10px; padding: 16px 22px; overflow-y: auto; }
+.mf-col-cap { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.mf-bigcol { align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 7px; }
+.mf-bigsrc { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 9px; background: #fafbfc; font-size: 12.5px; font-weight: 600; box-shadow: var(--shadow); }
+.mf-bigsrc-ico { width: 18px; height: 18px; color: var(--accent); flex: 0 0 auto; }
+.mf-bigsrc-ico svg { width: 100%; height: 100%; }
 .mf-core { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--accent); }
 .mf-core-badge { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 24px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 4px 14px rgba(0,182,122,.35); }
 .mf-core-lbl { font-size: 11px; font-weight: 700; color: var(--muted); }
 .mf-core-arrow { width: 40px; height: 12px; color: var(--muted); }
-.mf-results-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-content: center; }
-.mf-result { border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: 10px; background: var(--card); padding: 10px 12px; box-shadow: var(--shadow); opacity: 0; transform: translateX(16px); transition: opacity .45s ease, transform .45s ease; }
+.mf-results-col { display: flex; flex-direction: column; gap: 8px; align-content: center; }
+.mf-result { border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: 10px; background: var(--card); padding: 9px 12px; box-shadow: var(--shadow); opacity: 0; transform: translateX(16px); transition: opacity .45s ease, transform .45s ease; }
 .mf-result.show { opacity: 1; transform: none; }
 .mf-result.r-late { border-left-color: var(--warn); }
 .mf-result.r-paneu { border-left-color: var(--info); }
@@ -1087,6 +1169,31 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .mf-rchip svg { width: 12px; height: 12px; color: var(--accent); }
 .mf-plus { color: var(--muted); font-weight: 700; font-size: 11px; }
 .mf-result-why { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+
+/* ============ Below the animation: the three ML models explained ========= */
+.mf-models { margin-top: 22px; }
+.mf-models-head h3 { margin: 0 0 4px; font-size: 16px; }
+.mf-models-grid { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: 10px; margin-top: 12px; }
+.mf-mdl { border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 12px; background: var(--card); box-shadow: var(--shadow); padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.mf-mdl:nth-child(1) { border-top-color: var(--info); }
+.mf-mdl:nth-child(3) { border-top-color: var(--gold); }
+.mf-mdl:nth-child(5) { border-top-color: var(--accent); }
+.mf-mdl-h { display: flex; align-items: center; justify-content: space-between; }
+.mf-mdl-ico { width: 30px; height: 30px; color: var(--accent); }
+.mf-mdl:nth-child(1) .mf-mdl-ico { color: var(--info); }
+.mf-mdl:nth-child(3) .mf-mdl-ico { color: var(--gold); }
+.mf-mdl-ico svg { width: 100%; height: 100%; }
+.mf-mdl-step { width: 24px; height: 24px; border-radius: 50%; background: #f2f5f7; color: var(--muted); font-weight: 800; font-size: 13px; display: grid; place-items: center; }
+.mf-mdl-name { font-size: 15px; font-weight: 800; }
+.mf-mdl-type { font-size: 11px; font-weight: 700; letter-spacing: .02em; color: var(--muted); text-transform: uppercase; }
+.mf-mdl-desc { font-size: 12.5px; color: var(--ink); line-height: 1.5; }
+.mf-mdl-in { font-size: 11.5px; color: var(--muted); margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--line); }
+.mf-mdl-in-l { font-weight: 700; color: var(--ink); }
+.mf-mdl-arrow { align-self: center; color: var(--muted); font-size: 22px; font-weight: 700; }
+@media (max-width: 900px) {
+  .mf-models-grid { grid-template-columns: 1fr; }
+  .mf-mdl-arrow { transform: rotate(90deg); justify-self: center; }
+}
 
 /* ============================ Scene D — next steps ======================== */
 .mf-nextsteps { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 24px; }
@@ -1344,9 +1451,9 @@ const STRINGS = {
     consolLead: 'Build one consolidated Contra-COGS debit per supplier. Tick the agreements to include on the left; the document preview on the right updates live. Then generate the invoice or open the agreement summary.',
     consolPreview: 'Live document preview', consolFor: 'For', consolLinesLabel: 'agreement(s) selected', consolItemized: 'Itemized causes', consolNothing: 'Select at least one agreement on the left.', consolTotalLine: 'Total recoverable (consolidated)', consolScopes: 'Agreements included',
     navMore: 'More', navAbout: 'About & Manual', navAudit: 'Audit/Reporting', navRole: 'Role',
-    navMapping: 'Mapping Logic',
+    navMapping: 'Model explanation',
     mfLead: 'An animated walkthrough of how the tool turns raw source documents into the findings on your summary — collect, combine, and map.',
-    mfReplay: 'Replay', mfNextSteps: 'Next steps',
+    mfReplay: 'Replay', mfNextSteps: 'Next steps', mfContinue: 'Continue', mfResMissingShort: 'Invoice missing',
     mfCapA: 'Collecting source documents from every system…',
     mfCapB: 'Machine learning — combining every source into one mapping…',
     mfCapC: 'Findings mapped — each result and the inputs that produced it.',
@@ -1354,6 +1461,17 @@ const STRINGS = {
     mfCollecting: 'collecting…', mfIngested: 'Ingested sources', mfMlDone: 'ML complete',
     mfMlKick: 'Machine learning', mfMlTitle: 'Combining all sources into the mapping',
     mfMlCap: 'Every input is weighed against every other to reconstruct what really happened.',
+    mfChainIngest: 'Ingest', mfChainMatch: 'Match', mfChainReconstruct: 'Reconstruct', mfChainClassify: 'Classify',
+    mfModelsTitle: 'The three models behind the mapping', mfModelsLead: 'The pipeline is not one black box — it chains three purpose-built models that read the raw records and produce each CCOGS true-up.', mfMdlUses: 'Uses:',
+    mfMdlMatchName: 'Entity resolution', mfMdlMatchType: 'Unsupervised · probabilistic record linkage',
+    mfMdlMatchDesc: 'Links records that belong together across systems — which invoice, delivery note, goods receipt and agreement describe the same movement — despite mismatched IDs, dates and spellings.',
+    mfMdlMatchIn: 'invoices, delivery notes, goods receipts, agreements',
+    mfMdlReconName: 'Volume reconstruction', mfMdlReconType: 'Gradient-boosted regression · sequence model',
+    mfMdlReconDesc: 'Rebuilds the true qualifying volume per agreement window from the linked records and movement drivers (late deliveries, returns, pan-EU aggregation), correcting what the source systems under-counted.',
+    mfMdlReconIn: 'matched records, movement events, CCOGS engine files',
+    mfMdlClassName: 'True-up classification', mfMdlClassType: 'Supervised classifier · trained on resolved cases',
+    mfMdlClassDesc: 'Classifies each reconstructed case into a finding type (late delivery, pan-EU, scan/config, invoice missing, complete) and scores its recoverability and confidence — learned from historically resolved true-ups.',
+    mfMdlClassIn: 'reconstructed volumes, tier thresholds, labelled history',
     mfLayerIn: 'Sources', mfLayerHidden: 'Mapping', mfLayerOut: 'Findings',
     mfResLate: 'Late delivery', mfResLateWhy: 'Invoice + goods receipt + CCOGS engine showed goods arrived in store later than they should have.',
     mfResPanEu: 'Pan-EU aggregation', mfResPanEuWhy: 'Receipts across countries + agreement scope combined into one qualifying volume for a higher tier.',
@@ -1413,7 +1531,8 @@ const STRINGS = {
     validity: 'Validity', mlTotalAmount: 'Total portfolio', mlSkippedClean: 'Skipped — no issue found',
     allAgreements: 'All agreements', cleanDeliveries: 'clean deliveries',
     wlTitle: 'Claim builder Summary', wlNote: 'Findings staged for recovery, grouped by supplier — and the ones excluded from this run.', wlInRun: 'in the recovery run', wlSuppliers: 'suppliers', wlInclude: 'include', wlParked: 'parked', wlExcluded: 'excluded',
-    wlTop3By: 'Top 3 by', wlTop3Note: 'The three suppliers with the largest recovery in this run, ranked by {by}.', wlByAmount: 'by amount', wlByIssues: 'by issue count', wlIssue: 'issue', wlIssues: 'issues',
+    wlTop3By: 'Top 3 by', wlTop3Note: 'Three suppliers in this run, ordered by {by}.', wlByAmount: 'by amount', wlByIssues: 'by issue count', wlIssue: 'issue', wlIssues: 'issues',
+    wlByAmountDesc: 'amount ↓', wlByAmountAsc: 'amount ↑', wlByIssuesDesc: 'issues ↓', wlByIssuesAsc: 'issues ↑',
     durMONTH: 'Monthly', durQUARTER: 'Quarterly', durHALFYEAR: 'Half-year', durYEAR: 'Yearly', durCUSTOM: 'Promo',
     loginUser: 'User', loginPass: 'Password', loginSignIn: 'Sign in', loginNote: 'Authorized access only. This is a demonstration environment.',
     loginError: 'Incorrect user or password.', loginDeniedTitle: 'Access not granted', loginDeniedBody: 'Sorry, you are not granted access to this tool.', loginBack: 'Back to sign in',
@@ -1489,6 +1608,9 @@ const STRINGS = {
     fltSupplier: 'Supplier', fltWarehouse: 'Warehouse', fltAll: 'All', fltNone: 'None', fltSortBy: 'Sort by',
     fltSortCcogs: 'CCOGS value', fltSortOrder: 'Order value', fltSortUnits: 'Units',
     fltShowing: 'Showing {shown} of {total}', fltNoneMatch: 'No documents match the current filters.',
+    fltClear: 'Clear filters', ovFltIssue: 'Issue', ovFltContract: 'Contract', ovFltValidity: 'CCOGS validity',
+    ovValValid: 'Recoverable', ovValMissing: 'Invoice missing', ovValClean: 'No issue',
+    cfltYear: 'Agreement year', cfltAmount: 'True-Up amount',
     // ---- Audit section ----
     auditLead: 'Line- and SKU-level detail behind every additional Contra-COGS request — ready to export for an audit or a supplier query. Filter by agreement and date range, then export the full workbook.',
     auditLines: 'line items', auditDebits: 'CCOGS debits', auditTotalValue: 'total line value', auditMiLines: 'missing-invoice lines',
@@ -1504,6 +1626,14 @@ const STRINGS = {
     srcFolderName: 'Folder / SFTP watch', srcFolderSub: 'Monitor a shared drop folder for new files',
     srcMailboxName: 'Mailbox / EmailBox intake & scan', srcMailboxSub: 'Scan a shared mailbox and select emails to ingest',
     srcConnectedMsg: '{name} connected — will be scanned on the next ingestion run.',
+    cfConnect: 'Connect', cfDemoNote: 'Demonstration environment — credentials are illustrative and no live connection is made.',
+    cfEdiTitle: 'Connect EDI trading partner', cfEdiSub: 'Set up an EDI interchange (AS2 / SFTP / VAN) to receive invoices and dispatch advices.',
+    cfApiTitle: 'Connect API feed', cfApiSub: 'Pull documents from a partner or ERP REST API on a schedule.',
+    cfFolderTitle: 'Connect folder / SFTP watch', cfFolderSub: 'Monitor a shared drop folder for new document files.',
+    cfName: 'Connection name',
+    cfProtocol: 'Transport protocol', cfStandard: 'EDI standard', cfEndpoint: 'Endpoint / host', cfAs2Id: 'Partner AS2 ID', cfIsaSender: 'Interchange sender (ISA)', cfIsaReceiver: 'Interchange receiver (ISA)', cfTxnSets: 'Transaction sets', cfCert: 'Signing certificate',
+    cfBaseUrl: 'Base URL', cfAuth: 'Authentication', cfTokenUrl: 'Token URL', cfClientId: 'Client ID', cfClientSecret: 'Client secret', cfScope: 'Scopes', cfPoll: 'Poll schedule', cfPageSize: 'Page size',
+    cfPath: 'Folder path', cfPattern: 'File pattern', cfFormat: 'File format',
     tileMailbox: 'Shared mailbox', tileMailboxNote: 'Possible update waiting — click to scan.', tileMailboxFoundNote: 'New update found and matched to a Contra-COGS opportunity.',
     mbxPossible: 'Possible update', mbxSharedMailbox: 'shared mailbox', mbxScanCta: 'Scan shared mailbox', mbxMatched: 'Matched', mbxEmails: 'emails',
     mbxTitle: 'Scan shared mailbox', mbxLead: 'Scan the shared finance mailbox for emails that may relate to agreements, invoices or deliveries.',
@@ -1779,9 +1909,9 @@ const STRINGS = {
     consolLead: 'Vytvorte jeden konsolidovaný Contra-COGS dobropis na dodávateľa. Vľavo zaškrtnite zmluvy na zahrnutie; náhľad dokumentu vpravo sa aktualizuje naživo. Potom vygenerujte faktúru alebo otvorte súhrn zmluvy.',
     consolPreview: 'Živý náhľad dokumentu', consolFor: 'Pre', consolLinesLabel: 'vybraných zmlúv', consolItemized: 'Rozpísané príčiny', consolNothing: 'Vľavo vyberte aspoň jednu zmluvu.', consolTotalLine: 'Celkovo získateľné (konsolidované)', consolScopes: 'Zahrnuté zmluvy',
     navMore: 'Viac', navAbout: 'O aplikácii', navAudit: 'Audit log', navRole: 'Rola',
-    navMapping: 'Logika mapovania',
+    navMapping: 'Vysvetlenie modelu',
     mfLead: 'Animovaný prehľad toho, ako nástroj mení zdrojové dokumenty na nálezy vo vašom súhrne — zber, kombinácia a mapovanie.',
-    mfReplay: 'Prehrať znova', mfNextSteps: 'Ďalšie kroky',
+    mfReplay: 'Prehrať znova', mfNextSteps: 'Ďalšie kroky', mfContinue: 'Pokračovať', mfResMissingShort: 'Chýbajúca faktúra',
     mfCapA: 'Zbieram zdrojové dokumenty zo všetkých systémov…',
     mfCapB: 'Strojové učenie — kombinujem všetky zdroje do jedného mapovania…',
     mfCapC: 'Nálezy zmapované — každý výsledok a vstupy, ktoré ho vytvorili.',
@@ -1789,6 +1919,17 @@ const STRINGS = {
     mfCollecting: 'zbieram…', mfIngested: 'Načítané zdroje', mfMlDone: 'ML hotové',
     mfMlKick: 'Strojové učenie', mfMlTitle: 'Kombinovanie všetkých zdrojov do mapovania',
     mfMlCap: 'Každý vstup sa porovnáva s každým iným, aby sa zrekonštruovalo, čo sa naozaj stalo.',
+    mfChainIngest: 'Načítanie', mfChainMatch: 'Párovanie', mfChainReconstruct: 'Rekonštrukcia', mfChainClassify: 'Klasifikácia',
+    mfModelsTitle: 'Tri modely za mapovaním', mfModelsLead: 'Pipeline nie je jedna čierna skrinka — reťazí tri účelové modely, ktoré čítajú surové záznamy a vytvárajú každý CCOGS true-up.', mfMdlUses: 'Používa:',
+    mfMdlMatchName: 'Rozlíšenie entít', mfMdlMatchType: 'Bez učiteľa · pravdepodobnostné prepojenie záznamov',
+    mfMdlMatchDesc: 'Prepája záznamy, ktoré patria k sebe naprieč systémami — ktorá faktúra, dodací list, príjemka a zmluva opisujú ten istý pohyb — napriek nezhodným ID, dátumom a názvom.',
+    mfMdlMatchIn: 'faktúry, dodacie listy, príjemky, zmluvy',
+    mfMdlReconName: 'Rekonštrukcia objemu', mfMdlReconType: 'Gradient-boosted regresia · sekvenčný model',
+    mfMdlReconDesc: 'Znovu zostaví skutočný kvalifikujúci objem na okno zmluvy z prepojených záznamov a faktorov pohybu (oneskorené dodávky, vratky, pan-EU agregácia) a opraví to, čo zdrojové systémy podhodnotili.',
+    mfMdlReconIn: 'spárované záznamy, udalosti pohybu, súbory CCOGS engine',
+    mfMdlClassName: 'Klasifikácia true-up', mfMdlClassType: 'Klasifikátor s učiteľom · trénovaný na vyriešených prípadoch',
+    mfMdlClassDesc: 'Klasifikuje každý zrekonštruovaný prípad do typu nálezu (oneskorená dodávka, pan-EU, sken/konfigurácia, chýbajúca faktúra, kompletné) a hodnotí získateľnosť a istotu — naučené z historicky vyriešených true-upov.',
+    mfMdlClassIn: 'zrekonštruované objemy, prahy úrovní, označená história',
     mfLayerIn: 'Zdroje', mfLayerHidden: 'Mapovanie', mfLayerOut: 'Nálezy',
     mfResLate: 'Oneskorená dodávka', mfResLateWhy: 'Faktúra + príjemka + CCOGS engine ukázali, že tovar prišiel do predajne neskôr, ako mal.',
     mfResPanEu: 'Pan-EU agregácia', mfResPanEuWhy: 'Príjemky naprieč krajinami + rozsah zmluvy sa spojili do jedného kvalifikujúceho objemu pre vyššiu úroveň.',
@@ -1847,7 +1988,8 @@ const STRINGS = {
     validity: 'Platnosť', mlTotalAmount: 'Celé portfólio', mlSkippedClean: 'Preskočené — bez problému',
     allAgreements: 'Všetky zmluvy', cleanDeliveries: 'čistých dodávok',
     wlTitle: 'Súhrn tvorby nároku', wlNote: 'Nálezy pripravené na obnovu, zoskupené podľa dodávateľa — a tie vylúčené z tohto cyklu.', wlInRun: 'v cykle obnovy', wlSuppliers: 'dodávateľov', wlInclude: 'zahrnuté', wlParked: 'odložené', wlExcluded: 'vylúčené',
-    wlTop3By: 'Top 3 podľa', wlTop3Note: 'Traja dodávatelia s najväčšou obnovou v tomto cykle, zoradení podľa {by}.', wlByAmount: 'podľa sumy', wlByIssues: 'podľa počtu problémov', wlIssue: 'problém', wlIssues: 'problémov',
+    wlTop3By: 'Top 3 podľa', wlTop3Note: 'Traja dodávatelia v tomto cykle, zoradení podľa {by}.', wlByAmount: 'podľa sumy', wlByIssues: 'podľa počtu problémov', wlIssue: 'problém', wlIssues: 'problémov',
+    wlByAmountDesc: 'suma ↓', wlByAmountAsc: 'suma ↑', wlByIssuesDesc: 'problémy ↓', wlByIssuesAsc: 'problémy ↑',
     durMONTH: 'Mesačná', durQUARTER: 'Štvrťročná', durHALFYEAR: 'Polročná', durYEAR: 'Ročná', durCUSTOM: 'Promo',
     loginUser: 'Používateľ', loginPass: 'Heslo', loginSignIn: 'Prihlásiť sa', loginNote: 'Iba autorizovaný prístup. Toto je demonštračné prostredie.',
     loginError: 'Nesprávny používateľ alebo heslo.', loginDeniedTitle: 'Prístup nepovolený', loginDeniedBody: 'Ľutujeme, nemáte povolený prístup k tomuto nástroju.', loginBack: 'Späť na prihlásenie',
@@ -1924,6 +2066,9 @@ const STRINGS = {
     fltSupplier: 'Dodávateľ', fltWarehouse: 'Sklad', fltAll: 'Všetko', fltNone: 'Nič', fltSortBy: 'Zoradiť podľa',
     fltSortCcogs: 'Hodnota CCOGS', fltSortOrder: 'Hodnota objednávky', fltSortUnits: 'Jednotky',
     fltShowing: 'Zobrazené {shown} z {total}', fltNoneMatch: 'Žiadne dokumenty nezodpovedajú aktuálnym filtrom.',
+    fltClear: 'Zrušiť filtre', ovFltIssue: 'Problém', ovFltContract: 'Zmluva', ovFltValidity: 'Platnosť CCOGS',
+    ovValValid: 'Získateľné', ovValMissing: 'Chýbajúca faktúra', ovValClean: 'Bez problému',
+    cfltYear: 'Rok zmluvy', cfltAmount: 'Suma True-Up',
     // ---- Audit section ----
     auditLead: 'Detail na úrovni riadkov a SKU za každou dodatočnou Contra-COGS požiadavkou — pripravený na export pre audit alebo dopyt dodávateľa. Filtrujte podľa zmluvy a obdobia, potom exportujte celý zošit.',
     auditLines: 'riadkových položiek', auditDebits: 'CCOGS ťarchopisov', auditTotalValue: 'celková hodnota riadkov', auditMiLines: 'riadky s chýbajúcou faktúrou',
@@ -1939,6 +2084,14 @@ const STRINGS = {
     srcFolderName: 'Priečinok / SFTP', srcFolderSub: 'Sledovať zdieľaný priečinok pre nové súbory',
     srcMailboxName: 'Schránka / EmailBox príjem a sken', srcMailboxSub: 'Prehľadať zdieľanú schránku a vybrať e-maily na načítanie',
     srcConnectedMsg: '{name} pripojené — bude prehľadané pri ďalšom načítaní.',
+    cfConnect: 'Pripojiť', cfDemoNote: 'Demonštračné prostredie — prihlasovacie údaje sú ilustratívne a žiadne živé pripojenie sa nevytvára.',
+    cfEdiTitle: 'Pripojiť EDI obchodného partnera', cfEdiSub: 'Nastavte EDI výmenu (AS2 / SFTP / VAN) na príjem faktúr a dodacích avíz.',
+    cfApiTitle: 'Pripojiť API zdroj', cfApiSub: 'Sťahujte dokumenty z partnerského alebo ERP REST API podľa plánu.',
+    cfFolderTitle: 'Pripojiť priečinok / SFTP', cfFolderSub: 'Sledovať zdieľaný priečinok pre nové súbory dokumentov.',
+    cfName: 'Názov pripojenia',
+    cfProtocol: 'Prenosový protokol', cfStandard: 'EDI štandard', cfEndpoint: 'Koncový bod / host', cfAs2Id: 'AS2 ID partnera', cfIsaSender: 'Odosielateľ výmeny (ISA)', cfIsaReceiver: 'Príjemca výmeny (ISA)', cfTxnSets: 'Transakčné sady', cfCert: 'Podpisový certifikát',
+    cfBaseUrl: 'Základná URL', cfAuth: 'Autentifikácia', cfTokenUrl: 'Token URL', cfClientId: 'Client ID', cfClientSecret: 'Client secret', cfScope: 'Rozsahy', cfPoll: 'Plán sťahovania', cfPageSize: 'Veľkosť stránky',
+    cfPath: 'Cesta k priečinku', cfPattern: 'Vzor súborov', cfFormat: 'Formát súborov',
     tileMailbox: 'Zdieľaná schránka', tileMailboxNote: 'Možná aktualizácia čaká — kliknite na sken.', tileMailboxFoundNote: 'Nová aktualizácia nájdená a spárovaná s Contra-COGS príležitosťou.',
     mbxPossible: 'Možná aktualizácia', mbxSharedMailbox: 'zdieľaná schránka', mbxScanCta: 'Prehľadať schránku', mbxMatched: 'Spárované', mbxEmails: 'e-mailov',
     mbxTitle: 'Prehľadať zdieľanú schránku', mbxLead: 'Prehľadať zdieľanú finančnú schránku pre e-maily súvisiace so zmluvami, faktúrami alebo dodávkami.',
@@ -2214,9 +2367,9 @@ const STRINGS = {
     consolLead: 'Zbuduj jedną skonsolidowaną notę debetową Contra-COGS na dostawcę. Po lewej zaznacz umowy do uwzględnienia; podgląd dokumentu po prawej aktualizuje się na żywo. Następnie wygeneruj fakturę lub otwórz podsumowanie umowy.',
     consolPreview: 'Podgląd dokumentu na żywo', consolFor: 'Dla', consolLinesLabel: 'wybranych umów', consolItemized: 'Wyszczególnione przyczyny', consolNothing: 'Zaznacz co najmniej jedną umowę po lewej.', consolTotalLine: 'Łącznie do odzyskania (skonsolidowane)', consolScopes: 'Uwzględnione umowy',
     navMore: 'Więcej', navAbout: 'O aplikacji', navAudit: 'Dziennik audytu', navRole: 'Rola',
-    navMapping: 'Logika mapowania',
+    navMapping: 'Wyjaśnienie modelu',
     mfLead: 'Animowany przegląd tego, jak narzędzie zamienia dokumenty źródłowe w wyniki w Twoim podsumowaniu — zbieranie, łączenie i mapowanie.',
-    mfReplay: 'Odtwórz ponownie', mfNextSteps: 'Następne kroki',
+    mfReplay: 'Odtwórz ponownie', mfNextSteps: 'Następne kroki', mfContinue: 'Kontynuuj', mfResMissingShort: 'Brak faktury',
     mfCapA: 'Zbieranie dokumentów źródłowych ze wszystkich systemów…',
     mfCapB: 'Uczenie maszynowe — łączenie wszystkich źródeł w jedno mapowanie…',
     mfCapC: 'Wyniki zmapowane — każdy wynik i dane wejściowe, które go utworzyły.',
@@ -2224,6 +2377,17 @@ const STRINGS = {
     mfCollecting: 'zbieranie…', mfIngested: 'Wczytane źródła', mfMlDone: 'ML gotowe',
     mfMlKick: 'Uczenie maszynowe', mfMlTitle: 'Łączenie wszystkich źródeł w mapowanie',
     mfMlCap: 'Każde wejście jest ważone względem każdego innego, aby zrekonstruować, co naprawdę się stało.',
+    mfChainIngest: 'Wczytanie', mfChainMatch: 'Dopasowanie', mfChainReconstruct: 'Rekonstrukcja', mfChainClassify: 'Klasyfikacja',
+    mfModelsTitle: 'Trzy modele stojące za mapowaniem', mfModelsLead: 'Pipeline to nie jedna czarna skrzynka — łączy trzy dedykowane modele, które czytają surowe rekordy i tworzą każdy true-up CCOGS.', mfMdlUses: 'Używa:',
+    mfMdlMatchName: 'Rozpoznawanie encji', mfMdlMatchType: 'Bez nadzoru · probabilistyczne łączenie rekordów',
+    mfMdlMatchDesc: 'Łączy rekordy należące do siebie w różnych systemach — która faktura, dowód dostawy, przyjęcie i umowa opisują ten sam ruch — mimo niezgodnych ID, dat i nazw.',
+    mfMdlMatchIn: 'faktury, dowody dostawy, przyjęcia, umowy',
+    mfMdlReconName: 'Rekonstrukcja wolumenu', mfMdlReconType: 'Regresja gradient-boosted · model sekwencyjny',
+    mfMdlReconDesc: 'Odtwarza rzeczywisty kwalifikujący wolumen na okno umowy z połączonych rekordów i czynników ruchu (opóźnione dostawy, zwroty, agregacja pan-EU), korygując to, co systemy źródłowe zaniżyły.',
+    mfMdlReconIn: 'dopasowane rekordy, zdarzenia ruchu, pliki CCOGS engine',
+    mfMdlClassName: 'Klasyfikacja true-up', mfMdlClassType: 'Klasyfikator nadzorowany · trenowany na rozwiązanych przypadkach',
+    mfMdlClassDesc: 'Klasyfikuje każdy zrekonstruowany przypadek do typu wyniku (opóźniona dostawa, pan-EU, skan/konfiguracja, brak faktury, kompletne) i ocenia odzyskiwalność oraz pewność — nauczone z historycznie rozwiązanych true-upów.',
+    mfMdlClassIn: 'zrekonstruowane wolumeny, progi poziomów, oznaczona historia',
     mfLayerIn: 'Źródła', mfLayerHidden: 'Mapowanie', mfLayerOut: 'Wyniki',
     mfResLate: 'Opóźniona dostawa', mfResLateWhy: 'Faktura + przyjęcie + silnik CCOGS wykazały, że towar dotarł do sklepu później, niż powinien.',
     mfResPanEu: 'Agregacja Pan-EU', mfResPanEuWhy: 'Przyjęcia z różnych krajów + zakres umowy połączone w jeden kwalifikujący wolumen dla wyższego progu.',
@@ -2282,7 +2446,8 @@ const STRINGS = {
     validity: 'Ważność', mlTotalAmount: 'Całe portfolio', mlSkippedClean: 'Pominięte — brak problemu',
     allAgreements: 'Wszystkie umowy', cleanDeliveries: 'czystych dostaw',
     wlTitle: 'Podsumowanie kreatora roszczeń', wlNote: 'Wyniki przygotowane do odzysku, pogrupowane wg dostawcy — oraz te wykluczone z tego cyklu.', wlInRun: 'w cyklu odzysku', wlSuppliers: 'dostawców', wlInclude: 'uwzględnione', wlParked: 'odłożone', wlExcluded: 'wykluczone',
-    wlTop3By: 'Top 3 wg', wlTop3Note: 'Trzej dostawcy z największym odzyskiem w tym cyklu, uszeregowani wg {by}.', wlByAmount: 'wg kwoty', wlByIssues: 'wg liczby problemów', wlIssue: 'problem', wlIssues: 'problemów',
+    wlTop3By: 'Top 3 wg', wlTop3Note: 'Trzej dostawcy w tym cyklu, uszeregowani wg {by}.', wlByAmount: 'wg kwoty', wlByIssues: 'wg liczby problemów', wlIssue: 'problem', wlIssues: 'problemów',
+    wlByAmountDesc: 'kwota ↓', wlByAmountAsc: 'kwota ↑', wlByIssuesDesc: 'problemy ↓', wlByIssuesAsc: 'problemy ↑',
     durMONTH: 'Miesięczna', durQUARTER: 'Kwartalna', durHALFYEAR: 'Półroczna', durYEAR: 'Roczna', durCUSTOM: 'Promo',
     loginUser: 'Użytkownik', loginPass: 'Hasło', loginSignIn: 'Zaloguj się', loginNote: 'Tylko autoryzowany dostęp. To jest środowisko demonstracyjne.',
     loginError: 'Nieprawidłowy użytkownik lub hasło.', loginDeniedTitle: 'Brak dostępu', loginDeniedBody: 'Przepraszamy, nie masz dostępu do tego narzędzia.', loginBack: 'Powrót do logowania',
@@ -2358,6 +2523,9 @@ const STRINGS = {
     fltSupplier: 'Dostawca', fltWarehouse: 'Magazyn', fltAll: 'Wszystko', fltNone: 'Nic', fltSortBy: 'Sortuj wg',
     fltSortCcogs: 'Wartość CCOGS', fltSortOrder: 'Wartość zamówienia', fltSortUnits: 'Jednostki',
     fltShowing: 'Pokazano {shown} z {total}', fltNoneMatch: 'Żadne dokumenty nie pasują do bieżących filtrów.',
+    fltClear: 'Wyczyść filtry', ovFltIssue: 'Problem', ovFltContract: 'Umowa', ovFltValidity: 'Ważność CCOGS',
+    ovValValid: 'Do odzyskania', ovValMissing: 'Brak faktury', ovValClean: 'Bez problemu',
+    cfltYear: 'Rok umowy', cfltAmount: 'Kwota True-Up',
     // ---- Audit section ----
     auditLead: 'Szczegóły na poziomie linii i SKU stojące za każdym dodatkowym żądaniem Contra-COGS — gotowe do eksportu na potrzeby audytu lub zapytania dostawcy. Filtruj wg umowy i zakresu dat, a następnie wyeksportuj cały skoroszyt.',
     auditLines: 'pozycji liniowych', auditDebits: 'not Contra-COGS', auditTotalValue: 'łączna wartość linii', auditMiLines: 'linie z brakującą fakturą',
@@ -2373,6 +2541,14 @@ const STRINGS = {
     srcFolderName: 'Folder / SFTP', srcFolderSub: 'Monitoruj współdzielony folder pod kątem nowych plików',
     srcMailboxName: 'Skrzynka / EmailBox — pobór i skan', srcMailboxSub: 'Przeskanuj współdzieloną skrzynkę i wybierz e-maile do pobrania',
     srcConnectedMsg: '{name} podłączone — zostanie przeskanowane przy następnym pobieraniu.',
+    cfConnect: 'Połącz', cfDemoNote: 'Środowisko demonstracyjne — dane logowania są przykładowe i nie tworzone jest żadne rzeczywiste połączenie.',
+    cfEdiTitle: 'Połącz partnera EDI', cfEdiSub: 'Skonfiguruj wymianę EDI (AS2 / SFTP / VAN) do odbioru faktur i awizacji dostaw.',
+    cfApiTitle: 'Połącz źródło API', cfApiSub: 'Pobieraj dokumenty z API partnera lub ERP według harmonogramu.',
+    cfFolderTitle: 'Połącz folder / SFTP', cfFolderSub: 'Monitoruj współdzielony folder pod kątem nowych plików dokumentów.',
+    cfName: 'Nazwa połączenia',
+    cfProtocol: 'Protokół transportu', cfStandard: 'Standard EDI', cfEndpoint: 'Punkt końcowy / host', cfAs2Id: 'AS2 ID partnera', cfIsaSender: 'Nadawca wymiany (ISA)', cfIsaReceiver: 'Odbiorca wymiany (ISA)', cfTxnSets: 'Zestawy transakcji', cfCert: 'Certyfikat podpisu',
+    cfBaseUrl: 'Bazowy URL', cfAuth: 'Uwierzytelnianie', cfTokenUrl: 'URL tokenu', cfClientId: 'Client ID', cfClientSecret: 'Client secret', cfScope: 'Zakresy', cfPoll: 'Harmonogram odpytywania', cfPageSize: 'Rozmiar strony',
+    cfPath: 'Ścieżka folderu', cfPattern: 'Wzorzec plików', cfFormat: 'Format plików',
     tileMailbox: 'Współdzielona skrzynka', tileMailboxNote: 'Możliwa aktualizacja oczekuje — kliknij, aby przeskanować.', tileMailboxFoundNote: 'Znaleziono nową aktualizację i dopasowano do możliwości Contra-COGS.',
     mbxPossible: 'Możliwa aktualizacja', mbxSharedMailbox: 'współdzielona skrzynka', mbxScanCta: 'Skanuj skrzynkę', mbxMatched: 'Dopasowano', mbxEmails: 'e-maili',
     mbxTitle: 'Skanuj współdzieloną skrzynkę', mbxLead: 'Przeskanuj współdzieloną skrzynkę finansową w poszukiwaniu e-maili dotyczących umów, faktur lub dostaw.',
@@ -2648,9 +2824,9 @@ const STRINGS = {
     consolLead: 'Vytvořte jeden konsolidovaný Contra-COGS dobropis na dodavatele. Vlevo zaškrtněte smlouvy k zahrnutí; náhled dokumentu vpravo se aktualizuje živě. Poté vygenerujte fakturu nebo otevřete souhrn smlouvy.',
     consolPreview: 'Živý náhled dokumentu', consolFor: 'Pro', consolLinesLabel: 'vybraných smluv', consolItemized: 'Rozepsané příčiny', consolNothing: 'Vlevo vyberte alespoň jednu smlouvu.', consolTotalLine: 'Celkem získatelné (konsolidované)', consolScopes: 'Zahrnuté smlouvy',
     navMore: 'Více', navAbout: 'O aplikaci', navAudit: 'Auditní log', navRole: 'Role',
-    navMapping: 'Logika mapování',
+    navMapping: 'Vysvětlení modelu',
     mfLead: 'Animovaný průvodce tím, jak nástroj mění zdrojové dokumenty na nálezy ve vašem souhrnu — sběr, kombinace a mapování.',
-    mfReplay: 'Přehrát znovu', mfNextSteps: 'Další kroky',
+    mfReplay: 'Přehrát znovu', mfNextSteps: 'Další kroky', mfContinue: 'Pokračovat', mfResMissingShort: 'Chybí faktura',
     mfCapA: 'Sbírám zdrojové dokumenty ze všech systémů…',
     mfCapB: 'Strojové učení — kombinuji všechny zdroje do jednoho mapování…',
     mfCapC: 'Nálezy zmapovány — každý výsledek a vstupy, které jej vytvořily.',
@@ -2658,6 +2834,17 @@ const STRINGS = {
     mfCollecting: 'sbírám…', mfIngested: 'Načtené zdroje', mfMlDone: 'ML hotovo',
     mfMlKick: 'Strojové učení', mfMlTitle: 'Kombinování všech zdrojů do mapování',
     mfMlCap: 'Každý vstup se porovnává s každým jiným, aby se zrekonstruovalo, co se opravdu stalo.',
+    mfChainIngest: 'Načtení', mfChainMatch: 'Párování', mfChainReconstruct: 'Rekonstrukce', mfChainClassify: 'Klasifikace',
+    mfModelsTitle: 'Tři modely za mapováním', mfModelsLead: 'Pipeline není jedna černá skříňka — řetězí tři účelové modely, které čtou surové záznamy a vytvářejí každý CCOGS true-up.', mfMdlUses: 'Používá:',
+    mfMdlMatchName: 'Rozlišení entit', mfMdlMatchType: 'Bez učitele · pravděpodobnostní propojení záznamů',
+    mfMdlMatchDesc: 'Propojuje záznamy, které patří k sobě napříč systémy — která faktura, dodací list, příjemka a smlouva popisují tentýž pohyb — navzdory neshodným ID, datům a názvům.',
+    mfMdlMatchIn: 'faktury, dodací listy, příjemky, smlouvy',
+    mfMdlReconName: 'Rekonstrukce objemu', mfMdlReconType: 'Gradient-boosted regrese · sekvenční model',
+    mfMdlReconDesc: 'Znovu sestaví skutečný kvalifikující objem na okno smlouvy z propojených záznamů a faktorů pohybu (opožděné dodávky, vratky, pan-EU agregace) a opraví to, co zdrojové systémy podhodnotily.',
+    mfMdlReconIn: 'spárované záznamy, události pohybu, soubory CCOGS engine',
+    mfMdlClassName: 'Klasifikace true-up', mfMdlClassType: 'Klasifikátor s učitelem · trénovaný na vyřešených případech',
+    mfMdlClassDesc: 'Klasifikuje každý zrekonstruovaný případ do typu nálezu (opožděná dodávka, pan-EU, sken/konfigurace, chybějící faktura, kompletní) a hodnotí získatelnost a jistotu — naučeno z historicky vyřešených true-upů.',
+    mfMdlClassIn: 'zrekonstruované objemy, prahy úrovní, označená historie',
     mfLayerIn: 'Zdroje', mfLayerHidden: 'Mapování', mfLayerOut: 'Nálezy',
     mfResLate: 'Opožděná dodávka', mfResLateWhy: 'Faktura + příjemka + CCOGS engine ukázaly, že zboží dorazilo do prodejny později, než mělo.',
     mfResPanEu: 'Pan-EU agregace', mfResPanEuWhy: 'Příjemky napříč zeměmi + rozsah smlouvy se spojily do jednoho kvalifikujícího objemu pro vyšší úroveň.',
@@ -2716,7 +2903,8 @@ const STRINGS = {
     validity: 'Platnost', mlTotalAmount: 'Celé portfolio', mlSkippedClean: 'Přeskočeno — bez problému',
     allAgreements: 'Všechny smlouvy', cleanDeliveries: 'čistých dodávek',
     wlTitle: 'Souhrn tvorby nároku', wlNote: 'Nálezy připravené k obnově, seskupené podle dodavatele — a ty vyloučené z tohoto cyklu.', wlInRun: 'v cyklu obnovy', wlSuppliers: 'dodavatelů', wlInclude: 'zahrnuto', wlParked: 'odloženo', wlExcluded: 'vyloučeno',
-    wlTop3By: 'Top 3 podle', wlTop3Note: 'Tři dodavatelé s největší obnovou v tomto cyklu, seřazení podle {by}.', wlByAmount: 'podle částky', wlByIssues: 'podle počtu problémů', wlIssue: 'problém', wlIssues: 'problémů',
+    wlTop3By: 'Top 3 podle', wlTop3Note: 'Tři dodavatelé v tomto cyklu, seřazení podle {by}.', wlByAmount: 'podle částky', wlByIssues: 'podle počtu problémů', wlIssue: 'problém', wlIssues: 'problémů',
+    wlByAmountDesc: 'částka ↓', wlByAmountAsc: 'částka ↑', wlByIssuesDesc: 'problémy ↓', wlByIssuesAsc: 'problémy ↑',
     durMONTH: 'Měsíční', durQUARTER: 'Čtvrtletní', durHALFYEAR: 'Pololetní', durYEAR: 'Roční', durCUSTOM: 'Promo',
     loginUser: 'Uživatel', loginPass: 'Heslo', loginSignIn: 'Přihlásit se', loginNote: 'Pouze autorizovaný přístup. Toto je demonstrační prostředí.',
     loginError: 'Nesprávný uživatel nebo heslo.', loginDeniedTitle: 'Přístup nepovolen', loginDeniedBody: 'Omlouváme se, nemáte povolen přístup k tomuto nástroji.', loginBack: 'Zpět na přihlášení',
@@ -2792,6 +2980,9 @@ const STRINGS = {
     fltSupplier: 'Dodavatel', fltWarehouse: 'Sklad', fltAll: 'Vše', fltNone: 'Nic', fltSortBy: 'Řadit podle',
     fltSortCcogs: 'Hodnota CCOGS', fltSortOrder: 'Hodnota objednávky', fltSortUnits: 'Jednotky',
     fltShowing: 'Zobrazeno {shown} z {total}', fltNoneMatch: 'Žádné dokumenty neodpovídají aktuálním filtrům.',
+    fltClear: 'Zrušit filtry', ovFltIssue: 'Problém', ovFltContract: 'Smlouva', ovFltValidity: 'Platnost CCOGS',
+    ovValValid: 'Získatelné', ovValMissing: 'Chybí faktura', ovValClean: 'Bez problému',
+    cfltYear: 'Rok smlouvy', cfltAmount: 'Částka True-Up',
     // ---- Audit section ----
     auditLead: 'Detail na úrovni řádků a SKU za každým dodatečným požadavkem Contra-COGS — připraveno k exportu pro audit nebo dotaz dodavatele. Filtrujte podle smlouvy a rozsahu dat, poté exportujte celý sešit.',
     auditLines: 'řádkových položek', auditDebits: 'CCOGS vrubopisů', auditTotalValue: 'celková hodnota řádků', auditMiLines: 'řádky s chybějící fakturou',
@@ -2807,6 +2998,14 @@ const STRINGS = {
     srcFolderName: 'Složka / SFTP', srcFolderSub: 'Sledovat sdílenou složku pro nové soubory',
     srcMailboxName: 'Schránka / EmailBox příjem a sken', srcMailboxSub: 'Prohledat sdílenou schránku a vybrat e-maily k načtení',
     srcConnectedMsg: '{name} připojeno — bude prohledáno při dalším načítání.',
+    cfConnect: 'Připojit', cfDemoNote: 'Demonstrační prostředí — přihlašovací údaje jsou ilustrativní a žádné živé připojení se nevytváří.',
+    cfEdiTitle: 'Připojit EDI obchodního partnera', cfEdiSub: 'Nastavte EDI výměnu (AS2 / SFTP / VAN) pro příjem faktur a dodacích avíz.',
+    cfApiTitle: 'Připojit API zdroj', cfApiSub: 'Stahujte dokumenty z partnerského nebo ERP REST API podle plánu.',
+    cfFolderTitle: 'Připojit složku / SFTP', cfFolderSub: 'Sledovat sdílenou složku pro nové soubory dokumentů.',
+    cfName: 'Název připojení',
+    cfProtocol: 'Přenosový protokol', cfStandard: 'EDI standard', cfEndpoint: 'Koncový bod / host', cfAs2Id: 'AS2 ID partnera', cfIsaSender: 'Odesílatel výměny (ISA)', cfIsaReceiver: 'Příjemce výměny (ISA)', cfTxnSets: 'Transakční sady', cfCert: 'Podpisový certifikát',
+    cfBaseUrl: 'Základní URL', cfAuth: 'Autentizace', cfTokenUrl: 'Token URL', cfClientId: 'Client ID', cfClientSecret: 'Client secret', cfScope: 'Rozsahy', cfPoll: 'Plán stahování', cfPageSize: 'Velikost stránky',
+    cfPath: 'Cesta ke složce', cfPattern: 'Vzor souborů', cfFormat: 'Formát souborů',
     tileMailbox: 'Sdílená schránka', tileMailboxNote: 'Možná aktualizace čeká — klikněte pro sken.', tileMailboxFoundNote: 'Nalezena nová aktualizace a spárována s Contra-COGS příležitostí.',
     mbxPossible: 'Možná aktualizace', mbxSharedMailbox: 'sdílená schránka', mbxScanCta: 'Prohledat schránku', mbxMatched: 'Spárováno', mbxEmails: 'e-mailů',
     mbxTitle: 'Prohledat sdílenou schránku', mbxLead: 'Prohledat sdílenou finanční schránku pro e-maily týkající se smluv, faktur nebo dodávek.',
@@ -7534,7 +7733,7 @@ function summaryTiles(state) {
       subs: [`${ms2.emailCount || 1} ${t('mbxEmails')}`, ms2.matchAgreementId ? `${t('agreement')} ${ms2.matchAgreementId}` : ''].filter(Boolean),
       note: t('tileMailboxFoundNote') });
   } else {
-    tiles.push({ id: 'mailbox', size: 'normal', kind: 'warn', icon: 'mailbox', review: true, cta: t('mbxScanCta'),
+    tiles.push({ id: 'mailbox', size: 'normal', kind: 'warn', icon: 'mailbox', review: true, cta: t('mbxScanCta'), ctaStrong: true,
       title: t('tileMailbox'), big: t('mbxPossible'),
       subs: [t('mbxSharedMailbox')], note: t('tileMailboxNote') });
   }
@@ -7715,7 +7914,7 @@ function tileCard(tl) {
     <div class="tile-big">${esc(tl.big)}</div>
     <div class="tile-subs">${subs}</div>
     ${note}
-    <div class="tile-cta">${esc(tl.cta || t('tileOpenDetails'))} →</div>
+    <div class="tile-cta${tl.ctaStrong ? ' tile-cta-strong' : ''}">${esc(tl.cta || t('tileOpenDetails'))} →</div>
   </button>`;
 }
 
@@ -7965,9 +8164,70 @@ const money = (v, cur) => `${Number(v).toLocaleString(undefined, { maximumFracti
 
 function fmtN(n) { return Math.round(n).toLocaleString(); }
 
+const escf = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---- Finance Overview GLOBAL filter bar (supplier / issue / contract / validity) ----
+// Reuses the shared .fltbar look. Emits data-ovmenu / data-ovopt / data-ovall /
+// data-ovnone hooks wired by wireOverviewFilterBar() in app.js. Every facet is a
+// multi-select where "all checked" = no filter (null).
+function overviewFilterBar({ suppliers, scopes, windows, validities, sel, winLbl }) {
+  const VAL_LBL = { VALID: t('ovValValid'), MISSING: t('ovValMissing'), CLEAN: t('ovValClean') };
+  const chk = (kind, id, label, on) => `<label class="flt-opt"><input type="checkbox" data-ovopt="${kind}" value="${escf(id)}" ${on ? 'checked' : ''}/> ${escf(label)}</label>`;
+  const menu = (kind, title, opts, selSet, labelFn) => {
+    const on = (id) => !selSet || selSet.has(id);
+    const cnt = selSet ? [...selSet].length : opts.length;
+    return `<div class="flt-group flt-menu">
+      <button class="flt-toggle" data-ovmenu="${kind}">${title} <span class="flt-count">${cnt}/${opts.length}</span> ▾</button>
+      <div class="flt-pop" data-ovpop="${kind}" hidden>
+        <div class="flt-pop-actions"><button data-ovall="${kind}">${t('fltAll')}</button><button data-ovnone="${kind}">${t('fltNone')}</button></div>
+        <div class="flt-opts">${opts.map((o) => chk(kind, o, labelFn ? labelFn(o) : o, on(o))).join('')}</div>
+      </div>
+    </div>`;
+  };
+  return `<div class="fltbar ov-fltbar">
+    ${menu('sup', t('fltSupplier'), suppliers, sel.suppliers)}
+    ${menu('scope', t('ovFltIssue'), scopes, sel.scopes)}
+    ${menu('win', t('ovFltContract'), windows, sel.windows, (w) => winLbl[w] || w)}
+    ${menu('val', t('ovFltValidity'), validities, sel.validity, (v) => VAL_LBL[v] || v)}
+    <div class="flt-spacer"></div>
+    <button class="flt-toggle" data-ovclear>${t('fltClear')}</button>
+  </div>`;
+}
+
 // ---- Finance Overview: savings & earnings summary (before -> after portfolio) ----
 function renderOverview(state) {
-  const { beforeAfter = [] } = state;
+  const beforeAfterAll = state.beforeAfter || [];
+
+  // ---- GLOBAL FILTER: supplier / issue (scope) / contract duration / CCOGS validity.
+  // A single filter set drives the WHOLE page: metrics, tracker, Claim Builder,
+  // journey and every chart. null on a facet = "all selected".
+  const WIN_LBL = { MONTH: 'Monthly', QUARTER: 'Quarterly', HALF_YEAR: 'Half-year', YEAR: 'Yearly', CUSTOM: 'Custom' };
+  const ovf = state.ovFilters || (state.ovFilters = { suppliers: null, scopes: null, windows: null, validity: null });
+  const windowOf = (agreementId) => state.consolidated?.byAgreement?.get(agreementId)?.agreement?.windowType || 'CUSTOM';
+  // validity classes for a beforeAfter/finding row: MISSING (invoice missing) vs VALID (normal recoverable) vs CLEAN (no issue)
+  const findingByAgr = new Map((state.discovery?.findings || []).map((f) => [f.agreementId + '|' + f.scopeKey, f]));
+  const validityOfRow = (b) => {
+    const f = findingByAgr.get(b.agreementId + '|' + b.scopeKey);
+    if (f && f.missingInvoice) return 'MISSING';
+    return b.recoverable ? 'VALID' : 'CLEAN';
+  };
+  // option lists (from the full, unfiltered data)
+  const ovSuppliers = [...new Map(beforeAfterAll.map((b) => [b.supplierName || b.supplierId, b.supplierName || b.supplierId])).values()].sort();
+  const ovScopes = [...new Set(beforeAfterAll.map((b) => b.scopeKey).filter(Boolean))].sort();
+  const ovWindows = ['MONTH', 'QUARTER', 'HALF_YEAR', 'YEAR', 'CUSTOM'].filter((w) => beforeAfterAll.some((b) => windowOf(b.agreementId) === w));
+  const ovValidities = ['VALID', 'MISSING', 'CLEAN'].filter((v) => beforeAfterAll.some((b) => validityOfRow(b) === v));
+  const passOv = (b) => {
+    if (ovf.suppliers && !ovf.suppliers.has(b.supplierName || b.supplierId)) return false;
+    if (ovf.scopes && !ovf.scopes.has(b.scopeKey)) return false;
+    if (ovf.windows && !ovf.windows.has(windowOf(b.agreementId))) return false;
+    if (ovf.validity && !ovf.validity.has(validityOfRow(b))) return false;
+    return true;
+  };
+  const beforeAfter = beforeAfterAll.filter(passOv);
+  // allowed agreementIds after filtering — used to scope findings, charges, journey.
+  const allowedAgr = new Set(beforeAfter.map((b) => b.agreementId));
+  const ovFilterActive = !!(ovf.suppliers || ovf.scopes || ovf.windows || ovf.validity);
+  const ovBar = overviewFilterBar({ suppliers: ovSuppliers, scopes: ovScopes, windows: ovWindows, validities: ovValidities, sel: ovf, winLbl: WIN_LBL });
 
   // portfolio before (engine claimed) -> after (tool entitled) -> recovered True-Up
   const totalBefore = beforeAfter.reduce((s, b) => s + (b.before?.claimed || 0), 0);
@@ -7996,14 +8256,15 @@ function renderOverview(state) {
   const byPeriod = agg((b) => b.period);
 
   // all goods movements across the portfolio drive the finance process-journey
-  const allReceipts = state.consolidated ? [...state.consolidated.byAgreement.values()].flatMap((g) => g.receipts || []) : [];
-  const allCorrections = (state.reconstructions || []).flatMap((r) => r.corrections || []);
+  // (scoped to the filtered agreements so the journey reacts to the filter too)
+  const allReceipts = state.consolidated ? [...state.consolidated.byAgreement.entries()].filter(([id]) => allowedAgr.has(id)).flatMap(([, g]) => g.receipts || []) : [];
+  const allCorrections = (state.reconstructions || []).filter((r) => allowedAgr.has(r.agreementId)).flatMap((r) => r.corrections || []);
 
   // ---- Claim Builder worklist (from concept B5) — what's in this recovery run ----
   // Findings currently in the discovery list are "included"; archived suggestions
-  // are "excluded". Placed above the process journey.
-  const findings = state.discovery?.findings || [];
-  const archived = state.archived || [];
+  // are "excluded". Placed above the process journey. Scoped to the filter.
+  const findings = (state.discovery?.findings || []).filter((f) => allowedAgr.has(f.agreementId) && passOv({ ...f, costOfInaction: f.leakage }));
+  const archived = (state.archived || []).filter((a) => allowedAgr.has(a.agreementId) || !ovFilterActive);
   // group per supplier -> compact boxes (included findings + excluded/archived)
   const wlSup = new Map();
   const wlBucket = (name) => { if (!wlSup.has(name)) wlSup.set(name, { name, items: [], total: 0, issues: 0, cur: 'EUR' }); return wlSup.get(name); };
@@ -8012,13 +8273,18 @@ function renderOverview(state) {
   const wlIncludedCount = findings.length;
   const wlIncTotal = findings.reduce((s, f) => s + (f.leakage || 0), 0);
 
-  // Top 3 suppliers by the active sort: amount (total leakage desc) or issue count (# findings desc).
-  const wlSort = state.wlSort === 'issues' ? 'issues' : 'amount';
-  const wlSortLabel = wlSort === 'issues' ? t('wlByIssues') : t('wlByAmount');
-  const wlSortFn = wlSort === 'issues'
-    ? (a, b) => (b.issues - a.issues) || (b.total - a.total)
-    : (a, b) => (b.total - a.total) || (b.issues - a.issues);
-  const wlTop = [...wlSup.values()].sort(wlSortFn).slice(0, 3);
+  // 3 visible supplier boxes, ordered by one of FOUR sort modes. The whole list
+  // of suppliers is sorted by the chosen key+direction, then the first three are
+  // shown — so every button visibly reorders (and re-picks) the three boxes.
+  const WL_SORTS = {
+    amount_desc: { label: t('wlByAmountDesc'), fn: (a, b) => (b.total - a.total) || (b.issues - a.issues) },
+    amount_asc: { label: t('wlByAmountAsc'), fn: (a, b) => (a.total - b.total) || (a.issues - b.issues) },
+    issues_desc: { label: t('wlByIssuesDesc'), fn: (a, b) => (b.issues - a.issues) || (b.total - a.total) },
+    issues_asc: { label: t('wlByIssuesAsc'), fn: (a, b) => (a.issues - b.issues) || (a.total - b.total) },
+  };
+  const wlSort = WL_SORTS[state.wlSort] ? state.wlSort : 'amount_desc';
+  const wlSortLabel = WL_SORTS[wlSort].label;
+  const wlTop = [...wlSup.values()].sort(WL_SORTS[wlSort].fn).slice(0, 3);
   const wlBoxes = wlTop.map((b) => {
     const chips = b.items.map((it) => `<span class="wl-chip ${it.status}" title="${it.status === 'include' ? fmtN(it.amt) + ' ' + b.cur : (it.note || t('wlExcluded'))}"><span class="mono">${it.id}</span>${it.status === 'include' ? ` · ${fmtN(it.amt)}` : ' ✕'}</span>`).join('');
     return `<div class="wl-box">
@@ -8027,9 +8293,9 @@ function renderOverview(state) {
       <div class="wl-chips">${chips}</div>
     </div>`;
   }).join('');
+  const wlBtn = (key) => `<button class="wl-sortbtn ${wlSort === key ? 'active' : ''}" data-wlsort="${key}">${WL_SORTS[key].label}</button>`;
   const wlSortBtns = `<span class="wl-sort">
-    <button class="wl-sortbtn ${wlSort === 'amount' ? 'active' : ''}" data-wlsort="amount">${t('wlByAmount')}</button>
-    <button class="wl-sortbtn ${wlSort === 'issues' ? 'active' : ''}" data-wlsort="issues">${t('wlByIssues')}</button>
+    ${wlBtn('amount_desc')}${wlBtn('amount_asc')}${wlBtn('issues_desc')}${wlBtn('issues_asc')}
   </span>`;
   // ---- (A) ML findings summary + CCOGS delta + pending/realized tracker -------
   // CCOGS delta = what the engine claimed (before) vs what the tool reconstructs
@@ -8039,7 +8305,7 @@ function renderOverview(state) {
   // pending vs realized additional-CCOGS: a recoverable charge is "realized" once
   // it has been posted to the ERP billing system this session (state.erpSent).
   const erpSent = state.erpSent || {};
-  const charges = state.charges || [];
+  const charges = (state.charges || []).filter((c) => allowedAgr.has(c.agreementId));
   const recCharges = charges.filter((c) => (c.variance || 0) > 0.01);
   const realized = recCharges.filter((c) => erpSent[c.chargeId]);
   const pending = recCharges.filter((c) => !erpSent[c.chargeId]);
@@ -8049,7 +8315,7 @@ function renderOverview(state) {
 
   // ML findings summary — top findings by recoverable, with a type badge
   // (missing-invoice cases flagged) so Finance sees WHAT the model surfaced.
-  const findingsAll = [...(state.discovery?.findings || [])].sort((a, b) => (b.leakage || 0) - (a.leakage || 0));
+  const findingsAll = [...findings].sort((a, b) => (b.leakage || 0) - (a.leakage || 0));
   const miCount = findingsAll.filter((f) => f.missingInvoice).length;
 
   const findingsSummaryBlock = `
@@ -8105,8 +8371,10 @@ function renderOverview(state) {
       const k = b.agreementId;
       if (!seen.has(k)) { seen.add(k); }
     }
-    // count agreements + recoverable agreements per window
+    // count agreements per window — scoped to the filtered agreements so the
+    // fail-rate denominator reacts to the global filter.
     for (const [id, g] of state.consolidated.byAgreement) {
+      if (!allowedAgr.has(id)) continue;
       const wt = g.agreement.windowType || 'CUSTOM';
       winStats[wt] = winStats[wt] || { total: 0, recovered: 0, savings: 0, agreements: new Set() };
       winStats[wt].total += 1;
@@ -8130,6 +8398,8 @@ function renderOverview(state) {
 
   return `
     <p class="lead">${t('overviewLead')}</p>
+
+    ${ovBar}
 
     <div class="ba ba-ml">
       <div class="panel total"><div class="h">${t('mlTotalAmount')}</div><div class="big">${eur(totalAll)}</div><div class="small">${t('allAgreements')}</div></div>
@@ -8476,6 +8746,75 @@ function chargesBySupplier(state) {
   return [...result, ...rest];
 }
 
+// ---- GLOBAL filter for the Consolidated Debit view -------------------------
+// Facets: supplier · contract validity (windowType) · agreement year (period) ·
+// recoverable-amount bucket. null on a facet = "all". Mirrors the Finance
+// Overview filter-bar pattern (data-cf* hooks wired by wireConsolFilterBar()).
+const CONSOL_AMOUNT_BUCKETS = [
+  { key: '0-500', label: '0 – 500', min: 0, max: 500 },
+  { key: '500-3000', label: '500 – 3,000', min: 500, max: 3000 },
+  { key: '3000-10000', label: '3,000 – 10,000', min: 3000, max: 10000 },
+  { key: '10000-25000', label: '10,000 – 25,000', min: 10000, max: 25000 },
+  { key: '25000+', label: '25,000 +', min: 25000, max: Infinity },
+];
+function consolWindowOf(state, agreementId) {
+  return state.consolidated?.byAgreement?.get(agreementId)?.agreement?.windowType || 'CUSTOM';
+}
+function consolYearOf(c) {
+  const m = /(\d{4})/.exec(String(c.period || '')); return m ? m[1] : '—';
+}
+function consolAmountBucket(c) {
+  const v = c.variance || 0;
+  const b = CONSOL_AMOUNT_BUCKETS.find((x) => v >= x.min && v < x.max);
+  return b ? b.key : CONSOL_AMOUNT_BUCKETS[CONSOL_AMOUNT_BUCKETS.length - 1].key;
+}
+function consolFilters(state) {
+  if (!state.consolFilters) state.consolFilters = { suppliers: null, windows: null, years: null, amounts: null };
+  return state.consolFilters;
+}
+function consolPass(state, c) {
+  const f = consolFilters(state);
+  const g = state.consolidated?.byAgreement?.get(c.agreementId) || null;
+  const supName = g?.agreement?.supplierName || c.supplierId || '—';
+  if (f.suppliers && !f.suppliers.has(supName)) return false;
+  if (f.windows && !f.windows.has(consolWindowOf(state, c.agreementId))) return false;
+  if (f.years && !f.years.has(consolYearOf(c))) return false;
+  if (f.amounts && !f.amounts.has(consolAmountBucket(c))) return false;
+  return true;
+}
+// Build the filter bar from the FULL (unfiltered) charge set so options stay stable.
+function consolFilterBar(state) {
+  const WIN_LBL = { MONTH: t('durMONTH'), QUARTER: t('durQUARTER'), HALF_YEAR: t('durHALFYEAR'), YEAR: t('durYEAR'), CUSTOM: t('durCUSTOM') };
+  const all = state.charges || [];
+  const f = consolFilters(state);
+  const supList = [...new Set(all.map((c) => state.consolidated?.byAgreement?.get(c.agreementId)?.agreement?.supplierName || c.supplierId || '—'))].sort();
+  const winList = ['MONTH', 'QUARTER', 'HALF_YEAR', 'YEAR', 'CUSTOM'].filter((w) => all.some((c) => consolWindowOf(state, c.agreementId) === w));
+  const yearList = [...new Set(all.map((c) => consolYearOf(c)))].sort();
+  const amtList = CONSOL_AMOUNT_BUCKETS.filter((b) => all.some((c) => consolAmountBucket(c) === b.key)).map((b) => b.key);
+  const amtLbl = Object.fromEntries(CONSOL_AMOUNT_BUCKETS.map((b) => [b.key, b.label]));
+
+  const opt = (kind, id, label, on) => `<label class="flt-opt"><input type="checkbox" data-cfopt="${kind}" value="${esc(String(id))}" ${on ? 'checked' : ''}/> ${esc(label)}</label>`;
+  const menu = (kind, title, opts, selSet, labelFn) => {
+    const on = (id) => !selSet || selSet.has(id);
+    const cnt = selSet ? [...selSet].length : opts.length;
+    return `<div class="flt-group flt-menu">
+      <button class="flt-toggle" data-cfmenu="${kind}">${esc(title)} <span class="flt-count">${cnt}/${opts.length}</span> ▾</button>
+      <div class="flt-pop" data-cfpop="${kind}" hidden>
+        <div class="flt-pop-actions"><button data-cfall="${kind}">${t('fltAll')}</button><button data-cfnone="${kind}">${t('fltNone')}</button></div>
+        <div class="flt-opts">${opts.map((o) => opt(kind, o, labelFn ? labelFn(o) : o, on(o))).join('')}</div>
+      </div>
+    </div>`;
+  };
+  return `<div class="fltbar cf-fltbar">
+    ${menu('sup', t('fltSupplier'), supList, f.suppliers)}
+    ${menu('win', t('ovFltContract'), winList, f.windows, (w) => WIN_LBL[w] || w)}
+    ${menu('year', t('cfltYear'), yearList, f.years)}
+    ${menu('amt', t('cfltAmount'), amtList, f.amounts, (k) => amtLbl[k] || k)}
+    <div class="flt-spacer"></div>
+    <button class="flt-toggle" data-cfclear>${t('fltClear')}</button>
+  </div>`;
+}
+
 // which supplier is active in the right panel; default = first
 function activeSupplier(state, groups) {
   if (state.consolSup && groups.some((g) => g.supplierId === state.consolSup)) return state.consolSup;
@@ -8491,8 +8830,12 @@ function selSet(state) {
 }
 
 function renderConsolidatedDebit(state) {
-  const groups = chargesBySupplier(state);
-  if (!groups.length) return `<p class="lead">${t('consolLead')}</p><div class="small">—</div>`;
+  const bar = consolFilterBar(state);
+  // group, then apply the global filter to each supplier's charges; drop empties.
+  const groups = chargesBySupplier(state)
+    .map((g) => ({ ...g, charges: g.charges.filter((c) => consolPass(state, c)) }))
+    .filter((g) => g.charges.length);
+  if (!groups.length) return `<p class="lead">${t('consolLead')}</p>${bar}<div class="small">${t('consolNothing')}</div>`;
   const sel = selSet(state);
   const activeId = activeSupplier(state, groups);
   const active = groups.find((g) => g.supplierId === activeId) || groups[0];
@@ -8575,6 +8918,7 @@ function renderConsolidatedDebit(state) {
 
   return `
     <p class="lead">${t('consolLead')}</p>
+    ${bar}
     <div class="consol-grid">
       <div class="consol-left">${left}</div>
       <div class="consol-right">${preview}</div>
@@ -8744,28 +9088,30 @@ function renderAudit(state) {
 
 // ==== ui/mappingflow.js ====
 __define("ui/mappingflow", function(){
-// Mapping Logic — animated model workflow (nav stage #5).
+// Mapping Logic — animated model workflow (nav stage #5, currently hidden).
 //
 // A single-screen, self-explanatory animation of HOW the tool turns raw source
 // documents into the findings shown on the summary. Pure SVG + CSS + a small
 // timeline driver (setTimeout). Offline-safe, no libraries. Light theme, sized
 // to fit one monitor screen (roughly Finance-Overview height).
 //
-// Storyboard:
-//   Scene A — Collecting sources: the Invoices window comes to the front, its
-//     counter ticks 0->N, then it shrinks and flies to a stacked "ingested"
-//     slot on the left. Delivery notes follow (a touch faster), then goods,
-//     CCOGS engine, missing data and agreements (~2s each).
-//   Scene B — Machine learning: a neural-network-style panel (input / hidden /
-//     output layers) lights up its connections every which way (~8s), showing
-//     that all sources are being combined into the mapping.
-//   Scene C — Results: the stacked ingestions on the left feed a small "ML done"
-//     core; high-level result windows appear on the right, each labelled with
-//     which inputs combined to produce it (e.g. Late delivery <- invoice +
-//     goods receipt + CCOGS engine).
-//   Scene D — Next steps (revealed by a button): Data -> ML analysis -> Results
-//     -> the manual actions the user can take (generate invoice, contact
-//     supplier, audit export).
+// Storyboard (rev 2):
+//   Scene A — Collect: the Invoices window loads first (counter 0->N, ~5s),
+//     then delivery notes (~1s faster). Every source AFTER that just appears and
+//     flies straight to the right-hand stack (no long collect) to save time. As
+//     each parks it shrinks from a big window into a SMALL window; once stacked
+//     the text fades and only the ICON remains.
+//   Scene B — Messy ML web: an ML core drops at a random spot (mid->right of the
+//     screen), the source icons scatter around it, and arrows connect them every
+//     which way (~25 links) — a spider web. It fades, a second smaller cluster
+//     forms elsewhere (~15 links), then a third big messy one (~45 links). The
+//     point: the model tries to combine every input with every combination of
+//     inputs. Then the whole mess clears.
+//   Scene C — Results: the big source windows return on the left, an ML core in
+//     the middle, and the high-level result windows on the right, stacked below
+//     each other, each naming which inputs combined to produce it.
+//   Scene D — Next steps (button): Data -> ML analysis -> Results -> the manual
+//     actions the user can take (generate invoice, contact supplier, audit export).
 //
 // Pure string builder + playMappingFlow() that animates the DOM it produced.
 
@@ -8773,9 +9119,7 @@ const { t } = __require("lib/i18n");
 
 const nf = (n) => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
 
-// The six sources in collection order. `sys` = source system badge; `count` is
-// the live number of ingested docs; timings tuned per the storyboard.
-// icon = a tiny monoline glyph so each window reads at a glance.
+// tiny monoline glyphs so each source reads at a glance
 const SRC_ICON = {
   invoice: '<path d="M6 3h9l3 3v15l-2-1-2 1-2-1-2 1-2-1-2 1V3z"/><path d="M9 8h6M9 12h6M9 16h4"/>',
   delivery: '<path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/>',
@@ -8788,46 +9132,33 @@ function srcGlyph(icon) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SRC_ICON[icon] || SRC_ICON.invoice}</svg>`;
 }
 
-// order + metadata for the six collected sources
+// order + metadata for the six collected sources.
+//   collectMs = how long its "collect" phase lasts in Scene A.
+//   flyOnly   = true: skip the count-up collect, just appear + fly to the stack.
 const SOURCES = [
-  { key: 'invoices', icon: 'invoice', sys: 'DB', labelKey: 'subInvoices', collectMs: 5000, fallback: 42 },
-  { key: 'deliveryNotes', icon: 'delivery', sys: 'EDI', labelKey: 'subDeliveryNotes', collectMs: 4000, fallback: 28 },
-  { key: 'receipts', icon: 'goods', sys: 'DB', labelKey: 'subReceipts', collectMs: 2000, fallback: 36 },
-  { key: 'ccogsEngine', icon: 'engine', sys: 'DB', labelKey: 'subEngine', collectMs: 2000, fallback: 30 },
-  { key: 'events', icon: 'missing', sys: 'EDI', labelKey: 'subMissing', collectMs: 2000, fallback: 12 },
-  { key: 'agreements', icon: 'agreement', sys: 'DB', labelKey: 'subAgreements', collectMs: 2000, fallback: 18 },
+  { key: 'invoices', icon: 'invoice', sys: 'DB', labelKey: 'subInvoices', collectMs: 5000, flyOnly: false, fallback: 42 },
+  { key: 'deliveryNotes', icon: 'delivery', sys: 'EDI', labelKey: 'subDeliveryNotes', collectMs: 4000, flyOnly: false, fallback: 28 },
+  { key: 'receipts', icon: 'goods', sys: 'DB', labelKey: 'subReceipts', collectMs: 900, flyOnly: true, fallback: 36 },
+  { key: 'ccogsEngine', icon: 'engine', sys: 'DB', labelKey: 'subEngine', collectMs: 900, flyOnly: true, fallback: 30 },
+  { key: 'events', icon: 'missing', sys: 'EDI', labelKey: 'subMissing', collectMs: 900, flyOnly: true, fallback: 12 },
+  { key: 'agreements', icon: 'agreement', sys: 'DB', labelKey: 'subAgreements', collectMs: 900, flyOnly: true, fallback: 18 },
 ];
 
 // The high-level results (Scene C). Each names the inputs that combine to
-// produce it (shown as source chips) + a plain-language "why". `srcs` reference
-// SOURCES keys so we can draw the right feeder chips.
+// produce it (source chips) + a plain-language "why".
 const RESULTS = [
   { key: 'late', titleKey: 'mfResLate', srcs: ['invoices', 'receipts', 'ccogsEngine'], whyKey: 'mfResLateWhy', cls: 'r-late' },
   { key: 'paneu', titleKey: 'mfResPanEu', srcs: ['receipts', 'agreements', 'ccogsEngine'], whyKey: 'mfResPanEuWhy', cls: 'r-paneu' },
   { key: 'scan', titleKey: 'mfResScan', srcs: ['ccogsEngine', 'agreements'], whyKey: 'mfResScanWhy', cls: 'r-scan' },
-  { key: 'missing', titleKey: 'mfResMissing', srcs: ['deliveryNotes', 'receipts', 'events'], whyKey: 'mfResMissingWhy', cls: 'r-missing' },
+  { key: 'missing', titleKey: 'mfResMissing', shortKey: 'mfResMissingShort', srcs: ['deliveryNotes', 'receipts', 'events'], whyKey: 'mfResMissingWhy', cls: 'r-missing' },
   { key: 'complete', titleKey: 'mfResComplete', srcs: ['invoices', 'receipts'], whyKey: 'mfResCompleteWhy', cls: 'r-complete' },
 ];
 
-// Next-steps flow (Scene D): stages then the branch actions the user can take.
-const NEXT_STAGES = [
-  { key: 'data', labelKey: 'mfNsData', icon: 'δ', cls: 'ns-data' },
-  { key: 'ml', labelKey: 'mfNsMl', icon: '∑', cls: 'ns-ml' },
-  { key: 'results', labelKey: 'mfNsResults', icon: '✓', cls: 'ns-results' },
-];
-const NEXT_ACTIONS = [
-  { key: 'generate', titleKey: 'mfNsGenerate', descKey: 'mfNsGenerateD', cls: 'na-generate' },
-  { key: 'rejected', titleKey: 'mfNsRejected', descKey: 'mfNsRejectedD', cls: 'na-rejected' },
-  { key: 'details', titleKey: 'mfNsDetails', descKey: 'mfNsDetailsD', cls: 'na-details' },
-];
+function sysBadge(sys) { return `<span class="mf-sys mf-sys-${sys.toLowerCase()}">${t('sys' + sys)}</span>`; }
 
-// --- source-system glyph reused from ingest flow look ---
-function sysBadge(sys) {
-  return `<span class="mf-sys mf-sys-${sys.toLowerCase()}">${t('sys' + sys)}</span>`;
-}
-
-// Build one collected-source window (Scene A). Rendered absolutely-positioned;
-// the animation moves it to the front, counts up, then parks it in the stack.
+// One collected-source window (Scene A). Big + centered to start; animation adds
+// .front (pop to front), then .parked (shrink to a small right-hand stack slot),
+// then .iconly (text fades, only the icon remains).
 function sourceWindow(s, count, idx) {
   return `<div class="mf-srcwin" data-src="${s.key}" data-idx="${idx}" style="--slot:${idx}">
     <div class="mf-srcwin-h">
@@ -8837,38 +9168,6 @@ function sourceWindow(s, count, idx) {
     </div>
     <div class="mf-srcwin-count"><span class="mf-num" data-count="${count}">0</span></div>
     <div class="mf-srcwin-sub">${t('mfCollecting')}</div>
-  </div>`;
-}
-
-// Neural-net panel (Scene B). Three columns of nodes (input/hidden/output) with
-// SVG edges connecting every input to every hidden and every hidden to every
-// output. CSS animates edge "signal" pulses in all directions.
-function neuralPanel() {
-  const IN = 6, HID = 5, OUT = 5;
-  const W = 460, H = 300, padY = 26;
-  const colX = [60, 230, 400];
-  const ys = (n) => Array.from({ length: n }, (_, i) => padY + (H - 2 * padY) * (n === 1 ? 0.5 : i / (n - 1)));
-  const inY = ys(IN), hidY = ys(HID), outY = ys(OUT);
-  let edges = '';
-  let e = 0;
-  for (let i = 0; i < IN; i++) for (let h = 0; h < HID; h++) {
-    edges += `<line class="mf-edge" x1="${colX[0]}" y1="${inY[i].toFixed(1)}" x2="${colX[1]}" y2="${hidY[h].toFixed(1)}" style="--d:${(e++ % 12) * 0.12}s"/>`;
-  }
-  for (let h = 0; h < HID; h++) for (let o = 0; o < OUT; o++) {
-    edges += `<line class="mf-edge mf-edge-2" x1="${colX[1]}" y1="${hidY[h].toFixed(1)}" x2="${colX[2]}" y2="${outY[o].toFixed(1)}" style="--d:${(e++ % 12) * 0.12}s"/>`;
-  }
-  const nodes = (xs, arr, cls) => arr.map((y, i) => `<circle class="mf-node ${cls}" cx="${xs}" cy="${y.toFixed(1)}" r="7" style="--d:${i * 0.15}s"/>`).join('');
-  const colLbl = (x, key) => `<text class="mf-collbl" x="${x}" y="14" text-anchor="middle">${t(key)}</text>`;
-  return `<div class="mf-nn" id="mfNn">
-    <div class="mf-nn-head"><span class="mf-nn-kick">${t('mfMlKick')}</span><span class="mf-nn-title">${t('mfMlTitle')}</span></div>
-    <svg class="mf-nn-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-      ${colLbl(colX[0], 'mfLayerIn')}${colLbl(colX[1], 'mfLayerHidden')}${colLbl(colX[2], 'mfLayerOut')}
-      <g class="mf-edges">${edges}</g>
-      ${nodes(colX[0], inY, 'mf-node-in')}
-      ${nodes(colX[1], hidY, 'mf-node-hid')}
-      ${nodes(colX[2], outY, 'mf-node-out')}
-    </svg>
-    <div class="mf-nn-cap">${t('mfMlCap')}</div>
   </div>`;
 }
 
@@ -8885,49 +9184,32 @@ function resultWindow(r, idx) {
   </div>`;
 }
 
-// The compact left stack shown in Scene C (parked ingestions) + ML core.
+// Scene C stage: big source windows (left) -> ML core -> stacked results (right).
 function resultsStage() {
-  const stack = SOURCES.map((s) => `<div class="mf-stack-item" data-src="${s.key}">
-    <span class="mf-stack-ico">${srcGlyph(s.icon)}</span>
-    <span class="mf-stack-t">${t(s.labelKey)}</span>
+  const bigs = SOURCES.map((s) => `<div class="mf-bigsrc" data-src="${s.key}">
+    <span class="mf-bigsrc-ico">${srcGlyph(s.icon)}</span>
+    <span class="mf-bigsrc-t">${t(s.labelKey)}</span>
   </div>`).join('');
   const results = RESULTS.map((r, i) => resultWindow(r, i)).join('');
   return `<div class="mf-resultstage" id="mfResults">
-    <div class="mf-stack">
-      <div class="mf-stack-cap">${t('mfIngested')}</div>
-      ${stack}
+    <div class="mf-bigcol">
+      <div class="mf-col-cap">${t('mfIngested')}</div>
+      ${bigs}
     </div>
     <div class="mf-core">
       <div class="mf-core-badge">∑</div>
       <div class="mf-core-lbl">${t('mfMlDone')}</div>
       <svg class="mf-core-arrow" viewBox="0 0 40 12" aria-hidden="true"><path d="M0 6h34M28 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
-    <div class="mf-results-col">${results}</div>
-  </div>`;
-}
-
-// Next-steps flow (Scene D).
-function nextStepsView() {
-  const stages = NEXT_STAGES.map((s, i) => `
-    <div class="mf-ns-stage ${s.cls}" style="--si:${i}">
-      <div class="mf-ns-ico">${s.icon}</div>
-      <div class="mf-ns-lbl">${t(s.labelKey)}</div>
-    </div>${i < NEXT_STAGES.length - 1 ? '<div class="mf-ns-arrow">→</div>' : ''}`).join('');
-  const actions = NEXT_ACTIONS.map((a, i) => `
-    <div class="mf-ns-action ${a.cls}" style="--ai:${i}">
-      <div class="mf-ns-action-h">${t(a.titleKey)}</div>
-      <div class="mf-ns-action-d">${t(a.descKey)}</div>
-    </div>`).join('');
-  return `<div class="mf-nextsteps" id="mfNext">
-    <div class="mf-ns-flow">${stages}</div>
-    <div class="mf-ns-fork">↳ ${t('mfNsActionsLbl')}</div>
-    <div class="mf-ns-actions">${actions}</div>
+    <div class="mf-results-col">
+      <div class="mf-col-cap">${t('mfLayerOut')}</div>
+      ${results}
+    </div>
   </div>`;
 }
 
 // ---- top-level stage renderer ----
 function renderMappingFlow(state) {
-  // live counts from the store; fall back to storyboard numbers if empty
   const counts = {};
   for (const s of SOURCES) {
     const n = state?.store ? state.store.all(s.key).length : 0;
@@ -8939,32 +9221,174 @@ function renderMappingFlow(state) {
     <p class="lead">${t('mfLead')}</p>
     <div class="mf-stagewrap">
       <div class="mf-toolbar">
-        <div class="mf-caption" id="mfCaption">${t('mfCapA')}</div>
+        <div class="mf-caption" id="mfCaption">${t('mfCapB')}</div>
         <div class="mf-controls">
           <button class="btn ghost" id="mfReplay">↻ ${t('mfReplay')}</button>
-          <button class="btn primary" id="mfNextBtn" disabled>${t('mfNextSteps')} →</button>
+          <button class="btn primary" id="mfContinue">${t('mfContinue')} →</button>
         </div>
       </div>
 
-      <div class="mf-screen" id="mfScreen" data-scene="a">
-        <!-- Scene A + C share the source windows; C parks them into the stack -->
+      <div class="mf-screen" id="mfScreen" data-scene="b">
+        <!-- Scene A (collect) is SKIPPED for now — markup kept, hidden, for later. -->
         <div class="mf-collect" id="mfCollect">${srcWins}</div>
 
-        <!-- Scene B: neural net -->
-        ${neuralPanel()}
+        <!-- Scene B: model chain. SVG draws blocks/outputs/packets; the six input
+             tiles are HTML overlays (robust — no SVG-icon sizing surprises). -->
+        <div class="mf-web" id="mfWeb">
+          <svg class="mf-web-svg" id="mfWebSvg" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="mf-ch-tiles" id="mfChTiles"></div>
+        </div>
 
-        <!-- Scene C: results -->
+        <!-- Scene C: results (final scene) -->
         ${resultsStage()}
-
-        <!-- Scene D: next steps -->
-        ${nextStepsView()}
       </div>
+
+      ${modelsSection()}
     </div>`;
 }
 
+// ---- Below the animation: the THREE ML models the pipeline uses, explained.
+// Realistic, business-credible models that read the heterogeneous inputs and
+// produce the CCOGS true-ups: entity resolution (link records) → volume
+// reconstruction (regression) → true-up classification (supervised).
+const MF_MODELS = [
+  { key: 'match', glyph: 'link', badgeKey: 'mfMdlMatchType' },
+  { key: 'recon', glyph: 'wave', badgeKey: 'mfMdlReconType' },
+  { key: 'class', glyph: 'target', badgeKey: 'mfMdlClassType' },
+];
+const MF_MODEL_GLYPH = {
+  // link / record-matching
+  link: '<path d="M9 12a3 3 0 0 1 3-3h3a3 3 0 0 1 0 6h-1"/><path d="M15 12a3 3 0 0 1-3 3H9a3 3 0 0 1 0-6h1"/>',
+  // converging signal / reconstruction
+  wave: '<path d="M3 12c3 0 3-6 6-6s3 12 6 12 3-6 6-6"/>',
+  // classification target
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>',
+};
+function modelsSection() {
+  const cards = MF_MODELS.map((m, i) => `
+    <div class="mf-mdl" style="--mi:${i}">
+      <div class="mf-mdl-h">
+        <span class="mf-mdl-ico">${srcGlyphRaw(MF_MODEL_GLYPH[m.glyph])}</span>
+        <span class="mf-mdl-step">${i + 1}</span>
+      </div>
+      <div class="mf-mdl-name">${t('mfMdl' + cap1(m.key) + 'Name')}</div>
+      <div class="mf-mdl-type">${t(m.badgeKey)}</div>
+      <div class="mf-mdl-desc">${t('mfMdl' + cap1(m.key) + 'Desc')}</div>
+      <div class="mf-mdl-in"><span class="mf-mdl-in-l">${t('mfMdlUses')}</span> ${t('mfMdl' + cap1(m.key) + 'In')}</div>
+    </div>`).join('<div class="mf-mdl-arrow">→</div>');
+  return `<div class="mf-models">
+    <div class="mf-models-head">
+      <h3>${t('mfModelsTitle')}</h3>
+      <p class="muted small">${t('mfModelsLead')}</p>
+    </div>
+    <div class="mf-models-grid">${cards}</div>
+  </div>`;
+}
+
+// (Removed: the per-model "In action" worked-example panels.)
+function cap1(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// raw monoline glyph (path string) → sized SVG
+function srcGlyphRaw(pathStr) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${pathStr}</svg>`;
+}
+
+// small deterministic-ish RNG so replays look varied but not seizure-y
+function rng(seed) { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+
+// Short "real information" tokens for the travelling chips (EDI-style), so it
+// looks like actual documents/records are streaming through the model. Mix of
+// invoice numbers, delivery notes, goods receipts, EDI transaction codes and
+// unit counts drawn from the sources the tool ingests.
+const PACKET_PREFIX = ['INV', 'DN', 'GRN', 'PO', 'ASN', 'AGR'];
+const PACKET_EDI = ['850', '810', '856', '820', '855', '997'];
+function packetToken() {
+  const r = Math.random();
+  if (r < 0.5) return `${PACKET_PREFIX[(Math.random() * PACKET_PREFIX.length) | 0]}-${(10000 + ((Math.random() * 89999) | 0))}`;
+  if (r < 0.78) return `${PACKET_EDI[(Math.random() * PACKET_EDI.length) | 0]} · ${(1 + ((Math.random() * 480) | 0))}u`;
+  return `${(1 + ((Math.random() * 1200) | 0))} units`;
+}
+
+// Build the MODEL CHAIN (gallery idea "H"): six named source tiles on the left
+// feed a chain of THREE model blocks in series — Ingest → Reconstruct →
+// Classify — each holding its own little "combining web" of nodes. Five named
+// output cards sit on the right. This function returns the STATIC svg plus the
+// geometry the play loop needs to drive travelling packets:
+//   { svg, inPts:[{x,y}], webs:[[{x,y}...] x3], outPts:[{x,y}] }
+// Coordinate space matches the #mfWebSvg viewBox (1000 x 560).
+function buildModelChain(rand) {
+  const W = 1000, H = 560;
+  // blocks shifted left by ~57 viewBox units (~1.5cm on screen) for better balance.
+  // Labels reflect the three ML models: Match (entity resolution) → Reconstruct
+  // (volume regression) → Classify (supervised true-up classification).
+  const blocks = [
+    { x: 243, key: 'mfChainMatch' },
+    { x: 433, key: 'mfChainReconstruct' },
+    { x: 623, key: 'mfChainClassify' },
+  ];
+  // ---- vertical layout, centred in the 560-tall canvas (TEXT ONLY, no icons) ----
+  const inW = 150, inH = 46, inGap = 24;      // input tiles: narrower, hard left
+  const inN = SOURCES.length;
+  const inTotal = inN * inH + (inN - 1) * inGap;
+  const inTop = (H - inTotal) / 2;
+  const inLeft = 16;                          // hug the left edge → more gap to the middle
+
+  const bw = 150, bh = 380;                    // model blocks
+  const by = (H - bh) / 2;
+
+  const outW = 160, outH = 62, outGap = 18;    // output cards: WIDER on the right
+  const outN = RESULTS.length;
+  const outTotal = outN * outH + (outN - 1) * outGap;
+  const outTop = (H - outTotal) / 2;
+  const outLeft = 838;                         // starts just right of the last block (820)
+
+  // input tiles — rendered as HTML OVERLAY tiles (same button style as the
+  // Scene C source tiles), positioned as % of the 1000x560 canvas. This avoids
+  // any SVG-icon sizing bug. inPts (SVG coords) mark the right edge of each tile.
+  const inPts = [];
+  let tilesHtml = '';
+  SOURCES.forEach((s, i) => {
+    const y = inTop + i * (inH + inGap);
+    tilesHtml += `<div class="mf-ch-intile" style="left:${(inLeft / W * 100).toFixed(2)}%;top:${(y / H * 100).toFixed(2)}%;width:${(inW / W * 100).toFixed(2)}%;height:${(inH / H * 100).toFixed(2)}%">${t(s.labelKey)}</div>`;
+    inPts.push({ x: inLeft + inW, y: y + inH / 2 });
+  });
+
+  // three model blocks, each with an internal combining web (dots + links only)
+  let blockSvg = '';
+  const webs = [];
+  blocks.forEach((bk, bi) => {
+    const nodes = [];
+    for (let k = 0; k < 9; k++) nodes.push({ x: bk.x + 20 + rand() * (bw - 40), y: by + 26 + rand() * (bh - 52) });
+    webs.push(nodes);
+    let links = '';
+    for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+      if (rand() < 0.34) links += `<line class="mf-ch-weblink" x1="${nodes[i].x.toFixed(1)}" y1="${nodes[i].y.toFixed(1)}" x2="${nodes[j].x.toFixed(1)}" y2="${nodes[j].y.toFixed(1)}" />`;
+    }
+    const dots = nodes.map((n) => `<circle class="mf-ch-webnode" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="4" />`).join('');
+    blockSvg += `<g class="mf-ch-block" style="--bi:${bi}">
+      <rect class="mf-ch-box" x="${bk.x}" y="${by}" width="${bw}" height="${bh}" rx="18" />
+      <text class="mf-ch-blbl" x="${bk.x + bw / 2}" y="${by - 16}" text-anchor="middle">${t(bk.key)}</text>
+      ${links}${dots}
+    </g>`;
+  });
+
+  // output cards — HTML OVERLAY tiles (single line, auto-shrinking font), same
+  // button style as inputs; left-edge connection point returned in SVG coords.
+  const outPts = [];
+  let outTilesHtml = '';
+  RESULTS.forEach((r, i) => {
+    const y = outTop + i * (outH + outGap);
+    const outLabel = r.shortKey ? t(r.shortKey) : t(r.titleKey);
+    outTilesHtml += `<div class="mf-ch-outtile ${r.cls}" style="left:${(outLeft / W * 100).toFixed(2)}%;top:${(y / H * 100).toFixed(2)}%;width:${(outW / W * 100).toFixed(2)}%;height:${(outH / H * 100).toFixed(2)}%">${outLabel}</div>`;
+    outPts.push({ x: outLeft, y: y + outH / 2 });
+  });
+  const outSvg = '';
+
+  const svg = `<g class="mf-chain">${blockSvg}${outSvg}</g>`;
+  return { svg, tilesHtml: tilesHtml + outTilesHtml, inPts, webs, outPts, blocks: blocks.map((b) => b.x) };
+}
+
 // ---- animation driver ----
-// Scene captions in order + the scenes' cumulative schedule. Drives the DOM the
-// builder produced. Re-entrant: cancels any prior run on this host.
 function playMappingFlow(host) {
   const screen = host.querySelector('#mfScreen');
   if (!screen) return;
@@ -8973,90 +9397,106 @@ function playMappingFlow(host) {
   const after = (ms, fn) => timers.push(setTimeout(fn, ms));
 
   const caption = host.querySelector('#mfCaption');
-  const nextBtn = host.querySelector('#mfNextBtn');
+  const contBtn = host.querySelector('#mfContinue');
   const setCap = (key) => { if (caption) caption.textContent = t(key); };
   const setScene = (s) => { screen.dataset.scene = s; };
 
   const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // reset
-  setScene('a');
-  if (nextBtn) nextBtn.disabled = true;
-  const wins = [...screen.querySelectorAll('.mf-srcwin')];
-  wins.forEach((w) => { w.classList.remove('front', 'parked', 'collecting'); });
-  screen.querySelectorAll('.mf-num').forEach((el) => { el.textContent = '0'; });
-
-  // A run token: a fresh play() bumps it so any in-flight count-up loops stop.
   const runId = (screen.__mfRun = (screen.__mfRun || 0) + 1);
-  const raf = (typeof requestAnimationFrame === 'function') ? requestAnimationFrame : ((f) => setTimeout(() => f(Date.now()), 16));
-  const now0 = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
+  const NS = 'http://www.w3.org/2000/svg';
 
-  // count-up helper for a single window's number (eased, self-cancelling)
-  const countUp = (el, target, ms) => {
-    if (!el) return;
-    const start = now0();
-    const step = (now) => {
-      if (screen.__mfRun !== runId) return;        // a newer run superseded us
-      const p = Math.min(1, (now - start) / ms);
-      el.textContent = nf(Math.round(target * (0.5 - 0.5 * Math.cos(Math.PI * p)))); // ease-in-out
-      if (p < 1) raf(step); else el.textContent = nf(target);
-    };
-    raf(step);
+  // Scene A (collect) is skipped for now. We start at Scene B (the model chain).
+  const wins = [...screen.querySelectorAll('.mf-srcwin')];
+  wins.forEach((w) => { w.classList.remove('front', 'parked', 'iconly', 'collecting'); });
+  const webSvg = screen.querySelector('#mfWebSvg'); if (webSvg) webSvg.innerHTML = '';
+  const tilesHost = screen.querySelector('#mfChTiles'); if (tilesHost) tilesHost.innerHTML = '';
+
+  // ---- Scene B: model chain (Ingest → Reconstruct → Classify) with packets ----
+  const rand = rng(0x9e3779b9 ^ (Date.now() & 0xffff));
+  const chain = buildModelChain(rand);
+  setScene('b'); setCap('mfCapB');
+  if (contBtn) contBtn.disabled = false;
+  if (webSvg) webSvg.innerHTML = chain.svg;
+  if (tilesHost) tilesHost.innerHTML = chain.tilesHtml;
+
+  // drive travelling packets: input tile → a node in each block → an output.
+  // Each packet is an EDI-style labelled CHIP (rounded pill + short doc token),
+  // so it reads as real documents/records streaming through the model.
+  // For the first 8s, packets are labelled EDI chips (real records streaming);
+  // after that they become plain dots — calmer on the eyes. Movement is gentle.
+  const bStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const TEXT_WINDOW_MS = 8000;
+  const SPEED = 0.03;   // per-tick progress along a segment (lower = slower)
+  const spawn = () => {
+    if (screen.__mfRun !== runId || screen.dataset.scene !== 'b') return;
+    const svg = screen.querySelector('#mfWebSvg'); if (!svg) return;
+    const stops = [chain.inPts[(Math.random() * chain.inPts.length) | 0]];
+    chain.webs.forEach((web) => stops.push(web[(Math.random() * web.length) | 0]));
+    stops.push(chain.outPts[(Math.random() * chain.outPts.length) | 0]);
+
+    const nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    const asText = (nowMs - bStart) < TEXT_WINDOW_MS;
+
+    let g;
+    if (asText) {
+      const label = packetToken();
+      const halfW = 24 + label.length * 3.4;   // pill sized to the text
+      g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'mf-ch-packet');
+      const rect = document.createElementNS(NS, 'rect');
+      rect.setAttribute('x', (-halfW).toFixed(1)); rect.setAttribute('y', '-11');
+      rect.setAttribute('width', (halfW * 2).toFixed(1)); rect.setAttribute('height', '22');
+      rect.setAttribute('rx', '8'); rect.setAttribute('class', 'mf-ch-packet-box');
+      const txt = document.createElementNS(NS, 'text');
+      txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('dominant-baseline', 'central');
+      txt.setAttribute('class', 'mf-ch-packet-t'); txt.textContent = label;
+      g.appendChild(rect); g.appendChild(txt);
+    } else {
+      // plain dot phase
+      g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'mf-ch-packet mf-ch-packet-dot');
+      const dot = document.createElementNS(NS, 'circle');
+      dot.setAttribute('r', '5'); dot.setAttribute('class', 'mf-ch-packet-dotc');
+      g.appendChild(dot);
+    }
+    g.setAttribute('transform', `translate(${stops[0].x},${stops[0].y})`);
+    svg.appendChild(g);
+
+    let seg = 0, tt = 0;
+    const iv = setInterval(() => {
+      if (screen.__mfRun !== runId) { clearInterval(iv); g.remove(); return; }
+      tt += SPEED; const a = stops[seg], b = stops[seg + 1];
+      if (!b) { clearInterval(iv); g.remove(); return; }
+      const x = a.x + (b.x - a.x) * tt, y = a.y + (b.y - a.y) * tt;
+      g.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+      g.setAttribute('data-stage', seg === 0 ? 'in' : (seg < stops.length - 2 ? 'mix' : 'out'));
+      if (tt >= 1) { tt = 0; seg++; }
+    }, 26);
+    timers.push(iv);
   };
+  if (!reduced) { const streamer = setInterval(spawn, 340); timers.push(streamer); }
 
-  if (reduced) {
-    // snap straight to results
-    wins.forEach((w) => w.classList.add('parked'));
-    screen.querySelectorAll('.mf-num').forEach((el) => { el.textContent = nf(+el.dataset.count || 0); });
-    setScene('c'); setCap('mfCapC');
-    if (nextBtn) nextBtn.disabled = false;
-    return;
-  }
-
-  // ---- Scene A: collect each source in sequence ----
-  setCap('mfCapA');
-  let clock = 200;
-  wins.forEach((w, i) => {
-    const s = SOURCES[i];
-    const dur = s.collectMs;
-    const front = clock;
-    const park = clock + dur * 0.62;      // start shrinking/flying partway through
-    after(front, () => {
-      w.classList.add('front', 'collecting');
-      countUp(w.querySelector('.mf-num'), +w.querySelector('.mf-num').dataset.count || 0, dur * 0.55);
-    });
-    after(park, () => { w.classList.remove('front', 'collecting'); w.classList.add('parked'); });
-    clock += dur;
-  });
-  const endA = clock + 300;
-
-  // ---- Scene B: machine learning (~8s) ----
-  const endB = endA + 8000;
-  after(endA, () => { setScene('b'); setCap('mfCapB'); });
-
-  // ---- Scene C: results reveal ----
-  after(endB, () => {
+  // ---- Scene C: auto-advances after 20s, or on the Continue click ----
+  const goResults = () => {
+    if (screen.__mfRun !== runId || screen.dataset.scene === 'c') return;
     setScene('c'); setCap('mfCapC');
     const rs = [...screen.querySelectorAll('.mf-result')];
-    rs.forEach((r, i) => after(i * 700, () => r.classList.add('show')));
-    after(rs.length * 700 + 400, () => { if (nextBtn) nextBtn.disabled = false; });
-  });
-}
+    rs.forEach((r, i) => after(i * 650, () => r.classList.add('show')));
+    const live = host.querySelector('#mfContinue'); if (live) live.disabled = true;   // final scene
+  };
+  // rebind Continue each play (clone to drop stale listeners from a prior run)
+  if (contBtn) {
+    const fresh = contBtn.cloneNode(true);
+    contBtn.parentNode.replaceChild(fresh, contBtn);
+    fresh.addEventListener('click', goResults);
+  }
 
-// Reveal Scene D (next steps). Called by the "Next steps" button.
-function showNextSteps(host) {
-  const screen = host.querySelector('#mfScreen');
-  if (!screen) return;
-  screen.dataset.scene = 'd';
-  const caption = host.querySelector('#mfCaption');
-  if (caption) caption.textContent = t('mfCapD');
-  const stages = [...screen.querySelectorAll('.mf-ns-stage, .mf-ns-action')];
-  stages.forEach((el, i) => setTimeout(() => el.classList.add('show'), 120 + i * 260));
+  // auto-advance to the results after 20 seconds (Continue still skips ahead)
+  if (reduced) { goResults(); } else { after(20000, goResults); }
 }
 
   __M["ui/mappingflow"].renderMappingFlow = renderMappingFlow;
   __M["ui/mappingflow"].playMappingFlow = playMappingFlow;
-  __M["ui/mappingflow"].showNextSteps = showNextSteps;
 });
 
 // ==== app.js ====
@@ -9078,7 +9518,7 @@ const { animateIngestFlow, FLOW_NODES, mlAnalysisBlock, mlAnalysisStart, mlAnaly
 const { renderOverview, reviewModalHtml, renderAbout } = __require("ui/dashboards");
 const { renderInputs, renderMl, INPUT_CATS, tileDetail } = __require("ui/stages");
 const { renderAudit, auditDataset } = __require("ui/audit");
-const { renderMappingFlow, playMappingFlow, showNextSteps } = __require("ui/mappingflow");
+const { renderMappingFlow, playMappingFlow } = __require("ui/mappingflow");
 const { renderConsolidatedDebit, chargesBySupplier } = __require("ui/consolidated");
 const { invoiceDocHtml, deliveryNoteDocHtml, receiptDocHtml, eventDocHtml, engineDocHtml, agreementDocHtml, contraCogsInvoiceHtml } = __require("ui/doc");
 const { serializeInvoiceXml, serializeDeliveryNoteXml, serializeReceiptCsv, serializeEventCsv, serializeCcogsEngineCsv, serializeAgreementXml } = __require("lib/parsers");
@@ -9101,10 +9541,8 @@ const STAGES = [
   { id: 'consol', label: 'navConsolidated', n: 2, render: renderConsolidatedDebit },
   { id: 'overview', label: 'navOverview', n: 3, render: renderOverview },
   { id: 'audit', label: 'navAudit', n: 4, render: renderAudit },
-  // Part #5 — Mapping Logic (animated model workflow) HIDDEN for now while we
-  // refine it. Re-enable by uncommenting this line (module + i18n + CSS are all
-  // still in place). See src/ui/mappingflow.js.
-  // { id: 'mapping', label: 'navMapping', n: 5, render: renderMappingFlow },
+  // Part #5 — Mapping Logic (animated model workflow). Enabled for review.
+  { id: 'mapping', label: 'navMapping', n: 5, render: renderMappingFlow },
 ];
 
 const state = {
@@ -9121,6 +9559,7 @@ const state = {
   mailboxScan: null,            // { scanned, emailCount, matchAgreementId, matchEur, email } once a shared-mailbox scan matches an email to a finding
   erpSent: {},                  // chargeId -> { docNo, sys, amount, at } for charges "posted" to ERP this session (drives the Overview realized/pending tracker)
   inputFilters: { suppliers: null, warehouses: null, sortKey: 'ccogs', sortDir: 'desc' }, // Inputs & Collection doc-list filter/sort (null set = all selected)
+  consolFilters: { suppliers: null, windows: null, years: null, amounts: null }, // Consolidated Debit global filter (null = all)
   miContacted: false,           // missing-invoice: set true once the supplier has been contacted (unlocks recalculate)
 };
 
@@ -9232,14 +9671,18 @@ function bind() {
   const sumCont = app.querySelector('#sum-continue');
   if (sumCont) sumCont.addEventListener('click', () => { state.stage = 'consol'; render(); });
 
-  // Finance Overview — Claim builder Summary "Top 3 by" sort buttons (amount | issue count)
-  app.querySelectorAll('[data-wlsort]').forEach((b) => b.addEventListener('click', () => { state.wlSort = b.dataset.wlsort; render(); }));
+  // Finance Overview — global filter bar (supplier / issue / contract / validity)
+  wireOverviewFilterBar();
 
-  // Mapping Logic stage (#5): Replay restarts the animation; Next steps reveals Scene D.
+  // Consolidated Debit — global filter bar (supplier / contract / year / amount)
+  wireConsolFilterBar();
+
+  // Finance Overview — Claim builder Summary "Top 3 by" sort buttons are wired via
+  // the delegated listener in wireDelegates() (robust across re-renders).
+
+  // Mapping Logic stage (#5): Replay restarts the animation. (Ends at Scene C.)
   const mfReplay = app.querySelector('#mfReplay');
   if (mfReplay) mfReplay.addEventListener('click', () => playMappingFlow(app));
-  const mfNextBtn = app.querySelector('#mfNextBtn');
-  if (mfNextBtn) mfNextBtn.addEventListener('click', () => showNextSteps(app));
 
   // inputs summary: clickable result tiles -> details modal (what/how/proposal/impact).
   // The mailbox tile is special: unscanned -> open the scan flow; scanned -> details.
@@ -9476,18 +9919,18 @@ function openTileDetails(id) {
 // types; the Mailbox option launches the shared-mailbox email scan (the one that
 // can surface a missing-invoice update).
 function openAddSource() {
+  // Three connectable sources (mailbox removed — it has its own tile/flow).
   const SOURCES = [
     { id: 'edi', logo: 'EDI', name: t('srcEdiName'), sub: t('srcEdiSub') },
     { id: 'api', logo: 'API', name: t('srcApiName'), sub: t('srcApiSub') },
     { id: 'folder', logo: '📁', name: t('srcFolderName'), sub: t('srcFolderSub') },
-    { id: 'mailbox', logo: '✉', name: t('srcMailboxName'), sub: t('srcMailboxSub'), primary: true },
   ];
   const holder = document.createElement('div');
   holder.innerHTML = `<div class="modal-bg" id="asBg"><div class="modal">
     <div class="erp-head"><span class="erp-badge">＋</span><div>
       <h2>${t('addSourceTitle')}</h2><div class="sub">${t('addSourceLead')}</div></div></div>
     <div class="erp-syslist">
-      ${SOURCES.map((s) => `<button class="erp-sys as-src${s.primary ? ' as-primary' : ''}" data-src="${s.id}">
+      ${SOURCES.map((s) => `<button class="erp-sys as-src" data-src="${s.id}">
         <span class="erp-logo erp-logo-${s.id}">${s.logo}</span>
         <span class="erp-sys-main"><span class="erp-sys-name">${esc(s.name)}</span><span class="erp-sys-sub">${esc(s.sub)}</span></span>
         <span class="as-arrow">→</span>
@@ -9502,9 +9945,91 @@ function openAddSource() {
   holder.querySelectorAll('[data-src]').forEach((b) => b.addEventListener('click', () => {
     const id = b.dataset.src;
     close();
-    if (id === 'mailbox') openMailboxScan();
-    else flash(t('srcConnectedMsg', { name: SOURCES.find((s) => s.id === id).name }));
+    openConnectSource(id);
   }));
+}
+
+// Realistic per-source connection dialog (EDI / API / Folder). Each has its own
+// distinct set of professional fields. Demo-only: "Connect" flashes a confirmation.
+function connectSourceForm(kind) {
+  const fld = (labelKey, id, opts = {}) => {
+    const lbl = t(labelKey);
+    if (opts.options) {
+      const os = opts.options.map((o) => `<option${o === opts.value ? ' selected' : ''}>${esc(o)}</option>`).join('');
+      return `<label class="cf-fld"><span>${esc(lbl)}</span><select id="cf-${id}">${os}</select></label>`;
+    }
+    return `<label class="cf-fld"><span>${esc(lbl)}</span><input id="cf-${id}" type="${opts.type || 'text'}" value="${esc(opts.value || '')}" placeholder="${esc(opts.ph || '')}"/></label>`;
+  };
+  if (kind === 'edi') {
+    return {
+      title: t('cfEdiTitle'), sub: t('cfEdiSub'),
+      html: `<div class="cf-grid cf-2col">
+        ${fld('cfName', 'name', { value: 'Lumière Cosmetics — EDI (AS2)', ph: 'Trading partner EDI' })}
+        ${fld('cfProtocol', 'protocol', { options: ['AS2', 'OFTP2', 'SFTP', 'X.400', 'VAN'], value: 'AS2' })}
+        ${fld('cfStandard', 'standard', { options: ['ANSI X12', 'EDIFACT', 'TRADACOMS', 'XML/GS1'], value: 'EDIFACT' })}
+        ${fld('cfEndpoint', 'endpoint', { value: 'as2://edi.lumierecosmetics.fr/as2/inbound' })}
+        ${fld('cfAs2Id', 'as2id', { value: 'LUMIERE-PROD-01' })}
+        ${fld('cfIsaSender', 'isasender', { value: 'ZZ · 8590012340019' })}
+        ${fld('cfIsaReceiver', 'isareceiver', { value: 'ZZ · PERFUMERIES-AR' })}
+        ${fld('cfTxnSets', 'txnsets', { value: '810, 856, 850, 997', ph: '810, 856, 850' })}
+        ${fld('cfCert', 'cert', { value: 'partner_as2_public.cer', ph: 'AS2 signing certificate' })}
+      </div>
+      <p class="muted small">${t('cfDemoNote')}</p>`,
+    };
+  }
+  if (kind === 'api') {
+    return {
+      title: t('cfApiTitle'), sub: t('cfApiSub'),
+      html: `<div class="cf-grid cf-2col">
+        ${fld('cfName', 'name', { value: 'Nordica Beauty — REST API', ph: 'Partner / ERP API' })}
+        ${fld('cfBaseUrl', 'baseurl', { value: 'https://api.nordicabeauty.se/v2' })}
+        ${fld('cfAuth', 'auth', { options: ['OAuth 2.0 (client credentials)', 'API key', 'Basic auth', 'Bearer token'], value: 'OAuth 2.0 (client credentials)' })}
+        ${fld('cfTokenUrl', 'tokenurl', { value: 'https://auth.nordicabeauty.se/oauth/token' })}
+        ${fld('cfClientId', 'clientid', { value: 'perfumeries-ar-client' })}
+        ${fld('cfClientSecret', 'secret', { type: 'password', value: '••••••••••••••••' })}
+        ${fld('cfScope', 'scope', { value: 'invoices.read deliverynotes.read' })}
+        ${fld('cfPoll', 'poll', { options: ['Every 15 min', 'Hourly', 'Every 4 hours', 'Daily 06:00'], value: 'Hourly' })}
+        ${fld('cfPageSize', 'pagesize', { type: 'number', value: '500' })}
+      </div>
+      <p class="muted small">${t('cfDemoNote')}</p>`,
+    };
+  }
+  // folder (mirrors the old perfumeries.html Folder dialog)
+  return {
+    title: t('cfFolderTitle'), sub: t('cfFolderSub'),
+    html: `<div class="cf-grid">
+      ${fld('cfName', 'name', { value: 'OneDrive — AP inbox', ph: 'Shared drive inbox' })}
+      ${fld('cfPath', 'path', { value: './data/incoming/', ph: './data/incoming/' })}
+      ${fld('cfPattern', 'pattern', { value: '*.xml, *.csv' })}
+      ${fld('cfFormat', 'format', { options: ['XML (invoice / DN)', 'CSV (RECADV)', 'Mixed'], value: 'XML (invoice / DN)' })}
+    </div>
+    <p class="muted small">${t('cfDemoNote')}</p>`,
+  };
+}
+function openConnectSource(kind) {
+  const { title, sub, html } = connectSourceForm(kind);
+  const holder = document.createElement('div');
+  holder.innerHTML = `<div class="modal-bg" id="cfBg"><div class="modal">
+    <div class="erp-head"><span class="erp-badge">＋</span><div>
+      <h2>${esc(title)}</h2><div class="sub">${esc(sub)}</div></div></div>
+    <div class="cf-body">${html}</div>
+    <div class="actions">
+      <button class="btn ghost" id="cfCancel">${t('cancel')}</button>
+      <button class="btn primary" id="cfSave">${t('cfConnect')}</button>
+    </div>
+  </div></div>`;
+  document.body.appendChild(holder);
+  const close = () => holder.remove();
+  holder.querySelector('#cfBg').addEventListener('click', (e) => { if (e.target.id === 'cfBg') close(); });
+  holder.querySelector('#cfCancel').addEventListener('click', close);
+  holder.querySelector('#cfSave').addEventListener('click', () => {
+    const nameEl = holder.querySelector('#cf-name');
+    const name = (nameEl && nameEl.value) || t('srcEdiName');
+    close();
+    flash(t('srcConnectedMsg', { name }));
+  });
+  const first = holder.querySelector('#cf-body input, .cf-body input, .cf-body select');
+  if (first) { try { first.focus(); } catch { /* ignore */ } }
 }
 
 // Find the missing-invoice finding the scanned email should attach to (prefer
@@ -9552,7 +10077,7 @@ function openMailboxScan() {
 
   const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const foundMs = reduced ? 300 : 2600;   // show "match found" partway through
-  const closeMs = reduced ? 500 : 4000;   // then auto-close + flip the tile
+  const closeMs = reduced ? 500 : 6000;   // then auto-close + flip the tile (keep "ingesting" up 2s longer)
 
   setTimeout(() => {
     const txt = holder.querySelector('#mbxScanText');
@@ -9900,6 +10425,64 @@ function wireAuditBar() {
   // (Excel export button #auExport is handled by the delegated listener.)
 }
 
+// ---- Finance Overview GLOBAL filter bar wiring (supplier/issue/contract/validity) ----
+function wireOverviewFilterBar() {
+  const bar = app.querySelector('.ov-fltbar');
+  if (!bar) return;
+  if (!state.ovFilters) state.ovFilters = { suppliers: null, scopes: null, windows: null, validity: null };
+  const f = state.ovFilters;
+  const FIELD = { sup: 'suppliers', scope: 'scopes', win: 'windows', val: 'validity' };
+
+  bar.querySelectorAll('[data-ovmenu]').forEach((btn) => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const kind = btn.dataset.ovmenu;
+    const pop = bar.querySelector(`[data-ovpop="${kind}"]`);
+    const wasHidden = pop.hasAttribute('hidden');
+    bar.querySelectorAll('.flt-pop').forEach((p) => p.setAttribute('hidden', ''));
+    if (wasHidden) pop.removeAttribute('hidden');
+  }));
+  bar.querySelectorAll('.flt-pop').forEach((p) => p.addEventListener('click', (e) => e.stopPropagation()));
+
+  const collect = (kind) => {
+    const boxes = [...bar.querySelectorAll(`[data-ovopt="${kind}"]`)];
+    const checked = boxes.filter((b) => b.checked).map((b) => b.value);
+    return checked.length === boxes.length ? null : new Set(checked);
+  };
+  bar.querySelectorAll('[data-ovopt]').forEach((b) => b.addEventListener('change', () => { f[FIELD[b.dataset.ovopt]] = collect(b.dataset.ovopt); render(); }));
+  bar.querySelectorAll('[data-ovall]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); f[FIELD[b.dataset.ovall]] = null; render(); }));
+  bar.querySelectorAll('[data-ovnone]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); f[FIELD[b.dataset.ovnone]] = new Set(); render(); }));
+  const clear = bar.querySelector('[data-ovclear]'); if (clear) clear.addEventListener('click', () => { f.suppliers = null; f.scopes = null; f.windows = null; f.validity = null; render(); });
+}
+
+// ---- Consolidated Debit GLOBAL filter bar wiring (supplier/contract/year/amount) ----
+function wireConsolFilterBar() {
+  const bar = app.querySelector('.cf-fltbar');
+  if (!bar) return;
+  if (!state.consolFilters) state.consolFilters = { suppliers: null, windows: null, years: null, amounts: null };
+  const f = state.consolFilters;
+  const FIELD = { sup: 'suppliers', win: 'windows', year: 'years', amt: 'amounts' };
+
+  bar.querySelectorAll('[data-cfmenu]').forEach((btn) => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const kind = btn.dataset.cfmenu;
+    const pop = bar.querySelector(`[data-cfpop="${kind}"]`);
+    const wasHidden = pop.hasAttribute('hidden');
+    bar.querySelectorAll('.flt-pop').forEach((p) => p.setAttribute('hidden', ''));
+    if (wasHidden) pop.removeAttribute('hidden');
+  }));
+  bar.querySelectorAll('.flt-pop').forEach((p) => p.addEventListener('click', (e) => e.stopPropagation()));
+
+  const collect = (kind) => {
+    const boxes = [...bar.querySelectorAll(`[data-cfopt="${kind}"]`)];
+    const checked = boxes.filter((b) => b.checked).map((b) => b.value);
+    return checked.length === boxes.length ? null : new Set(checked);
+  };
+  bar.querySelectorAll('[data-cfopt]').forEach((b) => b.addEventListener('change', () => { f[FIELD[b.dataset.cfopt]] = collect(b.dataset.cfopt); render(); }));
+  bar.querySelectorAll('[data-cfall]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); f[FIELD[b.dataset.cfall]] = null; render(); }));
+  bar.querySelectorAll('[data-cfnone]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); f[FIELD[b.dataset.cfnone]] = new Set(); render(); }));
+  const clear = bar.querySelector('[data-cfclear]'); if (clear) clear.addEventListener('click', () => { f.suppliers = null; f.windows = null; f.years = null; f.amounts = null; render(); });
+}
+
 // One delegated click listener on `app`, installed ONCE, for the buttons that
 // were unreliable with per-render direct listeners (add-source, audit export).
 // Delegation survives re-renders and is unaffected by overlay/stacking issues.
@@ -9912,6 +10495,10 @@ function wireDelegates() {
     if (addSrc) { e.preventDefault(); openAddSource(); return; }
     const exp = e.target.closest && e.target.closest('#auExport');
     if (exp) { e.preventDefault(); exportAuditExcel(); return; }
+    // Finance Overview Claim-Builder sort buttons — delegated so a click always
+    // registers regardless of per-render binding timing.
+    const wl = e.target.closest && e.target.closest('[data-wlsort]');
+    if (wl) { e.preventDefault(); state.wlSort = wl.dataset.wlsort; render(); return; }
   });
 }
 

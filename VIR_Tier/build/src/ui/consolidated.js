@@ -46,6 +46,75 @@ export function chargesBySupplier(state) {
   return [...result, ...rest];
 }
 
+// ---- GLOBAL filter for the Consolidated Debit view -------------------------
+// Facets: supplier · contract validity (windowType) · agreement year (period) ·
+// recoverable-amount bucket. null on a facet = "all". Mirrors the Finance
+// Overview filter-bar pattern (data-cf* hooks wired by wireConsolFilterBar()).
+const CONSOL_AMOUNT_BUCKETS = [
+  { key: '0-500', label: '0 – 500', min: 0, max: 500 },
+  { key: '500-3000', label: '500 – 3,000', min: 500, max: 3000 },
+  { key: '3000-10000', label: '3,000 – 10,000', min: 3000, max: 10000 },
+  { key: '10000-25000', label: '10,000 – 25,000', min: 10000, max: 25000 },
+  { key: '25000+', label: '25,000 +', min: 25000, max: Infinity },
+];
+function consolWindowOf(state, agreementId) {
+  return state.consolidated?.byAgreement?.get(agreementId)?.agreement?.windowType || 'CUSTOM';
+}
+function consolYearOf(c) {
+  const m = /(\d{4})/.exec(String(c.period || '')); return m ? m[1] : '—';
+}
+function consolAmountBucket(c) {
+  const v = c.variance || 0;
+  const b = CONSOL_AMOUNT_BUCKETS.find((x) => v >= x.min && v < x.max);
+  return b ? b.key : CONSOL_AMOUNT_BUCKETS[CONSOL_AMOUNT_BUCKETS.length - 1].key;
+}
+function consolFilters(state) {
+  if (!state.consolFilters) state.consolFilters = { suppliers: null, windows: null, years: null, amounts: null };
+  return state.consolFilters;
+}
+function consolPass(state, c) {
+  const f = consolFilters(state);
+  const g = state.consolidated?.byAgreement?.get(c.agreementId) || null;
+  const supName = g?.agreement?.supplierName || c.supplierId || '—';
+  if (f.suppliers && !f.suppliers.has(supName)) return false;
+  if (f.windows && !f.windows.has(consolWindowOf(state, c.agreementId))) return false;
+  if (f.years && !f.years.has(consolYearOf(c))) return false;
+  if (f.amounts && !f.amounts.has(consolAmountBucket(c))) return false;
+  return true;
+}
+// Build the filter bar from the FULL (unfiltered) charge set so options stay stable.
+function consolFilterBar(state) {
+  const WIN_LBL = { MONTH: t('durMONTH'), QUARTER: t('durQUARTER'), HALF_YEAR: t('durHALFYEAR'), YEAR: t('durYEAR'), CUSTOM: t('durCUSTOM') };
+  const all = state.charges || [];
+  const f = consolFilters(state);
+  const supList = [...new Set(all.map((c) => state.consolidated?.byAgreement?.get(c.agreementId)?.agreement?.supplierName || c.supplierId || '—'))].sort();
+  const winList = ['MONTH', 'QUARTER', 'HALF_YEAR', 'YEAR', 'CUSTOM'].filter((w) => all.some((c) => consolWindowOf(state, c.agreementId) === w));
+  const yearList = [...new Set(all.map((c) => consolYearOf(c)))].sort();
+  const amtList = CONSOL_AMOUNT_BUCKETS.filter((b) => all.some((c) => consolAmountBucket(c) === b.key)).map((b) => b.key);
+  const amtLbl = Object.fromEntries(CONSOL_AMOUNT_BUCKETS.map((b) => [b.key, b.label]));
+
+  const opt = (kind, id, label, on) => `<label class="flt-opt"><input type="checkbox" data-cfopt="${kind}" value="${esc(String(id))}" ${on ? 'checked' : ''}/> ${esc(label)}</label>`;
+  const menu = (kind, title, opts, selSet, labelFn) => {
+    const on = (id) => !selSet || selSet.has(id);
+    const cnt = selSet ? [...selSet].length : opts.length;
+    return `<div class="flt-group flt-menu">
+      <button class="flt-toggle" data-cfmenu="${kind}">${esc(title)} <span class="flt-count">${cnt}/${opts.length}</span> ▾</button>
+      <div class="flt-pop" data-cfpop="${kind}" hidden>
+        <div class="flt-pop-actions"><button data-cfall="${kind}">${t('fltAll')}</button><button data-cfnone="${kind}">${t('fltNone')}</button></div>
+        <div class="flt-opts">${opts.map((o) => opt(kind, o, labelFn ? labelFn(o) : o, on(o))).join('')}</div>
+      </div>
+    </div>`;
+  };
+  return `<div class="fltbar cf-fltbar">
+    ${menu('sup', t('fltSupplier'), supList, f.suppliers)}
+    ${menu('win', t('ovFltContract'), winList, f.windows, (w) => WIN_LBL[w] || w)}
+    ${menu('year', t('cfltYear'), yearList, f.years)}
+    ${menu('amt', t('cfltAmount'), amtList, f.amounts, (k) => amtLbl[k] || k)}
+    <div class="flt-spacer"></div>
+    <button class="flt-toggle" data-cfclear>${t('fltClear')}</button>
+  </div>`;
+}
+
 // which supplier is active in the right panel; default = first
 function activeSupplier(state, groups) {
   if (state.consolSup && groups.some((g) => g.supplierId === state.consolSup)) return state.consolSup;
@@ -61,8 +130,12 @@ function selSet(state) {
 }
 
 export function renderConsolidatedDebit(state) {
-  const groups = chargesBySupplier(state);
-  if (!groups.length) return `<p class="lead">${t('consolLead')}</p><div class="small">—</div>`;
+  const bar = consolFilterBar(state);
+  // group, then apply the global filter to each supplier's charges; drop empties.
+  const groups = chargesBySupplier(state)
+    .map((g) => ({ ...g, charges: g.charges.filter((c) => consolPass(state, c)) }))
+    .filter((g) => g.charges.length);
+  if (!groups.length) return `<p class="lead">${t('consolLead')}</p>${bar}<div class="small">${t('consolNothing')}</div>`;
   const sel = selSet(state);
   const activeId = activeSupplier(state, groups);
   const active = groups.find((g) => g.supplierId === activeId) || groups[0];
@@ -145,6 +218,7 @@ export function renderConsolidatedDebit(state) {
 
   return `
     <p class="lead">${t('consolLead')}</p>
+    ${bar}
     <div class="consol-grid">
       <div class="consol-left">${left}</div>
       <div class="consol-right">${preview}</div>

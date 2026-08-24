@@ -255,7 +255,7 @@ export function summaryTiles(state) {
       subs: [`${ms2.emailCount || 1} ${t('mbxEmails')}`, ms2.matchAgreementId ? `${t('agreement')} ${ms2.matchAgreementId}` : ''].filter(Boolean),
       note: t('tileMailboxFoundNote') });
   } else {
-    tiles.push({ id: 'mailbox', size: 'normal', kind: 'warn', icon: 'mailbox', review: true, cta: t('mbxScanCta'),
+    tiles.push({ id: 'mailbox', size: 'normal', kind: 'warn', icon: 'mailbox', review: true, cta: t('mbxScanCta'), ctaStrong: true,
       title: t('tileMailbox'), big: t('mbxPossible'),
       subs: [t('mbxSharedMailbox')], note: t('tileMailboxNote') });
   }
@@ -436,7 +436,7 @@ function tileCard(tl) {
     <div class="tile-big">${esc(tl.big)}</div>
     <div class="tile-subs">${subs}</div>
     ${note}
-    <div class="tile-cta">${esc(tl.cta || t('tileOpenDetails'))} →</div>
+    <div class="tile-cta${tl.ctaStrong ? ' tile-cta-strong' : ''}">${esc(tl.cta || t('tileOpenDetails'))} →</div>
   </button>`;
 }
 

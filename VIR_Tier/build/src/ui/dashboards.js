@@ -13,9 +13,70 @@ const money = (v, cur) => `${Number(v).toLocaleString(undefined, { maximumFracti
 
 function fmtN(n) { return Math.round(n).toLocaleString(); }
 
+const escf = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---- Finance Overview GLOBAL filter bar (supplier / issue / contract / validity) ----
+// Reuses the shared .fltbar look. Emits data-ovmenu / data-ovopt / data-ovall /
+// data-ovnone hooks wired by wireOverviewFilterBar() in app.js. Every facet is a
+// multi-select where "all checked" = no filter (null).
+function overviewFilterBar({ suppliers, scopes, windows, validities, sel, winLbl }) {
+  const VAL_LBL = { VALID: t('ovValValid'), MISSING: t('ovValMissing'), CLEAN: t('ovValClean') };
+  const chk = (kind, id, label, on) => `<label class="flt-opt"><input type="checkbox" data-ovopt="${kind}" value="${escf(id)}" ${on ? 'checked' : ''}/> ${escf(label)}</label>`;
+  const menu = (kind, title, opts, selSet, labelFn) => {
+    const on = (id) => !selSet || selSet.has(id);
+    const cnt = selSet ? [...selSet].length : opts.length;
+    return `<div class="flt-group flt-menu">
+      <button class="flt-toggle" data-ovmenu="${kind}">${title} <span class="flt-count">${cnt}/${opts.length}</span> ▾</button>
+      <div class="flt-pop" data-ovpop="${kind}" hidden>
+        <div class="flt-pop-actions"><button data-ovall="${kind}">${t('fltAll')}</button><button data-ovnone="${kind}">${t('fltNone')}</button></div>
+        <div class="flt-opts">${opts.map((o) => chk(kind, o, labelFn ? labelFn(o) : o, on(o))).join('')}</div>
+      </div>
+    </div>`;
+  };
+  return `<div class="fltbar ov-fltbar">
+    ${menu('sup', t('fltSupplier'), suppliers, sel.suppliers)}
+    ${menu('scope', t('ovFltIssue'), scopes, sel.scopes)}
+    ${menu('win', t('ovFltContract'), windows, sel.windows, (w) => winLbl[w] || w)}
+    ${menu('val', t('ovFltValidity'), validities, sel.validity, (v) => VAL_LBL[v] || v)}
+    <div class="flt-spacer"></div>
+    <button class="flt-toggle" data-ovclear>${t('fltClear')}</button>
+  </div>`;
+}
+
 // ---- Finance Overview: savings & earnings summary (before -> after portfolio) ----
 export function renderOverview(state) {
-  const { beforeAfter = [] } = state;
+  const beforeAfterAll = state.beforeAfter || [];
+
+  // ---- GLOBAL FILTER: supplier / issue (scope) / contract duration / CCOGS validity.
+  // A single filter set drives the WHOLE page: metrics, tracker, Claim Builder,
+  // journey and every chart. null on a facet = "all selected".
+  const WIN_LBL = { MONTH: 'Monthly', QUARTER: 'Quarterly', HALF_YEAR: 'Half-year', YEAR: 'Yearly', CUSTOM: 'Custom' };
+  const ovf = state.ovFilters || (state.ovFilters = { suppliers: null, scopes: null, windows: null, validity: null });
+  const windowOf = (agreementId) => state.consolidated?.byAgreement?.get(agreementId)?.agreement?.windowType || 'CUSTOM';
+  // validity classes for a beforeAfter/finding row: MISSING (invoice missing) vs VALID (normal recoverable) vs CLEAN (no issue)
+  const findingByAgr = new Map((state.discovery?.findings || []).map((f) => [f.agreementId + '|' + f.scopeKey, f]));
+  const validityOfRow = (b) => {
+    const f = findingByAgr.get(b.agreementId + '|' + b.scopeKey);
+    if (f && f.missingInvoice) return 'MISSING';
+    return b.recoverable ? 'VALID' : 'CLEAN';
+  };
+  // option lists (from the full, unfiltered data)
+  const ovSuppliers = [...new Map(beforeAfterAll.map((b) => [b.supplierName || b.supplierId, b.supplierName || b.supplierId])).values()].sort();
+  const ovScopes = [...new Set(beforeAfterAll.map((b) => b.scopeKey).filter(Boolean))].sort();
+  const ovWindows = ['MONTH', 'QUARTER', 'HALF_YEAR', 'YEAR', 'CUSTOM'].filter((w) => beforeAfterAll.some((b) => windowOf(b.agreementId) === w));
+  const ovValidities = ['VALID', 'MISSING', 'CLEAN'].filter((v) => beforeAfterAll.some((b) => validityOfRow(b) === v));
+  const passOv = (b) => {
+    if (ovf.suppliers && !ovf.suppliers.has(b.supplierName || b.supplierId)) return false;
+    if (ovf.scopes && !ovf.scopes.has(b.scopeKey)) return false;
+    if (ovf.windows && !ovf.windows.has(windowOf(b.agreementId))) return false;
+    if (ovf.validity && !ovf.validity.has(validityOfRow(b))) return false;
+    return true;
+  };
+  const beforeAfter = beforeAfterAll.filter(passOv);
+  // allowed agreementIds after filtering — used to scope findings, charges, journey.
+  const allowedAgr = new Set(beforeAfter.map((b) => b.agreementId));
+  const ovFilterActive = !!(ovf.suppliers || ovf.scopes || ovf.windows || ovf.validity);
+  const ovBar = overviewFilterBar({ suppliers: ovSuppliers, scopes: ovScopes, windows: ovWindows, validities: ovValidities, sel: ovf, winLbl: WIN_LBL });
 
   // portfolio before (engine claimed) -> after (tool entitled) -> recovered True-Up
   const totalBefore = beforeAfter.reduce((s, b) => s + (b.before?.claimed || 0), 0);
@@ -44,14 +105,15 @@ export function renderOverview(state) {
   const byPeriod = agg((b) => b.period);
 
   // all goods movements across the portfolio drive the finance process-journey
-  const allReceipts = state.consolidated ? [...state.consolidated.byAgreement.values()].flatMap((g) => g.receipts || []) : [];
-  const allCorrections = (state.reconstructions || []).flatMap((r) => r.corrections || []);
+  // (scoped to the filtered agreements so the journey reacts to the filter too)
+  const allReceipts = state.consolidated ? [...state.consolidated.byAgreement.entries()].filter(([id]) => allowedAgr.has(id)).flatMap(([, g]) => g.receipts || []) : [];
+  const allCorrections = (state.reconstructions || []).filter((r) => allowedAgr.has(r.agreementId)).flatMap((r) => r.corrections || []);
 
   // ---- Claim Builder worklist (from concept B5) — what's in this recovery run ----
   // Findings currently in the discovery list are "included"; archived suggestions
-  // are "excluded". Placed above the process journey.
-  const findings = state.discovery?.findings || [];
-  const archived = state.archived || [];
+  // are "excluded". Placed above the process journey. Scoped to the filter.
+  const findings = (state.discovery?.findings || []).filter((f) => allowedAgr.has(f.agreementId) && passOv({ ...f, costOfInaction: f.leakage }));
+  const archived = (state.archived || []).filter((a) => allowedAgr.has(a.agreementId) || !ovFilterActive);
   // group per supplier -> compact boxes (included findings + excluded/archived)
   const wlSup = new Map();
   const wlBucket = (name) => { if (!wlSup.has(name)) wlSup.set(name, { name, items: [], total: 0, issues: 0, cur: 'EUR' }); return wlSup.get(name); };
@@ -60,13 +122,18 @@ export function renderOverview(state) {
   const wlIncludedCount = findings.length;
   const wlIncTotal = findings.reduce((s, f) => s + (f.leakage || 0), 0);
 
-  // Top 3 suppliers by the active sort: amount (total leakage desc) or issue count (# findings desc).
-  const wlSort = state.wlSort === 'issues' ? 'issues' : 'amount';
-  const wlSortLabel = wlSort === 'issues' ? t('wlByIssues') : t('wlByAmount');
-  const wlSortFn = wlSort === 'issues'
-    ? (a, b) => (b.issues - a.issues) || (b.total - a.total)
-    : (a, b) => (b.total - a.total) || (b.issues - a.issues);
-  const wlTop = [...wlSup.values()].sort(wlSortFn).slice(0, 3);
+  // 3 visible supplier boxes, ordered by one of FOUR sort modes. The whole list
+  // of suppliers is sorted by the chosen key+direction, then the first three are
+  // shown — so every button visibly reorders (and re-picks) the three boxes.
+  const WL_SORTS = {
+    amount_desc: { label: t('wlByAmountDesc'), fn: (a, b) => (b.total - a.total) || (b.issues - a.issues) },
+    amount_asc: { label: t('wlByAmountAsc'), fn: (a, b) => (a.total - b.total) || (a.issues - b.issues) },
+    issues_desc: { label: t('wlByIssuesDesc'), fn: (a, b) => (b.issues - a.issues) || (b.total - a.total) },
+    issues_asc: { label: t('wlByIssuesAsc'), fn: (a, b) => (a.issues - b.issues) || (a.total - b.total) },
+  };
+  const wlSort = WL_SORTS[state.wlSort] ? state.wlSort : 'amount_desc';
+  const wlSortLabel = WL_SORTS[wlSort].label;
+  const wlTop = [...wlSup.values()].sort(WL_SORTS[wlSort].fn).slice(0, 3);
   const wlBoxes = wlTop.map((b) => {
     const chips = b.items.map((it) => `<span class="wl-chip ${it.status}" title="${it.status === 'include' ? fmtN(it.amt) + ' ' + b.cur : (it.note || t('wlExcluded'))}"><span class="mono">${it.id}</span>${it.status === 'include' ? ` · ${fmtN(it.amt)}` : ' ✕'}</span>`).join('');
     return `<div class="wl-box">
@@ -75,9 +142,9 @@ export function renderOverview(state) {
       <div class="wl-chips">${chips}</div>
     </div>`;
   }).join('');
+  const wlBtn = (key) => `<button class="wl-sortbtn ${wlSort === key ? 'active' : ''}" data-wlsort="${key}">${WL_SORTS[key].label}</button>`;
   const wlSortBtns = `<span class="wl-sort">
-    <button class="wl-sortbtn ${wlSort === 'amount' ? 'active' : ''}" data-wlsort="amount">${t('wlByAmount')}</button>
-    <button class="wl-sortbtn ${wlSort === 'issues' ? 'active' : ''}" data-wlsort="issues">${t('wlByIssues')}</button>
+    ${wlBtn('amount_desc')}${wlBtn('amount_asc')}${wlBtn('issues_desc')}${wlBtn('issues_asc')}
   </span>`;
   // ---- (A) ML findings summary + CCOGS delta + pending/realized tracker -------
   // CCOGS delta = what the engine claimed (before) vs what the tool reconstructs
@@ -87,7 +154,7 @@ export function renderOverview(state) {
   // pending vs realized additional-CCOGS: a recoverable charge is "realized" once
   // it has been posted to the ERP billing system this session (state.erpSent).
   const erpSent = state.erpSent || {};
-  const charges = state.charges || [];
+  const charges = (state.charges || []).filter((c) => allowedAgr.has(c.agreementId));
   const recCharges = charges.filter((c) => (c.variance || 0) > 0.01);
   const realized = recCharges.filter((c) => erpSent[c.chargeId]);
   const pending = recCharges.filter((c) => !erpSent[c.chargeId]);
@@ -97,7 +164,7 @@ export function renderOverview(state) {
 
   // ML findings summary — top findings by recoverable, with a type badge
   // (missing-invoice cases flagged) so Finance sees WHAT the model surfaced.
-  const findingsAll = [...(state.discovery?.findings || [])].sort((a, b) => (b.leakage || 0) - (a.leakage || 0));
+  const findingsAll = [...findings].sort((a, b) => (b.leakage || 0) - (a.leakage || 0));
   const miCount = findingsAll.filter((f) => f.missingInvoice).length;
 
   const findingsSummaryBlock = `
@@ -153,8 +220,10 @@ export function renderOverview(state) {
       const k = b.agreementId;
       if (!seen.has(k)) { seen.add(k); }
     }
-    // count agreements + recoverable agreements per window
+    // count agreements per window — scoped to the filtered agreements so the
+    // fail-rate denominator reacts to the global filter.
     for (const [id, g] of state.consolidated.byAgreement) {
+      if (!allowedAgr.has(id)) continue;
       const wt = g.agreement.windowType || 'CUSTOM';
       winStats[wt] = winStats[wt] || { total: 0, recovered: 0, savings: 0, agreements: new Set() };
       winStats[wt].total += 1;
@@ -178,6 +247,8 @@ export function renderOverview(state) {
 
   return `
     <p class="lead">${t('overviewLead')}</p>
+
+    ${ovBar}
 
     <div class="ba ba-ml">
       <div class="panel total"><div class="h">${t('mlTotalAmount')}</div><div class="big">${eur(totalAll)}</div><div class="small">${t('allAgreements')}</div></div>

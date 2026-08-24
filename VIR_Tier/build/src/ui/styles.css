@@ -14,6 +14,7 @@
   --danger: #E74C3C;
   --danger-soft: #FBEAE8;
   --gold: #C77800;        /* leakage/attention (muted amber, not neon) */
+  --violet: #8b5cf6;      /* combination/mixing accent (mapping animation) */
   --radius: 12px;
   --shadow: 0 2px 10px rgba(0,0,0,.06);
   --shadow-lg: 0 8px 28px rgba(0,0,0,.12);
@@ -273,6 +274,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .au-kpi .v { font-size: 22px; font-weight: 700; letter-spacing: -.02em; } .au-kpi .v.gold { color: var(--gold); }
 .au-kpi .l { font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: 2px; }
 .au-fltbar { align-items: center; }
+.ov-fltbar { align-items: center; margin: 4px 0 14px; }
+.cf-fltbar { align-items: center; margin: 4px 0 14px; }
 .au-dates { gap: 6px; }
 .au-date { font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; background: #fff; }
 .au-table table { font-size: 13px; }
@@ -663,6 +666,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .tile-note { font-size: .76rem; color: var(--danger); margin-top: 2px; }
 .tile-note.incorporated { color: #0a7a53; }
 .tile-cta { margin-top: auto; padding-top: 8px; font-size: .74rem; color: var(--accent); font-weight: 600; }
+/* mailbox "Scan shared mailbox" — bigger + bold so the click-to-scan stands out */
+.tile-cta.tile-cta-strong { font-size: 1rem; font-weight: 800; color: var(--warn); letter-spacing: .01em; }
 /* kind accents (left border) */
 .sum-tile.tile-ok { border-left: 4px solid var(--accent); }
 .sum-tile.tile-info { border-left: 4px solid var(--info); }
@@ -688,7 +693,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* tile details modal */
 .td h2 { margin: 0 0 12px; }
 /* banners next to the detail title */
-.td-incorp { display: inline-block; font-size: .62rem; font-weight: 700; vertical-align: middle; margin-left: 8px; color: #0a7a53; background: var(--accent-soft); border: 1px solid #b7e6d3; border-radius: 999px; padding: 2px 10px; text-transform: none; letter-spacing: 0; }
+.td-incorp { display: inline-block; font-size: .95rem; font-weight: 700; vertical-align: middle; margin-left: 8px; color: #2f6fed; background: #e8f0fe; border: 1px solid #bcd3fb; border-radius: 999px; padding: 4px 14px; text-transform: none; letter-spacing: 0; }
 .td-action { display: inline-block; font-size: .62rem; font-weight: 700; vertical-align: middle; margin-left: 8px; color: var(--danger); background: var(--danger-soft); border: 1px solid #F3C6C1; border-radius: 999px; padding: 2px 10px; text-transform: none; letter-spacing: 0; }
 /* missing-invoice supplier-action flow */
 .mi-action { border: 1px solid #F3C6C1; background: #FDF6F5; border-radius: 10px; padding: 12px 14px; margin: 4px 0 16px; }
@@ -761,6 +766,17 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .as-src:hover { border-color: var(--accent); }
 .erp-logo-edi { background: #2f6fed; } .erp-logo-api { background: #6b3fd0; } .erp-logo-folder { background: #b7791f; font-size: 1rem; } .erp-logo-mailbox { background: #0a7a53; font-size: 1rem; }
 
+/* ---- Connect-source dialog (EDI / API / Folder) ---- */
+.cf-body { margin: 4px 0 14px; }
+.cf-grid { display: grid; grid-template-columns: 1fr; gap: 10px 14px; }
+.cf-grid.cf-2col { grid-template-columns: 1fr 1fr; }
+@media (max-width: 620px) { .cf-grid.cf-2col { grid-template-columns: 1fr; } }
+.cf-fld { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; }
+.cf-fld span { color: var(--muted); font-weight: 600; }
+.cf-fld input, .cf-fld select { font: inherit; font-size: .86rem; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); }
+.cf-fld input:focus, .cf-fld select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.cf-body .muted.small { margin-top: 10px; }
+
 /* ---- Mailbox one-click scanning window ---- */
 .mbx-scanning { text-align: center; padding: 26px 16px 20px; }
 .mbx-spinner { width: 40px; height: 40px; margin: 0 auto 12px; color: var(--info); }
@@ -788,8 +804,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .eml-doc { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .eml-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; background: #fafafa; border-bottom: 1px solid var(--line); }
 .eml-subj { font-weight: 700; }
-.eml-meta { color: var(--muted); font-size: .8rem; margin-top: 2px; }
-.eml-body { padding: 14px; font-size: .9rem; line-height: 1.6; }
+/* From line — bigger + glowing blue so it reads clearly as a real email header */
+.eml-meta { color: #2f6fed; font-size: 1rem; font-weight: 700; margin-top: 4px; text-shadow: 0 0 8px rgba(47,111,237,.45); }
+/* Email body — light pastel-blue panel so the message stands out in the window */
+.eml-body { padding: 14px 16px; font-size: .92rem; line-height: 1.65; background: #eef4ff; color: #17335e; border-top: 1px solid #cfe0fb; }
 
 @media (max-width: 1000px) {
   .sum-top { grid-template-columns: 1fr; }
@@ -992,11 +1010,18 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 /* ---- Scene switching: only the active scene layer is shown ---- */
-.mf-collect, .mf-nn, .mf-resultstage, .mf-nextsteps { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity .5s ease; }
+.mf-collect, .mf-web, .mf-resultstage, .mf-nextsteps { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity .5s ease; }
 .mf-screen[data-scene="a"] .mf-collect { opacity: 1; pointer-events: auto; }
-.mf-screen[data-scene="b"] .mf-nn { opacity: 1; pointer-events: auto; }
+.mf-screen[data-scene="b"] .mf-web { opacity: 1; pointer-events: auto; }
 .mf-screen[data-scene="c"] .mf-resultstage { opacity: 1; pointer-events: auto; }
 .mf-screen[data-scene="d"] .mf-nextsteps { opacity: 1; pointer-events: auto; }
+/* The collect layer (Scene A source windows) is ONLY for Scene A. Fully remove
+   it from the render tree in Scenes B and C so no stray/large window can ever
+   overlap the model chain or the results. */
+.mf-screen[data-scene="b"] .mf-collect,
+.mf-screen[data-scene="c"] .mf-collect,
+.mf-screen[data-scene="d"] .mf-collect { display: none !important; }
+.mf-screen[data-scene="b"] .mf-web { z-index: 3; }
 
 /* ============================ Scene A — collect ============================ */
 /* Source windows start centered/large; when .front they pop to the front; when
@@ -1015,31 +1040,88 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   z-index: 1;
 }
 .mf-srcwin.front { opacity: 1; transform: scale(1); z-index: 5; box-shadow: var(--shadow-lg); border-color: var(--accent); }
-/* parked: small card stacked vertically at top-left (slot index via --slot) */
+/* parked: small card stacked vertically on the RIGHT (slot index via --slot) */
 .mf-srcwin.parked {
   opacity: 1;
-  left: 130px; top: calc(46px + var(--slot) * 74px);
-  width: 210px; margin: 0 0 0 -105px;
+  left: auto; right: 26px; top: calc(30px + var(--slot) * 58px);
+  width: 176px; margin: 0;
   transform: scale(1);
-  padding: 8px 12px;
+  padding: 7px 11px;
   z-index: 2;
 }
+/* iconly: text/count/badge fade, only the icon remains (like the results-stage stack) */
+.mf-srcwin.iconly {
+  width: 116px;
+  padding: 7px 11px;
+}
 .mf-srcwin-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.mf-srcwin.parked .mf-srcwin-h { margin-bottom: 2px; }
+.mf-srcwin.parked .mf-srcwin-h { margin-bottom: 0; }
 .mf-srcwin-ico { width: 26px; height: 26px; color: var(--accent); flex: 0 0 auto; }
 .mf-srcwin.parked .mf-srcwin-ico { width: 18px; height: 18px; }
 .mf-srcwin-ico svg { width: 100%; height: 100%; }
-.mf-srcwin-t { font-weight: 700; font-size: 15px; }
-.mf-srcwin.parked .mf-srcwin-t { font-size: 12.5px; }
-.mf-sys { margin-left: auto; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; background: var(--accent-soft); color: #0a7a53; }
+.mf-srcwin-t { font-weight: 700; font-size: 15px; transition: opacity .35s ease; }
+.mf-srcwin.parked .mf-srcwin-t { font-size: 12px; }
+.mf-srcwin.iconly .mf-srcwin-t { opacity: 0; width: 0; overflow: hidden; }
+.mf-sys { margin-left: auto; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; background: var(--accent-soft); color: #0a7a53; transition: opacity .35s ease; }
 .mf-sys-edi { background: #eef2fb; color: #2f6fed; }
-.mf-srcwin-count { font-size: 40px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--ink); }
-.mf-srcwin.parked .mf-srcwin-count { font-size: 20px; }
+.mf-srcwin.parked .mf-sys { display: none; }
+.mf-srcwin-count { font-size: 40px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--ink); transition: opacity .35s ease, font-size .4s ease; }
+.mf-srcwin.parked .mf-srcwin-count { font-size: 18px; }
+.mf-srcwin.iconly .mf-srcwin-count { opacity: 0; height: 0; font-size: 0; }
 .mf-srcwin-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .mf-srcwin.parked .mf-srcwin-sub { display: none; }
-.mf-srcwin.collecting .mf-srcwin-sub::after { content: ''; }
 
-/* ============================ Scene B — neural net ========================= */
+/* ============================ Scene B — model chain ======================= */
+/* Named inputs → three model blocks (Ingest → Reconstruct → Classify), each
+   with an internal combining web → named outputs. Packets travel the chain. */
+.mf-web { display: block; background: radial-gradient(1000px 560px at 50% 45%, rgba(0,182,122,.05), transparent 70%); }
+.mf-web-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mf-web-cap { position: absolute; left: 24px; bottom: 16px; max-width: 380px; font-size: 12.5px; color: var(--muted); background: rgba(255,255,255,.82); padding: 6px 10px; border-radius: 8px; z-index: 2; }
+
+/* whole chain fades in when Scene B opens */
+.mf-chain { opacity: 0; animation: mfChainIn .5s ease forwards; }
+@keyframes mfChainIn { to { opacity: 1; } }
+
+/* HTML overlay tiles (inputs + outputs) — sit on top of the SVG, robust vs any
+   SVG sizing issues. Input tiles match the Scene C source-tile button style. */
+.mf-ch-tiles { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.mf-ch-intile, .mf-ch-outtile {
+  position: absolute; display: flex; align-items: center; justify-content: center; text-align: center;
+  border-radius: 9px; background: #fafbfc; border: 1px solid var(--line); box-shadow: var(--shadow);
+  font-weight: 600; color: var(--ink); padding: 4px 8px; line-height: 1.15; overflow: hidden; white-space: nowrap;
+}
+/* inputs: same neutral button look as .mf-bigsrc (Scene C) */
+.mf-ch-intile { font-size: clamp(10px, 1.35vw, 14px); }
+/* outputs: single line, coloured left border per result type, shrink to fit */
+.mf-ch-outtile { font-size: clamp(9px, 1.15vw, 12.5px); border-left-width: 4px; }
+.mf-ch-outtile.r-late { border-left-color: var(--warn); }
+.mf-ch-outtile.r-paneu { border-left-color: var(--info); }
+.mf-ch-outtile.r-scan { border-left-color: var(--violet); }
+.mf-ch-outtile.r-missing { border-left-color: var(--danger); }
+.mf-ch-outtile.r-complete { border-left-color: var(--accent); }
+
+/* model blocks (dashed rounded boxes) with a soft appear stagger */
+.mf-ch-block { opacity: 0; animation: mfChainIn .5s ease forwards; animation-delay: calc(.15s + var(--bi) * .5s); }
+.mf-ch-box { fill: rgba(0,182,122,.05); stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 6; }
+.mf-ch-blbl { fill: var(--accent); font-size: 15px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.mf-ch-weblink { stroke: var(--violet); stroke-width: 1; opacity: .4; }
+.mf-ch-webnode { fill: var(--gold); }
+
+
+/* travelling packets — EDI-style labelled chips, coloured by stage */
+.mf-ch-packet-box { fill: var(--card); stroke: var(--info); stroke-width: 1.4; }
+.mf-ch-packet-t { fill: var(--info); font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; }
+.mf-ch-packet[data-stage="mix"] .mf-ch-packet-box { stroke: var(--gold); }
+.mf-ch-packet[data-stage="mix"] .mf-ch-packet-t { fill: var(--gold); }
+.mf-ch-packet[data-stage="out"] .mf-ch-packet-box { stroke: var(--accent); }
+.mf-ch-packet[data-stage="out"] .mf-ch-packet-t { fill: var(--accent); }
+/* plain-dot phase (after the first 8s) — calmer on the eyes */
+.mf-ch-packet-dotc { fill: var(--info); }
+.mf-ch-packet-dot[data-stage="mix"] .mf-ch-packet-dotc { fill: var(--gold); }
+.mf-ch-packet-dot[data-stage="out"] .mf-ch-packet-dotc { fill: var(--accent); }
+
+/* (legacy classes kept harmless in case of reuse) */
+.mf-nn { display: none; }
 .mf-nn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
 .mf-nn-head { text-align: center; margin-bottom: 6px; }
 .mf-nn-kick { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
@@ -1059,18 +1141,18 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .mf-node { transform-box: fill-box; transform-origin: center; }
 
 /* ============================ Scene C — results =========================== */
-.mf-resultstage { display: grid; grid-template-columns: 250px 90px 1fr; align-items: center; gap: 8px; padding: 18px 22px; }
-.mf-stack { align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
-.mf-stack-cap { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-.mf-stack-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fafbfc; font-size: 12.5px; font-weight: 600; }
-.mf-stack-ico { width: 16px; height: 16px; color: var(--accent); flex: 0 0 auto; }
-.mf-stack-ico svg { width: 100%; height: 100%; }
+.mf-resultstage { display: grid; grid-template-columns: 220px 92px 1fr; align-items: center; gap: 10px; padding: 16px 22px; overflow-y: auto; }
+.mf-col-cap { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.mf-bigcol { align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 7px; }
+.mf-bigsrc { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 9px; background: #fafbfc; font-size: 12.5px; font-weight: 600; box-shadow: var(--shadow); }
+.mf-bigsrc-ico { width: 18px; height: 18px; color: var(--accent); flex: 0 0 auto; }
+.mf-bigsrc-ico svg { width: 100%; height: 100%; }
 .mf-core { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--accent); }
 .mf-core-badge { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 24px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 4px 14px rgba(0,182,122,.35); }
 .mf-core-lbl { font-size: 11px; font-weight: 700; color: var(--muted); }
 .mf-core-arrow { width: 40px; height: 12px; color: var(--muted); }
-.mf-results-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-content: center; }
-.mf-result { border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: 10px; background: var(--card); padding: 10px 12px; box-shadow: var(--shadow); opacity: 0; transform: translateX(16px); transition: opacity .45s ease, transform .45s ease; }
+.mf-results-col { display: flex; flex-direction: column; gap: 8px; align-content: center; }
+.mf-result { border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: 10px; background: var(--card); padding: 9px 12px; box-shadow: var(--shadow); opacity: 0; transform: translateX(16px); transition: opacity .45s ease, transform .45s ease; }
 .mf-result.show { opacity: 1; transform: none; }
 .mf-result.r-late { border-left-color: var(--warn); }
 .mf-result.r-paneu { border-left-color: var(--info); }
@@ -1083,6 +1165,31 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .mf-rchip svg { width: 12px; height: 12px; color: var(--accent); }
 .mf-plus { color: var(--muted); font-weight: 700; font-size: 11px; }
 .mf-result-why { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+
+/* ============ Below the animation: the three ML models explained ========= */
+.mf-models { margin-top: 22px; }
+.mf-models-head h3 { margin: 0 0 4px; font-size: 16px; }
+.mf-models-grid { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: 10px; margin-top: 12px; }
+.mf-mdl { border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 12px; background: var(--card); box-shadow: var(--shadow); padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.mf-mdl:nth-child(1) { border-top-color: var(--info); }
+.mf-mdl:nth-child(3) { border-top-color: var(--gold); }
+.mf-mdl:nth-child(5) { border-top-color: var(--accent); }
+.mf-mdl-h { display: flex; align-items: center; justify-content: space-between; }
+.mf-mdl-ico { width: 30px; height: 30px; color: var(--accent); }
+.mf-mdl:nth-child(1) .mf-mdl-ico { color: var(--info); }
+.mf-mdl:nth-child(3) .mf-mdl-ico { color: var(--gold); }
+.mf-mdl-ico svg { width: 100%; height: 100%; }
+.mf-mdl-step { width: 24px; height: 24px; border-radius: 50%; background: #f2f5f7; color: var(--muted); font-weight: 800; font-size: 13px; display: grid; place-items: center; }
+.mf-mdl-name { font-size: 15px; font-weight: 800; }
+.mf-mdl-type { font-size: 11px; font-weight: 700; letter-spacing: .02em; color: var(--muted); text-transform: uppercase; }
+.mf-mdl-desc { font-size: 12.5px; color: var(--ink); line-height: 1.5; }
+.mf-mdl-in { font-size: 11.5px; color: var(--muted); margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--line); }
+.mf-mdl-in-l { font-weight: 700; color: var(--ink); }
+.mf-mdl-arrow { align-self: center; color: var(--muted); font-size: 22px; font-weight: 700; }
+@media (max-width: 900px) {
+  .mf-models-grid { grid-template-columns: 1fr; }
+  .mf-mdl-arrow { transform: rotate(90deg); justify-self: center; }
+}
 
 /* ============================ Scene D — next steps ======================== */
 .mf-nextsteps { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 24px; }

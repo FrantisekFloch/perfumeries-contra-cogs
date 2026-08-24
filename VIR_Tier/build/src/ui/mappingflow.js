@@ -1,25 +1,27 @@
-// Mapping Logic — animated model workflow (nav stage #5).
+// Mapping Logic — animated model workflow (nav stage #5, currently hidden).
 //
 // A single-screen, self-explanatory animation of HOW the tool turns raw source
 // documents into the findings shown on the summary. Pure SVG + CSS + a small
 // timeline driver (setTimeout). Offline-safe, no libraries. Light theme, sized
 // to fit one monitor screen (roughly Finance-Overview height).
 //
-// Storyboard:
-//   Scene A — Collecting sources: the Invoices window comes to the front, its
-//     counter ticks 0->N, then it shrinks and flies to a stacked "ingested"
-//     slot on the left. Delivery notes follow (a touch faster), then goods,
-//     CCOGS engine, missing data and agreements (~2s each).
-//   Scene B — Machine learning: a neural-network-style panel (input / hidden /
-//     output layers) lights up its connections every which way (~8s), showing
-//     that all sources are being combined into the mapping.
-//   Scene C — Results: the stacked ingestions on the left feed a small "ML done"
-//     core; high-level result windows appear on the right, each labelled with
-//     which inputs combined to produce it (e.g. Late delivery <- invoice +
-//     goods receipt + CCOGS engine).
-//   Scene D — Next steps (revealed by a button): Data -> ML analysis -> Results
-//     -> the manual actions the user can take (generate invoice, contact
-//     supplier, audit export).
+// Storyboard (rev 2):
+//   Scene A — Collect: the Invoices window loads first (counter 0->N, ~5s),
+//     then delivery notes (~1s faster). Every source AFTER that just appears and
+//     flies straight to the right-hand stack (no long collect) to save time. As
+//     each parks it shrinks from a big window into a SMALL window; once stacked
+//     the text fades and only the ICON remains.
+//   Scene B — Messy ML web: an ML core drops at a random spot (mid->right of the
+//     screen), the source icons scatter around it, and arrows connect them every
+//     which way (~25 links) — a spider web. It fades, a second smaller cluster
+//     forms elsewhere (~15 links), then a third big messy one (~45 links). The
+//     point: the model tries to combine every input with every combination of
+//     inputs. Then the whole mess clears.
+//   Scene C — Results: the big source windows return on the left, an ML core in
+//     the middle, and the high-level result windows on the right, stacked below
+//     each other, each naming which inputs combined to produce it.
+//   Scene D — Next steps (button): Data -> ML analysis -> Results -> the manual
+//     actions the user can take (generate invoice, contact supplier, audit export).
 //
 // Pure string builder + playMappingFlow() that animates the DOM it produced.
 
@@ -27,9 +29,7 @@ import { t } from '../lib/i18n.js';
 
 const nf = (n) => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
 
-// The six sources in collection order. `sys` = source system badge; `count` is
-// the live number of ingested docs; timings tuned per the storyboard.
-// icon = a tiny monoline glyph so each window reads at a glance.
+// tiny monoline glyphs so each source reads at a glance
 const SRC_ICON = {
   invoice: '<path d="M6 3h9l3 3v15l-2-1-2 1-2-1-2 1-2-1-2 1V3z"/><path d="M9 8h6M9 12h6M9 16h4"/>',
   delivery: '<path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/>',
@@ -42,46 +42,33 @@ function srcGlyph(icon) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SRC_ICON[icon] || SRC_ICON.invoice}</svg>`;
 }
 
-// order + metadata for the six collected sources
+// order + metadata for the six collected sources.
+//   collectMs = how long its "collect" phase lasts in Scene A.
+//   flyOnly   = true: skip the count-up collect, just appear + fly to the stack.
 const SOURCES = [
-  { key: 'invoices', icon: 'invoice', sys: 'DB', labelKey: 'subInvoices', collectMs: 5000, fallback: 42 },
-  { key: 'deliveryNotes', icon: 'delivery', sys: 'EDI', labelKey: 'subDeliveryNotes', collectMs: 4000, fallback: 28 },
-  { key: 'receipts', icon: 'goods', sys: 'DB', labelKey: 'subReceipts', collectMs: 2000, fallback: 36 },
-  { key: 'ccogsEngine', icon: 'engine', sys: 'DB', labelKey: 'subEngine', collectMs: 2000, fallback: 30 },
-  { key: 'events', icon: 'missing', sys: 'EDI', labelKey: 'subMissing', collectMs: 2000, fallback: 12 },
-  { key: 'agreements', icon: 'agreement', sys: 'DB', labelKey: 'subAgreements', collectMs: 2000, fallback: 18 },
+  { key: 'invoices', icon: 'invoice', sys: 'DB', labelKey: 'subInvoices', collectMs: 5000, flyOnly: false, fallback: 42 },
+  { key: 'deliveryNotes', icon: 'delivery', sys: 'EDI', labelKey: 'subDeliveryNotes', collectMs: 4000, flyOnly: false, fallback: 28 },
+  { key: 'receipts', icon: 'goods', sys: 'DB', labelKey: 'subReceipts', collectMs: 900, flyOnly: true, fallback: 36 },
+  { key: 'ccogsEngine', icon: 'engine', sys: 'DB', labelKey: 'subEngine', collectMs: 900, flyOnly: true, fallback: 30 },
+  { key: 'events', icon: 'missing', sys: 'EDI', labelKey: 'subMissing', collectMs: 900, flyOnly: true, fallback: 12 },
+  { key: 'agreements', icon: 'agreement', sys: 'DB', labelKey: 'subAgreements', collectMs: 900, flyOnly: true, fallback: 18 },
 ];
 
 // The high-level results (Scene C). Each names the inputs that combine to
-// produce it (shown as source chips) + a plain-language "why". `srcs` reference
-// SOURCES keys so we can draw the right feeder chips.
+// produce it (source chips) + a plain-language "why".
 const RESULTS = [
   { key: 'late', titleKey: 'mfResLate', srcs: ['invoices', 'receipts', 'ccogsEngine'], whyKey: 'mfResLateWhy', cls: 'r-late' },
   { key: 'paneu', titleKey: 'mfResPanEu', srcs: ['receipts', 'agreements', 'ccogsEngine'], whyKey: 'mfResPanEuWhy', cls: 'r-paneu' },
   { key: 'scan', titleKey: 'mfResScan', srcs: ['ccogsEngine', 'agreements'], whyKey: 'mfResScanWhy', cls: 'r-scan' },
-  { key: 'missing', titleKey: 'mfResMissing', srcs: ['deliveryNotes', 'receipts', 'events'], whyKey: 'mfResMissingWhy', cls: 'r-missing' },
+  { key: 'missing', titleKey: 'mfResMissing', shortKey: 'mfResMissingShort', srcs: ['deliveryNotes', 'receipts', 'events'], whyKey: 'mfResMissingWhy', cls: 'r-missing' },
   { key: 'complete', titleKey: 'mfResComplete', srcs: ['invoices', 'receipts'], whyKey: 'mfResCompleteWhy', cls: 'r-complete' },
 ];
 
-// Next-steps flow (Scene D): stages then the branch actions the user can take.
-const NEXT_STAGES = [
-  { key: 'data', labelKey: 'mfNsData', icon: 'δ', cls: 'ns-data' },
-  { key: 'ml', labelKey: 'mfNsMl', icon: '∑', cls: 'ns-ml' },
-  { key: 'results', labelKey: 'mfNsResults', icon: '✓', cls: 'ns-results' },
-];
-const NEXT_ACTIONS = [
-  { key: 'generate', titleKey: 'mfNsGenerate', descKey: 'mfNsGenerateD', cls: 'na-generate' },
-  { key: 'rejected', titleKey: 'mfNsRejected', descKey: 'mfNsRejectedD', cls: 'na-rejected' },
-  { key: 'details', titleKey: 'mfNsDetails', descKey: 'mfNsDetailsD', cls: 'na-details' },
-];
+function sysBadge(sys) { return `<span class="mf-sys mf-sys-${sys.toLowerCase()}">${t('sys' + sys)}</span>`; }
 
-// --- source-system glyph reused from ingest flow look ---
-function sysBadge(sys) {
-  return `<span class="mf-sys mf-sys-${sys.toLowerCase()}">${t('sys' + sys)}</span>`;
-}
-
-// Build one collected-source window (Scene A). Rendered absolutely-positioned;
-// the animation moves it to the front, counts up, then parks it in the stack.
+// One collected-source window (Scene A). Big + centered to start; animation adds
+// .front (pop to front), then .parked (shrink to a small right-hand stack slot),
+// then .iconly (text fades, only the icon remains).
 function sourceWindow(s, count, idx) {
   return `<div class="mf-srcwin" data-src="${s.key}" data-idx="${idx}" style="--slot:${idx}">
     <div class="mf-srcwin-h">
@@ -91,38 +78,6 @@ function sourceWindow(s, count, idx) {
     </div>
     <div class="mf-srcwin-count"><span class="mf-num" data-count="${count}">0</span></div>
     <div class="mf-srcwin-sub">${t('mfCollecting')}</div>
-  </div>`;
-}
-
-// Neural-net panel (Scene B). Three columns of nodes (input/hidden/output) with
-// SVG edges connecting every input to every hidden and every hidden to every
-// output. CSS animates edge "signal" pulses in all directions.
-function neuralPanel() {
-  const IN = 6, HID = 5, OUT = 5;
-  const W = 460, H = 300, padY = 26;
-  const colX = [60, 230, 400];
-  const ys = (n) => Array.from({ length: n }, (_, i) => padY + (H - 2 * padY) * (n === 1 ? 0.5 : i / (n - 1)));
-  const inY = ys(IN), hidY = ys(HID), outY = ys(OUT);
-  let edges = '';
-  let e = 0;
-  for (let i = 0; i < IN; i++) for (let h = 0; h < HID; h++) {
-    edges += `<line class="mf-edge" x1="${colX[0]}" y1="${inY[i].toFixed(1)}" x2="${colX[1]}" y2="${hidY[h].toFixed(1)}" style="--d:${(e++ % 12) * 0.12}s"/>`;
-  }
-  for (let h = 0; h < HID; h++) for (let o = 0; o < OUT; o++) {
-    edges += `<line class="mf-edge mf-edge-2" x1="${colX[1]}" y1="${hidY[h].toFixed(1)}" x2="${colX[2]}" y2="${outY[o].toFixed(1)}" style="--d:${(e++ % 12) * 0.12}s"/>`;
-  }
-  const nodes = (xs, arr, cls) => arr.map((y, i) => `<circle class="mf-node ${cls}" cx="${xs}" cy="${y.toFixed(1)}" r="7" style="--d:${i * 0.15}s"/>`).join('');
-  const colLbl = (x, key) => `<text class="mf-collbl" x="${x}" y="14" text-anchor="middle">${t(key)}</text>`;
-  return `<div class="mf-nn" id="mfNn">
-    <div class="mf-nn-head"><span class="mf-nn-kick">${t('mfMlKick')}</span><span class="mf-nn-title">${t('mfMlTitle')}</span></div>
-    <svg class="mf-nn-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-      ${colLbl(colX[0], 'mfLayerIn')}${colLbl(colX[1], 'mfLayerHidden')}${colLbl(colX[2], 'mfLayerOut')}
-      <g class="mf-edges">${edges}</g>
-      ${nodes(colX[0], inY, 'mf-node-in')}
-      ${nodes(colX[1], hidY, 'mf-node-hid')}
-      ${nodes(colX[2], outY, 'mf-node-out')}
-    </svg>
-    <div class="mf-nn-cap">${t('mfMlCap')}</div>
   </div>`;
 }
 
@@ -139,49 +94,32 @@ function resultWindow(r, idx) {
   </div>`;
 }
 
-// The compact left stack shown in Scene C (parked ingestions) + ML core.
+// Scene C stage: big source windows (left) -> ML core -> stacked results (right).
 function resultsStage() {
-  const stack = SOURCES.map((s) => `<div class="mf-stack-item" data-src="${s.key}">
-    <span class="mf-stack-ico">${srcGlyph(s.icon)}</span>
-    <span class="mf-stack-t">${t(s.labelKey)}</span>
+  const bigs = SOURCES.map((s) => `<div class="mf-bigsrc" data-src="${s.key}">
+    <span class="mf-bigsrc-ico">${srcGlyph(s.icon)}</span>
+    <span class="mf-bigsrc-t">${t(s.labelKey)}</span>
   </div>`).join('');
   const results = RESULTS.map((r, i) => resultWindow(r, i)).join('');
   return `<div class="mf-resultstage" id="mfResults">
-    <div class="mf-stack">
-      <div class="mf-stack-cap">${t('mfIngested')}</div>
-      ${stack}
+    <div class="mf-bigcol">
+      <div class="mf-col-cap">${t('mfIngested')}</div>
+      ${bigs}
     </div>
     <div class="mf-core">
       <div class="mf-core-badge">∑</div>
       <div class="mf-core-lbl">${t('mfMlDone')}</div>
       <svg class="mf-core-arrow" viewBox="0 0 40 12" aria-hidden="true"><path d="M0 6h34M28 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
-    <div class="mf-results-col">${results}</div>
-  </div>`;
-}
-
-// Next-steps flow (Scene D).
-function nextStepsView() {
-  const stages = NEXT_STAGES.map((s, i) => `
-    <div class="mf-ns-stage ${s.cls}" style="--si:${i}">
-      <div class="mf-ns-ico">${s.icon}</div>
-      <div class="mf-ns-lbl">${t(s.labelKey)}</div>
-    </div>${i < NEXT_STAGES.length - 1 ? '<div class="mf-ns-arrow">→</div>' : ''}`).join('');
-  const actions = NEXT_ACTIONS.map((a, i) => `
-    <div class="mf-ns-action ${a.cls}" style="--ai:${i}">
-      <div class="mf-ns-action-h">${t(a.titleKey)}</div>
-      <div class="mf-ns-action-d">${t(a.descKey)}</div>
-    </div>`).join('');
-  return `<div class="mf-nextsteps" id="mfNext">
-    <div class="mf-ns-flow">${stages}</div>
-    <div class="mf-ns-fork">↳ ${t('mfNsActionsLbl')}</div>
-    <div class="mf-ns-actions">${actions}</div>
+    <div class="mf-results-col">
+      <div class="mf-col-cap">${t('mfLayerOut')}</div>
+      ${results}
+    </div>
   </div>`;
 }
 
 // ---- top-level stage renderer ----
 export function renderMappingFlow(state) {
-  // live counts from the store; fall back to storyboard numbers if empty
   const counts = {};
   for (const s of SOURCES) {
     const n = state?.store ? state.store.all(s.key).length : 0;
@@ -193,32 +131,174 @@ export function renderMappingFlow(state) {
     <p class="lead">${t('mfLead')}</p>
     <div class="mf-stagewrap">
       <div class="mf-toolbar">
-        <div class="mf-caption" id="mfCaption">${t('mfCapA')}</div>
+        <div class="mf-caption" id="mfCaption">${t('mfCapB')}</div>
         <div class="mf-controls">
           <button class="btn ghost" id="mfReplay">↻ ${t('mfReplay')}</button>
-          <button class="btn primary" id="mfNextBtn" disabled>${t('mfNextSteps')} →</button>
+          <button class="btn primary" id="mfContinue">${t('mfContinue')} →</button>
         </div>
       </div>
 
-      <div class="mf-screen" id="mfScreen" data-scene="a">
-        <!-- Scene A + C share the source windows; C parks them into the stack -->
+      <div class="mf-screen" id="mfScreen" data-scene="b">
+        <!-- Scene A (collect) is SKIPPED for now — markup kept, hidden, for later. -->
         <div class="mf-collect" id="mfCollect">${srcWins}</div>
 
-        <!-- Scene B: neural net -->
-        ${neuralPanel()}
+        <!-- Scene B: model chain. SVG draws blocks/outputs/packets; the six input
+             tiles are HTML overlays (robust — no SVG-icon sizing surprises). -->
+        <div class="mf-web" id="mfWeb">
+          <svg class="mf-web-svg" id="mfWebSvg" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="mf-ch-tiles" id="mfChTiles"></div>
+        </div>
 
-        <!-- Scene C: results -->
+        <!-- Scene C: results (final scene) -->
         ${resultsStage()}
-
-        <!-- Scene D: next steps -->
-        ${nextStepsView()}
       </div>
+
+      ${modelsSection()}
     </div>`;
 }
 
+// ---- Below the animation: the THREE ML models the pipeline uses, explained.
+// Realistic, business-credible models that read the heterogeneous inputs and
+// produce the CCOGS true-ups: entity resolution (link records) → volume
+// reconstruction (regression) → true-up classification (supervised).
+const MF_MODELS = [
+  { key: 'match', glyph: 'link', badgeKey: 'mfMdlMatchType' },
+  { key: 'recon', glyph: 'wave', badgeKey: 'mfMdlReconType' },
+  { key: 'class', glyph: 'target', badgeKey: 'mfMdlClassType' },
+];
+const MF_MODEL_GLYPH = {
+  // link / record-matching
+  link: '<path d="M9 12a3 3 0 0 1 3-3h3a3 3 0 0 1 0 6h-1"/><path d="M15 12a3 3 0 0 1-3 3H9a3 3 0 0 1 0-6h1"/>',
+  // converging signal / reconstruction
+  wave: '<path d="M3 12c3 0 3-6 6-6s3 12 6 12 3-6 6-6"/>',
+  // classification target
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>',
+};
+function modelsSection() {
+  const cards = MF_MODELS.map((m, i) => `
+    <div class="mf-mdl" style="--mi:${i}">
+      <div class="mf-mdl-h">
+        <span class="mf-mdl-ico">${srcGlyphRaw(MF_MODEL_GLYPH[m.glyph])}</span>
+        <span class="mf-mdl-step">${i + 1}</span>
+      </div>
+      <div class="mf-mdl-name">${t('mfMdl' + cap1(m.key) + 'Name')}</div>
+      <div class="mf-mdl-type">${t(m.badgeKey)}</div>
+      <div class="mf-mdl-desc">${t('mfMdl' + cap1(m.key) + 'Desc')}</div>
+      <div class="mf-mdl-in"><span class="mf-mdl-in-l">${t('mfMdlUses')}</span> ${t('mfMdl' + cap1(m.key) + 'In')}</div>
+    </div>`).join('<div class="mf-mdl-arrow">→</div>');
+  return `<div class="mf-models">
+    <div class="mf-models-head">
+      <h3>${t('mfModelsTitle')}</h3>
+      <p class="muted small">${t('mfModelsLead')}</p>
+    </div>
+    <div class="mf-models-grid">${cards}</div>
+  </div>`;
+}
+
+// (Removed: the per-model "In action" worked-example panels.)
+function cap1(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// raw monoline glyph (path string) → sized SVG
+function srcGlyphRaw(pathStr) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${pathStr}</svg>`;
+}
+
+// small deterministic-ish RNG so replays look varied but not seizure-y
+function rng(seed) { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+
+// Short "real information" tokens for the travelling chips (EDI-style), so it
+// looks like actual documents/records are streaming through the model. Mix of
+// invoice numbers, delivery notes, goods receipts, EDI transaction codes and
+// unit counts drawn from the sources the tool ingests.
+const PACKET_PREFIX = ['INV', 'DN', 'GRN', 'PO', 'ASN', 'AGR'];
+const PACKET_EDI = ['850', '810', '856', '820', '855', '997'];
+function packetToken() {
+  const r = Math.random();
+  if (r < 0.5) return `${PACKET_PREFIX[(Math.random() * PACKET_PREFIX.length) | 0]}-${(10000 + ((Math.random() * 89999) | 0))}`;
+  if (r < 0.78) return `${PACKET_EDI[(Math.random() * PACKET_EDI.length) | 0]} · ${(1 + ((Math.random() * 480) | 0))}u`;
+  return `${(1 + ((Math.random() * 1200) | 0))} units`;
+}
+
+// Build the MODEL CHAIN (gallery idea "H"): six named source tiles on the left
+// feed a chain of THREE model blocks in series — Ingest → Reconstruct →
+// Classify — each holding its own little "combining web" of nodes. Five named
+// output cards sit on the right. This function returns the STATIC svg plus the
+// geometry the play loop needs to drive travelling packets:
+//   { svg, inPts:[{x,y}], webs:[[{x,y}...] x3], outPts:[{x,y}] }
+// Coordinate space matches the #mfWebSvg viewBox (1000 x 560).
+function buildModelChain(rand) {
+  const W = 1000, H = 560;
+  // blocks shifted left by ~57 viewBox units (~1.5cm on screen) for better balance.
+  // Labels reflect the three ML models: Match (entity resolution) → Reconstruct
+  // (volume regression) → Classify (supervised true-up classification).
+  const blocks = [
+    { x: 243, key: 'mfChainMatch' },
+    { x: 433, key: 'mfChainReconstruct' },
+    { x: 623, key: 'mfChainClassify' },
+  ];
+  // ---- vertical layout, centred in the 560-tall canvas (TEXT ONLY, no icons) ----
+  const inW = 150, inH = 46, inGap = 24;      // input tiles: narrower, hard left
+  const inN = SOURCES.length;
+  const inTotal = inN * inH + (inN - 1) * inGap;
+  const inTop = (H - inTotal) / 2;
+  const inLeft = 16;                          // hug the left edge → more gap to the middle
+
+  const bw = 150, bh = 380;                    // model blocks
+  const by = (H - bh) / 2;
+
+  const outW = 160, outH = 62, outGap = 18;    // output cards: WIDER on the right
+  const outN = RESULTS.length;
+  const outTotal = outN * outH + (outN - 1) * outGap;
+  const outTop = (H - outTotal) / 2;
+  const outLeft = 838;                         // starts just right of the last block (820)
+
+  // input tiles — rendered as HTML OVERLAY tiles (same button style as the
+  // Scene C source tiles), positioned as % of the 1000x560 canvas. This avoids
+  // any SVG-icon sizing bug. inPts (SVG coords) mark the right edge of each tile.
+  const inPts = [];
+  let tilesHtml = '';
+  SOURCES.forEach((s, i) => {
+    const y = inTop + i * (inH + inGap);
+    tilesHtml += `<div class="mf-ch-intile" style="left:${(inLeft / W * 100).toFixed(2)}%;top:${(y / H * 100).toFixed(2)}%;width:${(inW / W * 100).toFixed(2)}%;height:${(inH / H * 100).toFixed(2)}%">${t(s.labelKey)}</div>`;
+    inPts.push({ x: inLeft + inW, y: y + inH / 2 });
+  });
+
+  // three model blocks, each with an internal combining web (dots + links only)
+  let blockSvg = '';
+  const webs = [];
+  blocks.forEach((bk, bi) => {
+    const nodes = [];
+    for (let k = 0; k < 9; k++) nodes.push({ x: bk.x + 20 + rand() * (bw - 40), y: by + 26 + rand() * (bh - 52) });
+    webs.push(nodes);
+    let links = '';
+    for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+      if (rand() < 0.34) links += `<line class="mf-ch-weblink" x1="${nodes[i].x.toFixed(1)}" y1="${nodes[i].y.toFixed(1)}" x2="${nodes[j].x.toFixed(1)}" y2="${nodes[j].y.toFixed(1)}" />`;
+    }
+    const dots = nodes.map((n) => `<circle class="mf-ch-webnode" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="4" />`).join('');
+    blockSvg += `<g class="mf-ch-block" style="--bi:${bi}">
+      <rect class="mf-ch-box" x="${bk.x}" y="${by}" width="${bw}" height="${bh}" rx="18" />
+      <text class="mf-ch-blbl" x="${bk.x + bw / 2}" y="${by - 16}" text-anchor="middle">${t(bk.key)}</text>
+      ${links}${dots}
+    </g>`;
+  });
+
+  // output cards — HTML OVERLAY tiles (single line, auto-shrinking font), same
+  // button style as inputs; left-edge connection point returned in SVG coords.
+  const outPts = [];
+  let outTilesHtml = '';
+  RESULTS.forEach((r, i) => {
+    const y = outTop + i * (outH + outGap);
+    const outLabel = r.shortKey ? t(r.shortKey) : t(r.titleKey);
+    outTilesHtml += `<div class="mf-ch-outtile ${r.cls}" style="left:${(outLeft / W * 100).toFixed(2)}%;top:${(y / H * 100).toFixed(2)}%;width:${(outW / W * 100).toFixed(2)}%;height:${(outH / H * 100).toFixed(2)}%">${outLabel}</div>`;
+    outPts.push({ x: outLeft, y: y + outH / 2 });
+  });
+  const outSvg = '';
+
+  const svg = `<g class="mf-chain">${blockSvg}${outSvg}</g>`;
+  return { svg, tilesHtml: tilesHtml + outTilesHtml, inPts, webs, outPts, blocks: blocks.map((b) => b.x) };
+}
+
 // ---- animation driver ----
-// Scene captions in order + the scenes' cumulative schedule. Drives the DOM the
-// builder produced. Re-entrant: cancels any prior run on this host.
 export function playMappingFlow(host) {
   const screen = host.querySelector('#mfScreen');
   if (!screen) return;
@@ -227,83 +307,100 @@ export function playMappingFlow(host) {
   const after = (ms, fn) => timers.push(setTimeout(fn, ms));
 
   const caption = host.querySelector('#mfCaption');
-  const nextBtn = host.querySelector('#mfNextBtn');
+  const contBtn = host.querySelector('#mfContinue');
   const setCap = (key) => { if (caption) caption.textContent = t(key); };
   const setScene = (s) => { screen.dataset.scene = s; };
 
   const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // reset
-  setScene('a');
-  if (nextBtn) nextBtn.disabled = true;
-  const wins = [...screen.querySelectorAll('.mf-srcwin')];
-  wins.forEach((w) => { w.classList.remove('front', 'parked', 'collecting'); });
-  screen.querySelectorAll('.mf-num').forEach((el) => { el.textContent = '0'; });
-
-  // A run token: a fresh play() bumps it so any in-flight count-up loops stop.
   const runId = (screen.__mfRun = (screen.__mfRun || 0) + 1);
-  const raf = (typeof requestAnimationFrame === 'function') ? requestAnimationFrame : ((f) => setTimeout(() => f(Date.now()), 16));
-  const now0 = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
+  const NS = 'http://www.w3.org/2000/svg';
 
-  // count-up helper for a single window's number (eased, self-cancelling)
-  const countUp = (el, target, ms) => {
-    if (!el) return;
-    const start = now0();
-    const step = (now) => {
-      if (screen.__mfRun !== runId) return;        // a newer run superseded us
-      const p = Math.min(1, (now - start) / ms);
-      el.textContent = nf(Math.round(target * (0.5 - 0.5 * Math.cos(Math.PI * p)))); // ease-in-out
-      if (p < 1) raf(step); else el.textContent = nf(target);
-    };
-    raf(step);
+  // Scene A (collect) is skipped for now. We start at Scene B (the model chain).
+  const wins = [...screen.querySelectorAll('.mf-srcwin')];
+  wins.forEach((w) => { w.classList.remove('front', 'parked', 'iconly', 'collecting'); });
+  const webSvg = screen.querySelector('#mfWebSvg'); if (webSvg) webSvg.innerHTML = '';
+  const tilesHost = screen.querySelector('#mfChTiles'); if (tilesHost) tilesHost.innerHTML = '';
+
+  // ---- Scene B: model chain (Ingest → Reconstruct → Classify) with packets ----
+  const rand = rng(0x9e3779b9 ^ (Date.now() & 0xffff));
+  const chain = buildModelChain(rand);
+  setScene('b'); setCap('mfCapB');
+  if (contBtn) contBtn.disabled = false;
+  if (webSvg) webSvg.innerHTML = chain.svg;
+  if (tilesHost) tilesHost.innerHTML = chain.tilesHtml;
+
+  // drive travelling packets: input tile → a node in each block → an output.
+  // Each packet is an EDI-style labelled CHIP (rounded pill + short doc token),
+  // so it reads as real documents/records streaming through the model.
+  // For the first 8s, packets are labelled EDI chips (real records streaming);
+  // after that they become plain dots — calmer on the eyes. Movement is gentle.
+  const bStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const TEXT_WINDOW_MS = 8000;
+  const SPEED = 0.03;   // per-tick progress along a segment (lower = slower)
+  const spawn = () => {
+    if (screen.__mfRun !== runId || screen.dataset.scene !== 'b') return;
+    const svg = screen.querySelector('#mfWebSvg'); if (!svg) return;
+    const stops = [chain.inPts[(Math.random() * chain.inPts.length) | 0]];
+    chain.webs.forEach((web) => stops.push(web[(Math.random() * web.length) | 0]));
+    stops.push(chain.outPts[(Math.random() * chain.outPts.length) | 0]);
+
+    const nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    const asText = (nowMs - bStart) < TEXT_WINDOW_MS;
+
+    let g;
+    if (asText) {
+      const label = packetToken();
+      const halfW = 24 + label.length * 3.4;   // pill sized to the text
+      g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'mf-ch-packet');
+      const rect = document.createElementNS(NS, 'rect');
+      rect.setAttribute('x', (-halfW).toFixed(1)); rect.setAttribute('y', '-11');
+      rect.setAttribute('width', (halfW * 2).toFixed(1)); rect.setAttribute('height', '22');
+      rect.setAttribute('rx', '8'); rect.setAttribute('class', 'mf-ch-packet-box');
+      const txt = document.createElementNS(NS, 'text');
+      txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('dominant-baseline', 'central');
+      txt.setAttribute('class', 'mf-ch-packet-t'); txt.textContent = label;
+      g.appendChild(rect); g.appendChild(txt);
+    } else {
+      // plain dot phase
+      g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'mf-ch-packet mf-ch-packet-dot');
+      const dot = document.createElementNS(NS, 'circle');
+      dot.setAttribute('r', '5'); dot.setAttribute('class', 'mf-ch-packet-dotc');
+      g.appendChild(dot);
+    }
+    g.setAttribute('transform', `translate(${stops[0].x},${stops[0].y})`);
+    svg.appendChild(g);
+
+    let seg = 0, tt = 0;
+    const iv = setInterval(() => {
+      if (screen.__mfRun !== runId) { clearInterval(iv); g.remove(); return; }
+      tt += SPEED; const a = stops[seg], b = stops[seg + 1];
+      if (!b) { clearInterval(iv); g.remove(); return; }
+      const x = a.x + (b.x - a.x) * tt, y = a.y + (b.y - a.y) * tt;
+      g.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+      g.setAttribute('data-stage', seg === 0 ? 'in' : (seg < stops.length - 2 ? 'mix' : 'out'));
+      if (tt >= 1) { tt = 0; seg++; }
+    }, 26);
+    timers.push(iv);
   };
+  if (!reduced) { const streamer = setInterval(spawn, 340); timers.push(streamer); }
 
-  if (reduced) {
-    // snap straight to results
-    wins.forEach((w) => w.classList.add('parked'));
-    screen.querySelectorAll('.mf-num').forEach((el) => { el.textContent = nf(+el.dataset.count || 0); });
-    setScene('c'); setCap('mfCapC');
-    if (nextBtn) nextBtn.disabled = false;
-    return;
-  }
-
-  // ---- Scene A: collect each source in sequence ----
-  setCap('mfCapA');
-  let clock = 200;
-  wins.forEach((w, i) => {
-    const s = SOURCES[i];
-    const dur = s.collectMs;
-    const front = clock;
-    const park = clock + dur * 0.62;      // start shrinking/flying partway through
-    after(front, () => {
-      w.classList.add('front', 'collecting');
-      countUp(w.querySelector('.mf-num'), +w.querySelector('.mf-num').dataset.count || 0, dur * 0.55);
-    });
-    after(park, () => { w.classList.remove('front', 'collecting'); w.classList.add('parked'); });
-    clock += dur;
-  });
-  const endA = clock + 300;
-
-  // ---- Scene B: machine learning (~8s) ----
-  const endB = endA + 8000;
-  after(endA, () => { setScene('b'); setCap('mfCapB'); });
-
-  // ---- Scene C: results reveal ----
-  after(endB, () => {
+  // ---- Scene C: auto-advances after 20s, or on the Continue click ----
+  const goResults = () => {
+    if (screen.__mfRun !== runId || screen.dataset.scene === 'c') return;
     setScene('c'); setCap('mfCapC');
     const rs = [...screen.querySelectorAll('.mf-result')];
-    rs.forEach((r, i) => after(i * 700, () => r.classList.add('show')));
-    after(rs.length * 700 + 400, () => { if (nextBtn) nextBtn.disabled = false; });
-  });
-}
+    rs.forEach((r, i) => after(i * 650, () => r.classList.add('show')));
+    const live = host.querySelector('#mfContinue'); if (live) live.disabled = true;   // final scene
+  };
+  // rebind Continue each play (clone to drop stale listeners from a prior run)
+  if (contBtn) {
+    const fresh = contBtn.cloneNode(true);
+    contBtn.parentNode.replaceChild(fresh, contBtn);
+    fresh.addEventListener('click', goResults);
+  }
 
-// Reveal Scene D (next steps). Called by the "Next steps" button.
-export function showNextSteps(host) {
-  const screen = host.querySelector('#mfScreen');
-  if (!screen) return;
-  screen.dataset.scene = 'd';
-  const caption = host.querySelector('#mfCaption');
-  if (caption) caption.textContent = t('mfCapD');
-  const stages = [...screen.querySelectorAll('.mf-ns-stage, .mf-ns-action')];
-  stages.forEach((el, i) => setTimeout(() => el.classList.add('show'), 120 + i * 260));
+  // auto-advance to the results after 20 seconds (Continue still skips ahead)
+  if (reduced) { goResults(); } else { after(20000, goResults); }
 }

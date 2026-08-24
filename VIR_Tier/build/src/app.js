@@ -15,7 +15,7 @@ import { animateIngestFlow, FLOW_NODES, mlAnalysisBlock, mlAnalysisStart, mlAnal
 import { renderOverview, reviewModalHtml, renderAbout } from './ui/dashboards.js';
 import { renderInputs, renderMl, INPUT_CATS, tileDetail } from './ui/stages.js';
 import { renderAudit, auditDataset } from './ui/audit.js';
-import { renderMappingFlow, playMappingFlow, showNextSteps } from './ui/mappingflow.js';
+import { renderMappingFlow, playMappingFlow } from './ui/mappingflow.js';
 import { renderConsolidatedDebit, chargesBySupplier } from './ui/consolidated.js';
 import { invoiceDocHtml, deliveryNoteDocHtml, receiptDocHtml, eventDocHtml, engineDocHtml, agreementDocHtml, contraCogsInvoiceHtml } from './ui/doc.js';
 import { serializeInvoiceXml, serializeDeliveryNoteXml, serializeReceiptCsv, serializeEventCsv, serializeCcogsEngineCsv, serializeAgreementXml } from './lib/parsers.js';
@@ -38,10 +38,8 @@ const STAGES = [
   { id: 'consol', label: 'navConsolidated', n: 2, render: renderConsolidatedDebit },
   { id: 'overview', label: 'navOverview', n: 3, render: renderOverview },
   { id: 'audit', label: 'navAudit', n: 4, render: renderAudit },
-  // Part #5 — Mapping Logic (animated model workflow) HIDDEN for now while we
-  // refine it. Re-enable by uncommenting this line (module + i18n + CSS are all
-  // still in place). See src/ui/mappingflow.js.
-  // { id: 'mapping', label: 'navMapping', n: 5, render: renderMappingFlow },
+  // Part #5 — Mapping Logic (animated model workflow). Enabled for review.
+  { id: 'mapping', label: 'navMapping', n: 5, render: renderMappingFlow },
 ];
 
 const state = {
@@ -58,6 +56,7 @@ const state = {
   mailboxScan: null,            // { scanned, emailCount, matchAgreementId, matchEur, email } once a shared-mailbox scan matches an email to a finding
   erpSent: {},                  // chargeId -> { docNo, sys, amount, at } for charges "posted" to ERP this session (drives the Overview realized/pending tracker)
   inputFilters: { suppliers: null, warehouses: null, sortKey: 'ccogs', sortDir: 'desc' }, // Inputs & Collection doc-list filter/sort (null set = all selected)
+  consolFilters: { suppliers: null, windows: null, years: null, amounts: null }, // Consolidated Debit global filter (null = all)
   miContacted: false,           // missing-invoice: set true once the supplier has been contacted (unlocks recalculate)
 };
 
@@ -169,14 +168,18 @@ function bind() {
   const sumCont = app.querySelector('#sum-continue');
   if (sumCont) sumCont.addEventListener('click', () => { state.stage = 'consol'; render(); });
 
-  // Finance Overview — Claim builder Summary "Top 3 by" sort buttons (amount | issue count)
-  app.querySelectorAll('[data-wlsort]').forEach((b) => b.addEventListener('click', () => { state.wlSort = b.dataset.wlsort; render(); }));
+  // Finance Overview — global filter bar (supplier / issue / contract / validity)
+  wireOverviewFilterBar();
 
-  // Mapping Logic stage (#5): Replay restarts the animation; Next steps reveals Scene D.
+  // Consolidated Debit — global filter bar (supplier / contract / year / amount)
+  wireConsolFilterBar();
+
+  // Finance Overview — Claim builder Summary "Top 3 by" sort buttons are wired via
+  // the delegated listener in wireDelegates() (robust across re-renders).
+
+  // Mapping Logic stage (#5): Replay restarts the animation. (Ends at Scene C.)
   const mfReplay = app.querySelector('#mfReplay');
   if (mfReplay) mfReplay.addEventListener('click', () => playMappingFlow(app));
-  const mfNextBtn = app.querySelector('#mfNextBtn');
-  if (mfNextBtn) mfNextBtn.addEventListener('click', () => showNextSteps(app));
 
   // inputs summary: clickable result tiles -> details modal (what/how/proposal/impact).
   // The mailbox tile is special: unscanned -> open the scan flow; scanned -> details.
@@ -413,18 +416,18 @@ function openTileDetails(id) {
 // types; the Mailbox option launches the shared-mailbox email scan (the one that
 // can surface a missing-invoice update).
 function openAddSource() {
+  // Three connectable sources (mailbox removed — it has its own tile/flow).
   const SOURCES = [
     { id: 'edi', logo: 'EDI', name: t('srcEdiName'), sub: t('srcEdiSub') },
     { id: 'api', logo: 'API', name: t('srcApiName'), sub: t('srcApiSub') },
     { id: 'folder', logo: '📁', name: t('srcFolderName'), sub: t('srcFolderSub') },
-    { id: 'mailbox', logo: '✉', name: t('srcMailboxName'), sub: t('srcMailboxSub'), primary: true },
   ];
   const holder = document.createElement('div');
   holder.innerHTML = `<div class="modal-bg" id="asBg"><div class="modal">
     <div class="erp-head"><span class="erp-badge">＋</span><div>
       <h2>${t('addSourceTitle')}</h2><div class="sub">${t('addSourceLead')}</div></div></div>
     <div class="erp-syslist">
-      ${SOURCES.map((s) => `<button class="erp-sys as-src${s.primary ? ' as-primary' : ''}" data-src="${s.id}">
+      ${SOURCES.map((s) => `<button class="erp-sys as-src" data-src="${s.id}">
         <span class="erp-logo erp-logo-${s.id}">${s.logo}</span>
         <span class="erp-sys-main"><span class="erp-sys-name">${esc(s.name)}</span><span class="erp-sys-sub">${esc(s.sub)}</span></span>
         <span class="as-arrow">→</span>
@@ -439,9 +442,91 @@ function openAddSource() {
   holder.querySelectorAll('[data-src]').forEach((b) => b.addEventListener('click', () => {
     const id = b.dataset.src;
     close();
-    if (id === 'mailbox') openMailboxScan();
-    else flash(t('srcConnectedMsg', { name: SOURCES.find((s) => s.id === id).name }));
+    openConnectSource(id);
   }));
+}
+
+// Realistic per-source connection dialog (EDI / API / Folder). Each has its own
+// distinct set of professional fields. Demo-only: "Connect" flashes a confirmation.
+function connectSourceForm(kind) {
+  const fld = (labelKey, id, opts = {}) => {
+    const lbl = t(labelKey);
+    if (opts.options) {
+      const os = opts.options.map((o) => `<option${o === opts.value ? ' selected' : ''}>${esc(o)}</option>`).join('');
+      return `<label class="cf-fld"><span>${esc(lbl)}</span><select id="cf-${id}">${os}</select></label>`;
+    }
+    return `<label class="cf-fld"><span>${esc(lbl)}</span><input id="cf-${id}" type="${opts.type || 'text'}" value="${esc(opts.value || '')}" placeholder="${esc(opts.ph || '')}"/></label>`;
+  };
+  if (kind === 'edi') {
+    return {
+      title: t('cfEdiTitle'), sub: t('cfEdiSub'),
+      html: `<div class="cf-grid cf-2col">
+        ${fld('cfName', 'name', { value: 'Lumière Cosmetics — EDI (AS2)', ph: 'Trading partner EDI' })}
+        ${fld('cfProtocol', 'protocol', { options: ['AS2', 'OFTP2', 'SFTP', 'X.400', 'VAN'], value: 'AS2' })}
+        ${fld('cfStandard', 'standard', { options: ['ANSI X12', 'EDIFACT', 'TRADACOMS', 'XML/GS1'], value: 'EDIFACT' })}
+        ${fld('cfEndpoint', 'endpoint', { value: 'as2://edi.lumierecosmetics.fr/as2/inbound' })}
+        ${fld('cfAs2Id', 'as2id', { value: 'LUMIERE-PROD-01' })}
+        ${fld('cfIsaSender', 'isasender', { value: 'ZZ · 8590012340019' })}
+        ${fld('cfIsaReceiver', 'isareceiver', { value: 'ZZ · PERFUMERIES-AR' })}
+        ${fld('cfTxnSets', 'txnsets', { value: '810, 856, 850, 997', ph: '810, 856, 850' })}
+        ${fld('cfCert', 'cert', { value: 'partner_as2_public.cer', ph: 'AS2 signing certificate' })}
+      </div>
+      <p class="muted small">${t('cfDemoNote')}</p>`,
+    };
+  }
+  if (kind === 'api') {
+    return {
+      title: t('cfApiTitle'), sub: t('cfApiSub'),
+      html: `<div class="cf-grid cf-2col">
+        ${fld('cfName', 'name', { value: 'Nordica Beauty — REST API', ph: 'Partner / ERP API' })}
+        ${fld('cfBaseUrl', 'baseurl', { value: 'https://api.nordicabeauty.se/v2' })}
+        ${fld('cfAuth', 'auth', { options: ['OAuth 2.0 (client credentials)', 'API key', 'Basic auth', 'Bearer token'], value: 'OAuth 2.0 (client credentials)' })}
+        ${fld('cfTokenUrl', 'tokenurl', { value: 'https://auth.nordicabeauty.se/oauth/token' })}
+        ${fld('cfClientId', 'clientid', { value: 'perfumeries-ar-client' })}
+        ${fld('cfClientSecret', 'secret', { type: 'password', value: '••••••••••••••••' })}
+        ${fld('cfScope', 'scope', { value: 'invoices.read deliverynotes.read' })}
+        ${fld('cfPoll', 'poll', { options: ['Every 15 min', 'Hourly', 'Every 4 hours', 'Daily 06:00'], value: 'Hourly' })}
+        ${fld('cfPageSize', 'pagesize', { type: 'number', value: '500' })}
+      </div>
+      <p class="muted small">${t('cfDemoNote')}</p>`,
+    };
+  }
+  // folder (mirrors the old perfumeries.html Folder dialog)
+  return {
+    title: t('cfFolderTitle'), sub: t('cfFolderSub'),
+    html: `<div class="cf-grid">
+      ${fld('cfName', 'name', { value: 'OneDrive — AP inbox', ph: 'Shared drive inbox' })}
+      ${fld('cfPath', 'path', { value: './data/incoming/', ph: './data/incoming/' })}
+      ${fld('cfPattern', 'pattern', { value: '*.xml, *.csv' })}
+      ${fld('cfFormat', 'format', { options: ['XML (invoice / DN)', 'CSV (RECADV)', 'Mixed'], value: 'XML (invoice / DN)' })}
+    </div>
+    <p class="muted small">${t('cfDemoNote')}</p>`,
+  };
+}
+function openConnectSource(kind) {
+  const { title, sub, html } = connectSourceForm(kind);
+  const holder = document.createElement('div');
+  holder.innerHTML = `<div class="modal-bg" id="cfBg"><div class="modal">
+    <div class="erp-head"><span class="erp-badge">＋</span><div>
+      <h2>${esc(title)}</h2><div class="sub">${esc(sub)}</div></div></div>
+    <div class="cf-body">${html}</div>
+    <div class="actions">
+      <button class="btn ghost" id="cfCancel">${t('cancel')}</button>
+      <button class="btn primary" id="cfSave">${t('cfConnect')}</button>
+    </div>
+  </div></div>`;
+  document.body.appendChild(holder);
+  const close = () => holder.remove();
+  holder.querySelector('#cfBg').addEventListener('click', (e) => { if (e.target.id === 'cfBg') close(); });
+  holder.querySelector('#cfCancel').addEventListener('click', close);
+  holder.querySelector('#cfSave').addEventListener('click', () => {
+    const nameEl = holder.querySelector('#cf-name');
+    const name = (nameEl && nameEl.value) || t('srcEdiName');
+    close();
+    flash(t('srcConnectedMsg', { name }));
+  });
+  const first = holder.querySelector('#cf-body input, .cf-body input, .cf-body select');
+  if (first) { try { first.focus(); } catch { /* ignore */ } }
 }
 
 // Find the missing-invoice finding the scanned email should attach to (prefer
@@ -489,7 +574,7 @@ function openMailboxScan() {
 
   const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const foundMs = reduced ? 300 : 2600;   // show "match found" partway through
-  const closeMs = reduced ? 500 : 4000;   // then auto-close + flip the tile
+  const closeMs = reduced ? 500 : 6000;   // then auto-close + flip the tile (keep "ingesting" up 2s longer)
 
   setTimeout(() => {
     const txt = holder.querySelector('#mbxScanText');
@@ -837,6 +922,64 @@ function wireAuditBar() {
   // (Excel export button #auExport is handled by the delegated listener.)
 }
 
+// ---- Finance Overview GLOBAL filter bar wiring (supplier/issue/contract/validity) ----
+function wireOverviewFilterBar() {
+  const bar = app.querySelector('.ov-fltbar');
+  if (!bar) return;
+  if (!state.ovFilters) state.ovFilters = { suppliers: null, scopes: null, windows: null, validity: null };
+  const f = state.ovFilters;
+  const FIELD = { sup: 'suppliers', scope: 'scopes', win: 'windows', val: 'validity' };
+
+  bar.querySelectorAll('[data-ovmenu]').forEach((btn) => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const kind = btn.dataset.ovmenu;
+    const pop = bar.querySelector(`[data-ovpop="${kind}"]`);
+    const wasHidden = pop.hasAttribute('hidden');
+    bar.querySelectorAll('.flt-pop').forEach((p) => p.setAttribute('hidden', ''));
+    if (wasHidden) pop.removeAttribute('hidden');
+  }));
+  bar.querySelectorAll('.flt-pop').forEach((p) => p.addEventListener('click', (e) => e.stopPropagation()));
+
+  const collect = (kind) => {
+    const boxes = [...bar.querySelectorAll(`[data-ovopt="${kind}"]`)];
+    const checked = boxes.filter((b) => b.checked).map((b) => b.value);
+    return checked.length === boxes.length ? null : new Set(checked);
+  };
+  bar.querySelectorAll('[data-ovopt]').forEach((b) => b.addEventListener('change', () => { f[FIELD[b.dataset.ovopt]] = collect(b.dataset.ovopt); render(); }));
+  bar.querySelectorAll('[data-ovall]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); f[FIELD[b.dataset.ovall]] = null; render(); }));
+  bar.querySelectorAll('[data-ovnone]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); f[FIELD[b.dataset.ovnone]] = new Set(); render(); }));
+  const clear = bar.querySelector('[data-ovclear]'); if (clear) clear.addEventListener('click', () => { f.suppliers = null; f.scopes = null; f.windows = null; f.validity = null; render(); });
+}
+
+// ---- Consolidated Debit GLOBAL filter bar wiring (supplier/contract/year/amount) ----
+function wireConsolFilterBar() {
+  const bar = app.querySelector('.cf-fltbar');
+  if (!bar) return;
+  if (!state.consolFilters) state.consolFilters = { suppliers: null, windows: null, years: null, amounts: null };
+  const f = state.consolFilters;
+  const FIELD = { sup: 'suppliers', win: 'windows', year: 'years', amt: 'amounts' };
+
+  bar.querySelectorAll('[data-cfmenu]').forEach((btn) => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const kind = btn.dataset.cfmenu;
+    const pop = bar.querySelector(`[data-cfpop="${kind}"]`);
+    const wasHidden = pop.hasAttribute('hidden');
+    bar.querySelectorAll('.flt-pop').forEach((p) => p.setAttribute('hidden', ''));
+    if (wasHidden) pop.removeAttribute('hidden');
+  }));
+  bar.querySelectorAll('.flt-pop').forEach((p) => p.addEventListener('click', (e) => e.stopPropagation()));
+
+  const collect = (kind) => {
+    const boxes = [...bar.querySelectorAll(`[data-cfopt="${kind}"]`)];
+    const checked = boxes.filter((b) => b.checked).map((b) => b.value);
+    return checked.length === boxes.length ? null : new Set(checked);
+  };
+  bar.querySelectorAll('[data-cfopt]').forEach((b) => b.addEventListener('change', () => { f[FIELD[b.dataset.cfopt]] = collect(b.dataset.cfopt); render(); }));
+  bar.querySelectorAll('[data-cfall]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); f[FIELD[b.dataset.cfall]] = null; render(); }));
+  bar.querySelectorAll('[data-cfnone]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); f[FIELD[b.dataset.cfnone]] = new Set(); render(); }));
+  const clear = bar.querySelector('[data-cfclear]'); if (clear) clear.addEventListener('click', () => { f.suppliers = null; f.windows = null; f.years = null; f.amounts = null; render(); });
+}
+
 // One delegated click listener on `app`, installed ONCE, for the buttons that
 // were unreliable with per-render direct listeners (add-source, audit export).
 // Delegation survives re-renders and is unaffected by overlay/stacking issues.
@@ -849,6 +992,10 @@ function wireDelegates() {
     if (addSrc) { e.preventDefault(); openAddSource(); return; }
     const exp = e.target.closest && e.target.closest('#auExport');
     if (exp) { e.preventDefault(); exportAuditExcel(); return; }
+    // Finance Overview Claim-Builder sort buttons — delegated so a click always
+    // registers regardless of per-render binding timing.
+    const wl = e.target.closest && e.target.closest('[data-wlsort]');
+    if (wl) { e.preventDefault(); state.wlSort = wl.dataset.wlsort; render(); return; }
   });
 }
 
