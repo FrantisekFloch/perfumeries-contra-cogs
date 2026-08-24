@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-020</agreementId>
-  <supplierId>SUP-LUMIERE</supplierId>
-  <supplierName>Lumière Cosmetics SA</supplierName>
+  <supplierId>SUP-ATELIER</supplierId>
+  <supplierName>Atelier Parfums Group</supplierName>
   <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
-  <basis>WEIGHT</basis>
+  <basis>UNITS</basis>
   <period>YEAR</period>
   <scope>PER_COUNTRY</scope>
   <retrospectiveReach>WITHIN_PERIOD</retrospectiveReach>
@@ -13,28 +13,28 @@
   <contractRef>CTR-2026-0020</contractRef>
   <effectiveFrom>2026-01-01</effectiveFrom>
   <effectiveTo>2026-12-31</effectiveTo>
-  <signatory>Anna Wiśniewska</signatory>
+  <signatory>Mgr. Jana Kučerová</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
   <signedDate>2026-01-01</signedDate>
-  <governingLaw>Slovak Republic</governingLaw>
+  <governingLaw>Czech Republic</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.012"/>
-    <tier threshold="70000" rate="0.02"/>
-    <tier threshold="140000" rate="0.03"/>
+    <tier threshold="0" rate="0.008"/>
+    <tier threshold="90000" rate="0.014"/>
+    <tier threshold="180000" rate="0.022"/>
   </tiers>
   <skuSet>
-    <sku>LIP-004</sku>
     <sku>GFT-SET</sku>
+    <sku>EDP-100</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>LIP-004</sku>
     <sku>GFT-SET</sku>
+    <sku>EDP-100</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>
   </currencies>
   <countries>
-    <country>PL</country>
+    <country>SK</country>
   </countries>
   <clauses>
     <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>

@@ -3,39 +3,34 @@
   <header>
     <invoiceNumber>INV-0038</invoiceNumber>
     <type>final</type>
-    <agreementId>AGR-022</agreementId>
-    <distributor id="SUP-MAISON" name="Maison Aroma Distribution"/>
+    <agreementId>AGR-024</agreementId>
+    <distributor id="SUP-BOTANI" name="Botanika Naturals"/>
     <country>SK</country>
-    <poReference>PO-2026-1223</poReference>
-    <invoiceDate>2026-04-18</invoiceDate>
-    <shipDate>2026-04-18</shipDate>
+    <poReference>PO-2026-6513</poReference>
+    <invoiceDate>2026-02-03</invoiceDate>
+    <shipDate>2026-02-03</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="" pct="3"/>
+      <tier minQty="1" maxQty="70000" pct="1.2"/>
+      <tier minQty="70001" maxQty="140000" pct="2"/>
+      <tier minQty="140001" maxQty="" pct="3"/>
     </discount>
-    <totalValueStandard>388827.6</totalValueStandard>
+    <totalValueStandard>4790077.93</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>GFT-SET</stockId>
-      <description>Gift Set</description>
-      <qtyInvoiced>4516</qtyInvoiced>
-      <unitPriceStandard>28.7</unitPriceStandard>
-      <targetStorage>WH-SK-01</targetStorage>
-    </line>
-    <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>4516</qtyInvoiced>
-      <unitPriceStandard>28.7</unitPriceStandard>
+      <qtyInvoiced>71902</qtyInvoiced>
+      <unitPriceStandard>33.31</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
-      <stockId>EDP-100</stockId>
-      <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>4516</qtyInvoiced>
-      <unitPriceStandard>28.7</unitPriceStandard>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>71901</qtyInvoiced>
+      <unitPriceStandard>33.31</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
   </lines>

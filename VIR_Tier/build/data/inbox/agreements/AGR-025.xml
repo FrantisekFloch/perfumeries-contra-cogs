@@ -1,40 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-025</agreementId>
-  <supplierId>SUP-ORIENT</supplierId>
-  <supplierName>Orient Essence Trading</supplierName>
+  <supplierId>SUP-NORD</supplierId>
+  <supplierName>Nordica Beauty Group</supplierName>
   <rebateStructure>SLIDING_INCREMENTAL</rebateStructure>
   <basis>VALUE</basis>
   <period>QUARTER</period>
   <scope>PER_COUNTRY</scope>
   <retrospectiveReach>WITHIN_PERIOD</retrospectiveReach>
-  <tierMeasure>COMBINED</tierMeasure>
+  <tierMeasure>PER_SKU</tierMeasure>
   <windowType>QUARTER</windowType>
   <contractRef>CTR-2026-0025</contractRef>
-  <effectiveFrom>2026-04-01</effectiveFrom>
-  <effectiveTo>2026-06-30</effectiveTo>
-  <signatory>Mgr. Jana Kučerová</signatory>
+  <effectiveFrom>2026-07-01</effectiveFrom>
+  <effectiveTo>2026-09-30</effectiveTo>
+  <signatory>Dr. Martin Svoboda</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-04-01</signedDate>
+  <signedDate>2026-07-01</signedDate>
   <governingLaw>Czech Republic</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.008"/>
-    <tier threshold="90000" rate="0.014"/>
-    <tier threshold="180000" rate="0.022"/>
+    <tier threshold="0" rate="0.01"/>
+    <tier threshold="60000" rate="0.015"/>
+    <tier threshold="120000" rate="0.02"/>
+    <tier threshold="240000" rate="0.025"/>
   </tiers>
   <skuSet>
-    <sku>EDT-075</sku>
+    <sku>EDP-050</sku>
+    <sku>EDP-100</sku>
+    <sku>SRM-030</sku>
     <sku>LIP-004</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>EDT-075</sku>
+    <sku>EDP-050</sku>
+    <sku>EDP-100</sku>
+    <sku>SRM-030</sku>
     <sku>LIP-004</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>
   </currencies>
   <countries>
-    <country>CZ</country>
+    <country>PL</country>
   </countries>
   <clauses>
     <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>

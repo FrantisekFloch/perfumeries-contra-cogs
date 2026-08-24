@@ -1,2 +1,2 @@
-eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
-EVT-0021,BACKORDERING,AGR-015,SUP-MAISON,PL,SRM-030,309,PUR-0029,2026-10-08,2026-09-15
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate,reason
+EVT-0021,BACKORDERING,AGR-015,SUP-LUMIERE,PL,SRM-030,309,PUR-0029,2026-10-08,2026-09-15,

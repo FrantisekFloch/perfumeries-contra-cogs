@@ -1,0 +1,2 @@
+outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
+ENG-0025,AGR-027,SUP-MAISON,CZ,2026,UNITS,11336,0.5,5668,EUR,CCOGS_INVOICE,INV-0041,DN-0027,RCP-0131|RCP-0132,11336 units @ 50.00% = 5668 EUR (full combined volume; no leakage)

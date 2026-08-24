@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-017</agreementId>
-  <supplierId>SUP-BOTANI</supplierId>
-  <supplierName>Botanika Naturals</supplierName>
+  <supplierId>SUP-ATELIER</supplierId>
+  <supplierName>Atelier Parfums Group</supplierName>
   <rebateStructure>SLIDING_INCREMENTAL</rebateStructure>
   <basis>WEIGHT</basis>
   <period>YEAR</period>

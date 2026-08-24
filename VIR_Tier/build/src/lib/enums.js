@@ -37,6 +37,14 @@ export const LeakageDriver = Object.freeze({
   FOUND_LATER_PALLET: 'FOUND_LATER_PALLET',                     // short-scanned then a pallet is found later
   FORGOTTEN_SKU: 'FORGOTTEN_SKU',                               // contract SKU never configured in internal engine
   REROUTE_SKIPPED_SCAN: 'REROUTE_SKIPPED_SCAN',                 // goods rerouted to town WH; main-WH scan skipped
+  MISSING_INVOICE: 'MISSING_INVOICE',                           // goods received (delivery note + GRN) but supplier invoice never arrived / rejected by ERP as corrupt; no CCOGS ever generated
+});
+
+// Why the invoice behind a MISSING_INVOICE event is absent — drives the finding
+// narrative and the manual-check reason shown to the user.
+export const MissingInvoiceReason = Object.freeze({
+  NEVER_ARRIVED: 'NEVER_ARRIVED',   // supplier never sent the invoice (may still arrive after agreement validity)
+  ERP_REJECTED: 'ERP_REJECTED',     // invoice was submitted but ERP rejected it as corrupt / incomplete
 });
 
 // How a tier threshold is measured against the contract's SKU set.

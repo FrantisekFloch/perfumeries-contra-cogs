@@ -3,46 +3,49 @@
   <header>
     <invoiceNumber>INV-0039</invoiceNumber>
     <type>final</type>
-    <agreementId>AGR-023</agreementId>
-    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <agreementId>AGR-025</agreementId>
+    <distributor id="SUP-NORD" name="Nordica Beauty Group"/>
     <country>PL</country>
-    <poReference>PO-2026-5095</poReference>
-    <invoiceDate>2026-01-18</invoiceDate>
-    <shipDate>2026-01-18</shipDate>
+    <poReference>PO-2026-2785</poReference>
+    <invoiceDate>2026-07-14</invoiceDate>
+    <shipDate>2026-07-14</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="" pct="50"/>
+      <tier minQty="1" maxQty="60000" pct="1"/>
+      <tier minQty="60001" maxQty="120000" pct="1.5"/>
+      <tier minQty="120001" maxQty="240000" pct="2"/>
+      <tier minQty="240001" maxQty="" pct="2.5"/>
     </discount>
-    <totalValueStandard>468544.5</totalValueStandard>
+    <totalValueStandard>5503488.73</totalValueStandard>
   </header>
   <lines>
     <line>
+      <stockId>EDP-050</stockId>
+      <description>Eau de Parfum 50ml</description>
+      <qtyInvoiced>60372</qtyInvoiced>
+      <unitPriceStandard>22.79</unitPriceStandard>
+      <targetStorage>WH-PL-01</targetStorage>
+    </line>
+    <line>
       <stockId>EDP-100</stockId>
       <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>3144</qtyInvoiced>
-      <unitPriceStandard>37.26</unitPriceStandard>
+      <qtyInvoiced>60372</qtyInvoiced>
+      <unitPriceStandard>22.79</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
-      <stockId>MSC-200</stockId>
-      <description>Body Mist 200ml</description>
-      <qtyInvoiced>3144</qtyInvoiced>
-      <unitPriceStandard>37.26</unitPriceStandard>
-      <targetStorage>WH-PL-01</targetStorage>
-    </line>
-    <line>
-      <stockId>EDT-075</stockId>
-      <description>Eau de Toilette 75ml</description>
-      <qtyInvoiced>3144</qtyInvoiced>
-      <unitPriceStandard>37.26</unitPriceStandard>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>60372</qtyInvoiced>
+      <unitPriceStandard>22.79</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
     <line>
       <stockId>LIP-004</stockId>
       <description>Lipstick 4g</description>
-      <qtyInvoiced>3143</qtyInvoiced>
-      <unitPriceStandard>37.26</unitPriceStandard>
+      <qtyInvoiced>60371</qtyInvoiced>
+      <unitPriceStandard>22.79</unitPriceStandard>
       <targetStorage>WH-PL-01</targetStorage>
     </line>
   </lines>

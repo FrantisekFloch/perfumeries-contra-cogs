@@ -3,34 +3,32 @@
   <header>
     <invoiceNumber>INV-0041</invoiceNumber>
     <type>final</type>
-    <agreementId>AGR-025</agreementId>
-    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <agreementId>AGR-027</agreementId>
+    <distributor id="SUP-MAISON" name="Maison Aroma Distribution"/>
     <country>CZ</country>
-    <poReference>PO-2026-6056</poReference>
-    <invoiceDate>2026-04-14</invoiceDate>
-    <shipDate>2026-04-14</shipDate>
+    <poReference>PO-2026-5971</poReference>
+    <invoiceDate>2026-01-09</invoiceDate>
+    <shipDate>2026-01-09</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="90000" pct="0.8"/>
-      <tier minQty="90001" maxQty="180000" pct="1.4"/>
-      <tier minQty="180001" maxQty="" pct="2.2"/>
+      <tier minQty="1" maxQty="" pct="50"/>
     </discount>
-    <totalValueStandard>7749074.86</totalValueStandard>
+    <totalValueStandard>222298.96</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>EDT-075</stockId>
-      <description>Eau de Toilette 75ml</description>
-      <qtyInvoiced>91879</qtyInvoiced>
-      <unitPriceStandard>42.17</unitPriceStandard>
+      <stockId>GFT-SET</stockId>
+      <description>Gift Set</description>
+      <qtyInvoiced>5668</qtyInvoiced>
+      <unitPriceStandard>19.61</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
     <line>
-      <stockId>LIP-004</stockId>
-      <description>Lipstick 4g</description>
-      <qtyInvoiced>91879</qtyInvoiced>
-      <unitPriceStandard>42.17</unitPriceStandard>
+      <stockId>SRM-030</stockId>
+      <description>Serum 30ml</description>
+      <qtyInvoiced>5668</qtyInvoiced>
+      <unitPriceStandard>19.61</unitPriceStandard>
       <targetStorage>WH-CZ-01</targetStorage>
     </line>
   </lines>

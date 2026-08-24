@@ -76,7 +76,32 @@ export function scoreOpportunities(beforeAfter, reconstructions = [], consolidat
     };
     const rawScore = clamp01(contrib.magnitude + contrib.lift + contrib.driverPressure + contrib.tierProximity);
 
+    // ---- missing-invoice discrepancy detection --------------------------------
+    // Goods received (delivery note + GRN) but no supplier invoice / no CCOGS was
+    // ever generated. The engine claimed zero, so the whole entitlement is
+    // recoverable — but because a document is genuinely missing, this needs a
+    // MANUAL CHECK rather than an automatic claim. We surface it distinctly.
+    const miEvents = (group?.missingInvoiceEvents && group.missingInvoiceEvents.length)
+      ? group.missingInvoiceEvents
+      : (group?.events || []).filter((e) => e.type === 'MISSING_INVOICE');
+    const isMissingInvoice = (group?.hasMissingInvoice === true) || miEvents.length > 0;
+    const miReason = miEvents[0]?.reason || null; // 'NEVER_ARRIVED' | 'ERP_REJECTED' | null
+    const missingInvoice = isMissingInvoice ? {
+      reason: miReason,
+      units: miEvents.reduce((s, e) => s + (e.qty || 0), 0) || (group?.orphanReceipts || []).reduce((s, r) => s + (r.qtyReceived || 0), 0),
+      receiptRefs: [
+        ...miEvents.flatMap((e) => e.refIds || []),
+        ...((group?.orphanReceipts || []).map((r) => r.receiptId)),
+      ].filter((v, i, a) => v && a.indexOf(v) === i),
+    } : null;
+
     const reasons = [];
+    // Missing-invoice takes precedence in the narrative — it is the headline cause.
+    if (isMissingInvoice) {
+      reasons.push(miReason === 'ERP_REJECTED'
+        ? 'Manual check: goods received but the supplier invoice was rejected by the ERP as corrupt/incomplete — no CCOGS was ever generated, yet the volume qualifies under the agreement.'
+        : 'Manual check: goods received but the supplier invoice never arrived — no CCOGS was ever generated, yet the volume qualifies under the agreement (the invoice may still arrive after the agreement validity).');
+    }
     // lead with the concrete "process miss but goods delivered" story where present
     const NEW_CAUSE = {
       REROUTE_SKIPPED_SCAN: 'Goods rerouted to a town WH — the main-WH scan was skipped, but delivery is confirmed.',
@@ -173,6 +198,10 @@ export function scoreOpportunities(beforeAfter, reconstructions = [], consolidat
         liftPct: Math.round(liftRatioRaw * 100),
         magnitudeZ: Number(magnitudeZ.toFixed(2)),
       },
+      // when set, this finding is a "goods received but no invoice / no CCOGS"
+      // discrepancy that needs a manual check (see missingInvoice.reason).
+      missingInvoice,
+      needsManualCheck: !!missingInvoice,
       reasons,
     };
   });
@@ -281,6 +310,17 @@ export function patternInsights(beforeAfter, findings, consolidated = null) {
     insights.push({ kind: 'FOUND_LATER_PALLET', severity: 'medium', illustrative: false,
       title: 'Found-later pallets',
       detail: `${d.count} pallet(s), ~${Math.round(d.units)} units, were located after an initial short-scan. They belong to the same in-window order and push qualifying volume up — often across a tier threshold.` });
+  }
+  // Missing invoice / no CCOGS — the new discrepancy. Prefer the consolidation
+  // summary (covers both explicit events and orphan receipts) when available.
+  const miSummary = (consolidated && Array.isArray(consolidated.missingInvoices)) ? consolidated.missingInvoices : [];
+  const miAgg = D('MISSING_INVOICE');
+  if (miSummary.length || miAgg.count) {
+    const cases = miSummary.length || miAgg.count;
+    const units = miSummary.length ? miSummary.reduce((s, m) => s + (m.units || 0), 0) : miAgg.units;
+    insights.push({ kind: 'MISSING_INVOICE', severity: 'high', illustrative: false,
+      title: 'Goods received — invoice missing (manual check)',
+      detail: `${cases} case(s), ~${Math.round(units)} units, were received under a rebate agreement but never billed — the supplier invoice never arrived, or the ERP rejected it as corrupt/incomplete, so no CCOGS was generated. The agreements, delivery notes and receipts do not tie to any invoice. Flagged for manual check: confirm the delivery, then reclaim the full entitlement.` });
   }
 
   // 5) illustrative model-style findings (flagged) — the "rooster" a human would hunt for

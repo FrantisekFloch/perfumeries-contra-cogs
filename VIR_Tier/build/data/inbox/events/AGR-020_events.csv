@@ -1,0 +1,2 @@
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate,reason
+EVT-0027,MISSING_INVOICE,AGR-020,SUP-ATELIER,SK,GFT-SET,103597,RCP-0110|RCP-0111,2027-01-08,,NEVER_ARRIVED

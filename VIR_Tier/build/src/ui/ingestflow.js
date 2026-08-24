@@ -71,14 +71,122 @@ export function renderIngestFlow(counts = {}, opts = {}) {
   return `
     <div class="ifl${done ? ' done' : ''}" id="ingestFlow">
       <div class="ifl-head">
-        <div class="ifl-kick">${t('flowKick')}</div>
-        <div class="ifl-title" id="iflTitle">${title}</div>
+        <div class="ifl-head-main">
+          <div class="ifl-kick">${t('flowKick')}</div>
+          <div class="ifl-title" id="iflTitle">${title}</div>
+        </div>
+        <button class="ifl-addsrc" id="iflAddSource" title="${t('addSourceHint')}">＋ ${t('addSource')}</button>
       </div>
       <div class="ifl-track">
         <div class="ifl-line"><i class="ifl-wave" id="iflWave" style="width:${done ? '100%' : '0%'}"></i></div>
         <div class="ifl-nodes">${nodes}</div>
       </div>
     </div>`;
+}
+
+// ---- Machine-Learning analysis panel (sits to the RIGHT of the ingest flow) ----
+// A professional, "mathematical" looking animated panel: a phase line
+// (Initializing -> Analysis in progress -> Complete), a live scrolling matrix of
+// figures/equations, a converging optimisation curve, and a set of rotating
+// method chips. Pure SVG + CSS; no libraries. It animates in parallel with the
+// ingest flow and settles when analysis "completes".
+export function renderMlAnalysisPanel(opts = {}) {
+  const done = !!opts.done;
+  // deterministic-ish grid of "coefficients" the animation scrolls through
+  const cells = [];
+  for (let i = 0; i < 36; i++) cells.push(`<span class="mla-cell">${(Math.random() * 2 - 1).toFixed(2)}</span>`);
+  // a smooth converging curve (loss going down) as an inline SVG polyline
+  const pts = [];
+  for (let x = 0; x <= 100; x += 4) {
+    const y = 40 * Math.exp(-x / 34) + 4 + (Math.sin(x / 6) * 1.6);
+    pts.push(`${x},${(50 - y).toFixed(1)}`);
+  }
+  const eqs = [
+    'argmin&nbsp;Σ‖Vᵢ − V̂ᵢ‖²',
+    'P = 0.40·mag + 0.30·lift + 0.20·drv + 0.10·tier',
+    'V̂ = Σ receipts + Σ driverΔ',
+    'entitled = valueBase × rate(V̂)',
+    'z = (x − μ) / σ',
+  ];
+  // The panel starts BLOCKED (waiting for the live ingestion to finish). Once
+  // ingestion completes, mlAnalysisStart() unblocks it and runs the analysis
+  // (~6-8s), then mlAnalysisComplete() settles it. Light theme, business look.
+  const startCls = done ? ' done' : ' blocked';
+  const topLabel = done ? t('mlaComplete') : t('mlaAnalysisRunning');
+  return `
+    <div class="mla${startCls}" id="mlAnalysis">
+      <div class="mla-head">
+        <div class="mla-kick">${t('mlaKick')}</div>
+        <div class="mla-phase" id="mlaPhase">${topLabel}</div>
+        <div class="mla-model">
+          <span class="mla-model-name" id="mlaModelName">${t('mlaModelName')} · <span id="mlaModelState">${done ? t('mlaComplete') : t('mlaModelIdle')}</span></span>
+        </div>
+      </div>
+      <div class="mla-body">
+        <div class="mla-viz">
+          <svg class="mla-curve" viewBox="0 0 100 50" preserveAspectRatio="none" aria-hidden="true">
+            <defs><linearGradient id="mlaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00B67A" stop-opacity="0.28"/><stop offset="100%" stop-color="#00B67A" stop-opacity="0"/>
+            </linearGradient></defs>
+            <polyline class="mla-line" points="${pts.join(' ')}"/>
+            <polygon class="mla-area" points="0,50 ${pts.join(' ')} 100,50" fill="url(#mlaGrad)"/>
+          </svg>
+          <div class="mla-scan" aria-hidden="true"></div>
+          <div class="mla-wait" id="mlaWait"><span class="mla-wait-dot"></span>${t('mlaWaiting')}</div>
+        </div>
+        <div class="mla-matrix" aria-hidden="true">${cells.join('')}</div>
+        <div class="mla-eqs">${eqs.map((e, i) => `<span class="mla-eq" style="animation-delay:${i * 0.6}s">${e}</span>`).join('')}</div>
+      </div>
+      <div class="mla-foot"><span class="mla-spark" id="mlaSpark"></span><span class="mla-stat" id="mlaStat">${done ? t('mlaDoneStat') : t('mlaWaiting')}</span></div>
+    </div>`;
+}
+
+// Render the panel in its initial BLOCKED state (waiting for ingestion). No-op
+// beyond ensuring classes/labels are right; the panel markup already ships
+// blocked, so this simply (re)asserts it in case of a re-render.
+export function mlAnalysisBlock(host) {
+  const root = host.querySelector('#mlAnalysis');
+  if (!root) return;
+  if (root.__mlaTimers) root.__mlaTimers.forEach((tm) => clearTimeout(tm));
+  root.classList.remove('done', 'working'); root.classList.add('blocked');
+  const state = root.querySelector('#mlaModelState'); if (state) state.textContent = t('mlaModelIdle');
+  const stat = root.querySelector('#mlaStat'); if (stat) stat.textContent = t('mlaWaiting');
+}
+
+// Unblock + run the analysis. Called once the live ingestion completes. Runs the
+// viz for ~6-8s, then calls opts.onDone (which settles the panel + reveals
+// results). Respects reduced-motion (snaps to done quickly).
+export function mlAnalysisStart(host, opts = {}) {
+  const root = host.querySelector('#mlAnalysis');
+  if (!root) return;
+  if (root.__mlaTimers) root.__mlaTimers.forEach((tm) => clearTimeout(tm));
+  const timers = []; root.__mlaTimers = timers;
+  const phase = root.querySelector('#mlaPhase');
+  const modelState = root.querySelector('#mlaModelState');
+  const stat = root.querySelector('#mlaStat');
+  const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  root.classList.remove('blocked', 'done'); root.classList.add('working');
+  if (phase) phase.textContent = t('mlaAnalysisRunning');
+  if (modelState) modelState.textContent = t('mlaRunning');
+  if (stat) stat.textContent = t('mlaWorking');
+
+  const finishMs = reduced ? 200 : (6000 + Math.random() * 2000); // 6-8s real feel
+  root.__mlaFinishMs = finishMs;
+  timers.push(setTimeout(() => { if (typeof opts.onDone === 'function') opts.onDone(); }, finishMs));
+}
+
+// Settle the ML panel to its finished state (called from mlAnalysisStart onDone).
+export function mlAnalysisComplete(host) {
+  const root = host.querySelector('#mlAnalysis');
+  if (!root) return;
+  const phase = root.querySelector('#mlaPhase');
+  const modelState = root.querySelector('#mlaModelState');
+  const stat = root.querySelector('#mlaStat');
+  root.classList.remove('working', 'blocked'); root.classList.add('done');
+  if (phase) phase.textContent = t('mlaComplete');
+  if (modelState) modelState.textContent = t('mlaComplete');
+  if (stat) stat.textContent = t('mlaDoneStat');
 }
 
 // Animate: all nodes load at once (spinner overlay), each finishing at a RANDOM

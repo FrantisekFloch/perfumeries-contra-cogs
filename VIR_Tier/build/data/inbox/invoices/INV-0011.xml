@@ -4,7 +4,7 @@
     <invoiceNumber>INV-0011</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-006</agreementId>
-    <distributor id="SUP-VELVET" name="Velvet &amp; Co. Fragrances"/>
+    <distributor id="SUP-NORD" name="Nordica Beauty Group"/>
     <country>PL</country>
     <poReference>PO-2026-8291</poReference>
     <invoiceDate>2026-05-15</invoiceDate>

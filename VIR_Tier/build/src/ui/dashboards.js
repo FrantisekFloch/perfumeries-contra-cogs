@@ -7,6 +7,7 @@ import { hintSpan } from './tooltip.js';
 import { barChart } from './charts.js';
 import { buildReviewDocument } from '../lib/approval.js';
 import { financeJourney } from './doc.js';
+import { miDiscrepancyBlock } from './stages.js';
 
 const money = (v, cur) => `${Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${cur}`;
 
@@ -95,6 +96,72 @@ export function renderOverview(state) {
       <div class="wl-chips">${chips}</div>
     </div>`;
   }).join('');
+  // ---- (A) ML findings summary + CCOGS delta + pending/realized tracker -------
+  // CCOGS delta = what the engine claimed (before) vs what the tool reconstructs
+  // you are entitled to (after). The delta is the additional CCOGS found to reclaim.
+  const ccogsDelta = totalAfter - totalBefore;
+
+  // pending vs realized additional-CCOGS: a recoverable charge is "realized" once
+  // it has been posted to the ERP billing system this session (state.erpSent).
+  const erpSent = state.erpSent || {};
+  const charges = state.charges || [];
+  const recCharges = charges.filter((c) => (c.variance || 0) > 0.01);
+  const realized = recCharges.filter((c) => erpSent[c.chargeId]);
+  const pending = recCharges.filter((c) => !erpSent[c.chargeId]);
+  const realizedEur = realized.reduce((s, c) => s + (c.variance || 0), 0);
+  const pendingEur = pending.reduce((s, c) => s + (c.variance || 0), 0);
+  const trackerPct = (realizedEur + pendingEur) > 0 ? Math.round(realizedEur / (realizedEur + pendingEur) * 100) : 0;
+
+  // ML findings summary — top findings by recoverable, with a type badge
+  // (missing-invoice cases flagged) so Finance sees WHAT the model surfaced.
+  const findingsAll = [...(state.discovery?.findings || [])].sort((a, b) => (b.leakage || 0) - (a.leakage || 0));
+  const miCount = findingsAll.filter((f) => f.missingInvoice).length;
+  const findingRows = findingsAll.slice(0, 8).map((f) => {
+    const badge = f.missingInvoice
+      ? `<span class="of-badge mi">⚑ ${t('miBadge')}</span>`
+      : (f.scopeKey === 'PAN_EU' ? `<span class="of-badge pan">Pan-EU</span>` : '');
+    return `<tr>
+      <td>${f.supplierName || f.supplierId} <span class="mono small">${f.agreementId}</span> ${badge}</td>
+      <td>${f.scopeKey}</td>
+      <td class="num">${fmtN(f.claimed)} ${f.currency}</td>
+      <td class="num">${fmtN(f.entitled)} ${f.currency}</td>
+      <td class="num"><strong style="color:var(--gold)">${fmtN(f.leakage)} ${f.currency}</strong></td>
+    </tr>`;
+  }).join('');
+
+  const findingsSummaryBlock = `
+    <h3 class="ov-h">${t('ovFindingsTitle')}</h3>
+    <p class="muted small">${t('ovFindingsNote')}</p>
+    <div class="ov-cards">
+      <div class="ov-metric">
+        <div class="l">${t('ovCcogsBefore')}</div><div class="v">${eur(totalBefore)}</div>
+        <div class="s">${t('engineClaimed')}</div>
+      </div>
+      <div class="ov-metric arrow-metric"><span>→</span></div>
+      <div class="ov-metric">
+        <div class="l">${t('ovCcogsAfter')}</div><div class="v">${eur(totalAfter)}</div>
+        <div class="s">${t('toolEntitled')}</div>
+      </div>
+      <div class="ov-metric gold">
+        <div class="l">${t('ovCcogsDelta')}</div><div class="v">${eur(ccogsDelta)}</div>
+        <div class="s">${recoverableCount} ${t('recoverableAgreements')} · ${miCount} ${t('ovMissingInvoiceCount')}</div>
+      </div>
+    </div>
+
+    <div class="card ov-tracker">
+      <div class="ovt-head"><strong>${t('ovTrackerTitle')}</strong><span class="small muted">${t('ovTrackerNote')}</span></div>
+      <div class="ovt-bar"><i style="width:${trackerPct}%"></i></div>
+      <div class="ovt-legend">
+        <span class="ovt-leg realized"><b>${eur(realizedEur)}</b> ${t('ovRealized')} (${realized.length})</span>
+        <span class="ovt-leg pending"><b>${eur(pendingEur)}</b> ${t('ovPending')} (${pending.length})</span>
+      </div>
+    </div>
+
+    <div class="table-wrap"><table class="ov-findings"><thead><tr>
+      <th>${t('supplier')} / ${t('agreement')}</th><th>${t('scope')}</th>
+      <th class="num">${t('colOriginal')}</th><th class="num">${t('colRecomputed')}</th><th class="num">${t('colTrueUp')}</th>
+    </tr></thead><tbody>${findingRows || `<tr><td colspan="5" class="small">—</td></tr>`}</tbody></table></div>`;
+
   const worklistBlock = `
     <h3 class="ov-h">${t('wlTitle')}</h3>
     <p class="muted small">${t('wlNote')}</p>
@@ -156,6 +223,8 @@ export function renderOverview(state) {
       <div class="panel after"><div class="h">${t('after')}</div><div class="big">${eur(totalAfter)}</div><div class="small">${t('toolEntitled')} · ${hintSpan(t('controlPeriod'), 'CONTROL_PERIOD')}</div></div>
     </div>
     <div class="loss-banner">${t('totalRecoverable')}: <strong>${eur(totalTrueUp)}</strong> &nbsp;·&nbsp; ${upliftPct.toFixed(1)}% ${t('upliftOnClaimed')} &nbsp;·&nbsp; ${recoverableCount} ${t('recoverableAgreements')}</div>
+
+    ${findingsSummaryBlock}
 
     ${worklistBlock}
 
@@ -224,13 +293,22 @@ export function reviewModalHtml(charge, group, reconstruction, opts = {}) {
   const f = opts.finding;
   if (f) {
     const dv = f.derivation || {}; const tb = dv.tierBefore || {}; const ta = dv.tierAfter || {};
-    storyBlock = `<p class="mf-story review-story">${t(tb.idx !== ta.idx ? 'mlStoryTierMove' : 'mlStorySameTier', {
-      claimed: fmtN(f.claimed), cur: f.currency, engV: fmtN(dv.engineVolume), reconV: fmtN(dv.reconstructedVolume),
-      baseV: fmtN(dv.baseVolume), restored: fmtN(dv.restoredUnits),
-      tierA: ta.idx >= 0 ? ta.idx + 1 : '—', rateA: ((ta.rate || 0) * 100).toFixed(2),
-      tierB: tb.idx >= 0 ? tb.idx + 1 : '—', rateB: ((tb.rate || 0) * 100).toFixed(2),
-      entitled: fmtN(f.entitled), leak: fmtN(f.leakage),
-    })}</p>`;
+    const mi = f.missingInvoice || null;
+    if (mi) {
+      storyBlock = `<p class="mf-story review-story mf-story-mi">${t(mi.reason === 'ERP_REJECTED' ? 'miStoryRejected' : 'miStoryNever', {
+        cur: f.currency, units: fmtN(mi.units || dv.reconstructedVolume), reconV: fmtN(dv.reconstructedVolume),
+        rateA: ((ta.rate || 0) * 100).toFixed(2), tierA: ta.idx >= 0 ? ta.idx + 1 : '—',
+        entitled: fmtN(f.entitled), leak: fmtN(f.leakage),
+      })}</p>${miDiscrepancyBlock(mi, group, f.currency)}`;
+    } else {
+      storyBlock = `<p class="mf-story review-story">${t(tb.idx !== ta.idx ? 'mlStoryTierMove' : 'mlStorySameTier', {
+        claimed: fmtN(f.claimed), cur: f.currency, engV: fmtN(dv.engineVolume), reconV: fmtN(dv.reconstructedVolume),
+        baseV: fmtN(dv.baseVolume), restored: fmtN(dv.restoredUnits),
+        tierA: ta.idx >= 0 ? ta.idx + 1 : '—', rateA: ((ta.rate || 0) * 100).toFixed(2),
+        tierB: tb.idx >= 0 ? tb.idx + 1 : '—', rateB: ((tb.rate || 0) * 100).toFixed(2),
+        entitled: fmtN(f.entitled), leak: fmtN(f.leakage),
+      })}</p>`;
+    }
 
     // "Where the volume came from" — base receipts + per-driver restored units +
     // reconstructed total (ported from the ML Discovery finding card so this
@@ -249,6 +327,10 @@ export function reviewModalHtml(charge, group, reconstruction, opts = {}) {
   return `
   <div class="modal-bg" id="reviewBg">
     <div class="modal">
+      ${opts.readOnly ? `<div class="modal-topbar">
+        <button class="btn tint-green-soft" data-genreadonly="${charge.chargeId}">${t('genContraInvoice')}</button>
+        <button class="btn ghost" data-closemodal>${t('close')}</button>
+      </div>` : ''}
       <h2>${t('reviewDoc')} — ${charge.chargeId}</h2>
       <div class="sub">${doc.supplier.name} · ${doc.agreementId} · ${doc.scopeKey} · ${doc.period}</div>
 
@@ -287,10 +369,10 @@ export function reviewModalHtml(charge, group, reconstruction, opts = {}) {
         <table><thead><tr><th>#</th><th>Time</th><th>Actor</th><th>Action</th></tr></thead><tbody>${audit}</tbody></table>
       </div>
 
-      <div class="actions">
-        ${opts.readOnly ? '' : `<button class="btn primary" data-gencontra="${charge.chargeId}">${t('genContraInvoice')}</button>`}
+      ${opts.readOnly ? '' : `<div class="actions">
+        <button class="btn primary" data-gencontra="${charge.chargeId}">${t('genContraInvoice')}</button>
         <button class="btn ghost" data-closemodal>${t('close')}</button>
-      </div>
+      </div>`}
     </div>
   </div>`;
 }
@@ -363,7 +445,41 @@ export function renderAbout() {
         <h5>${t('ab.ml.outputH')}</h5>
         <p>${t('ab.ml.outputP')}</p>` },
     { id: 'trueup', h: t('ab.h.trueup'), body: `<p>${t('ab.p.trueup')}</p>` },
-    { id: 'finance', h: t('ab.h.finance'), body: `<p>${t('ab.p.finance')}</p>` },
+    // ---- NEW capability sections ----
+    { id: 'missinginvoice', h: t('ab.h.mi'), body: `<p>${t('ab.p.mi')}</p>
+        <ul class="manual">
+          <li>${t('ab.mi.never')}</li>
+          <li>${t('ab.mi.rejected')}</li>
+        </ul>
+        <p>${t('ab.mi.how')}</p>` },
+    { id: 'loading', h: t('ab.h.loading'), body: `<p>${t('ab.p.loading')}</p>
+        <ul class="manual">
+          <li>${t('ab.load.ingest')}</li>
+          <li>${t('ab.load.ml')}</li>
+          <li>${t('ab.load.tiles')}</li>
+        </ul>` },
+    { id: 'sources', h: t('ab.h.sources'), body: `<p>${t('ab.p.sources')}</p>
+        <ul class="manual">
+          <li>${t('ab.src2.edi')}</li>
+          <li>${t('ab.src2.api')}</li>
+          <li>${t('ab.src2.folder')}</li>
+          <li>${t('ab.src2.mailbox')}</li>
+        </ul>
+        <p>${t('ab.src2.scan')}</p>` },
+    { id: 'generate', h: t('ab.h.generate'), body: `<p>${t('ab.p.generate')}</p>
+        <ul class="manual">
+          <li>${t('ab.gen.percase')}</li>
+          <li>${t('ab.gen.consolidated')}</li>
+          <li>${t('ab.gen.erp')}</li>
+        </ul>` },
+    { id: 'filters', h: t('ab.h.filters'), body: `<p>${t('ab.p.filters')}</p>` },
+    { id: 'audit', h: t('ab.h.audit'), body: `<p>${t('ab.p.audit')}</p>
+        <ul class="manual">
+          <li>${t('ab.audit.sheet0')}</li>
+          <li>${t('ab.audit.sheet1')}</li>
+          <li>${t('ab.audit.sheet2')}</li>
+        </ul>` },
+    { id: 'finance', h: t('ab.h.finance'), body: `<p>${t('ab.p.finance')}</p><p>${t('ab.p.finance2')}</p>` },
     { id: 'nav', h: t('ab.h.nav'), body: `<p>${t('ab.p.nav')}</p>` },
     { id: 'glossary', h: t('ab.h.glossary'), body: `<dl class="glossary">
         <dt>CCOGS</dt><dd>${t('ab.g.ccogs')}</dd>

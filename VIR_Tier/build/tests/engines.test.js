@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { reconstructVolume } from '../src/lib/reconstruction.js';
 import { computeEntitled, computeEntitledWithReach, resolveTier } from '../src/lib/rebate.js';
 import { buildVariance, __resetChargeSeqForTests } from '../src/lib/variance.js';
+import { buildTrueUp } from '../src/lib/trueup.js';
 import { createAgreement, createReceipt, createLeakageEvent, createPurchase } from '../src/lib/models.js';
 import { RebateStructure, Basis, Period, Scope, RetrospectiveReach, LeakageDriver } from '../src/lib/enums.js';
 
@@ -90,6 +91,58 @@ test('value basis uses purchase unitValue', () => {
   const receipts = [createReceipt({ receiptId: 'R1', purchaseId: 'P1', agreementId: 'AGR-1', country: 'SK', stockId: 'S1', qtyReceived: 1000, receiptDate: '2026-02-01' })];
   const rec = reconstructVolume({ agreement, purchases, receipts });
   assert.equal(rec.volumes[0].qualifyingVolume, 10000); // 1000 * 10
+});
+
+// ---- True-Up line reconciliation (numbers must be bulletproof) ----
+test('buildTrueUp lines sum EXACTLY to the variance (tier uplift + drivers)', () => {
+  const agreement = panEuAgreement();
+  const tu = buildTrueUp({
+    agreement, scopeKey: 'PAN_EU', period: '2026', currency: 'EUR',
+    baseVolume: 8000, engineClaimed: 80, reconstructedVolume: 12000, basisValue: 12000,
+    corrections: [{ driver: LeakageDriver.FORGOTTEN_SKU, volumeDelta: 4000, note: 'forgotten sku' }],
+    now: () => 'Z',
+  });
+  assert.ok(tu.charge, 'a charge is produced');
+  const lineSum = Math.round(tu.lines.reduce((s, l) => s + (l.deltaValue || 0), 0) * 100) / 100;
+  assert.equal(lineSum, tu.charge.variance, 'lines reconcile to variance to the cent');
+});
+
+test('buildTrueUp reconciles even when engine claimed zero (missing invoice)', () => {
+  const agreement = panEuAgreement({ scope: Scope.PER_COUNTRY });
+  const tu = buildTrueUp({
+    agreement, scopeKey: 'SK', period: '2026', currency: 'EUR',
+    baseVolume: 6000, engineClaimed: 0, reconstructedVolume: 6000, basisValue: 6000,
+    corrections: [], now: () => 'Z',
+  });
+  assert.ok(tu.charge, 'a charge is produced when claimed is zero');
+  const lineSum = Math.round(tu.lines.reduce((s, l) => s + (l.deltaValue || 0), 0) * 100) / 100;
+  assert.equal(lineSum, tu.charge.variance, 'single base line equals the full entitlement');
+});
+
+// ---- missing-invoice discrepancy: goods received, no invoice, no CCOGS ----
+test('missing invoice: received goods are qualifying volume; marker adds no volume and carries reason', () => {
+  const agreement = panEuAgreement({ scope: Scope.PER_COUNTRY });
+  // Goods physically received (GRN) but no invoice -> receipt has no invoiceRef.
+  const receipts = [createReceipt({ receiptId: 'R1', agreementId: 'AGR-1', country: 'SK', stockId: 'S1', qtyReceived: 6000, receiptDate: '2026-02-01' })];
+  // The MISSING_INVOICE marker tags WHY the invoice is absent; qty mirrors the receipt
+  // but it must NOT double-count (delta 0 — goods already in base via the receipt).
+  const events = [createLeakageEvent({ eventId: 'E1', type: LeakageDriver.MISSING_INVOICE, agreementId: 'AGR-1', country: 'SK', stockId: 'S1', qty: 6000, refIds: ['R1'], eventDate: '2026-03-01', reason: 'ERP_REJECTED' })];
+  const rec = reconstructVolume({ agreement, receipts, events });
+  const sk = rec.volumes.find((v) => v.scopeKey === 'SK');
+  assert.equal(sk.qualifyingVolume, 6000); // received goods only — no double count
+  const corr = rec.corrections.find((c) => c.driver === LeakageDriver.MISSING_INVOICE);
+  assert.ok(corr, 'a MISSING_INVOICE correction/marker is recorded');
+  assert.equal(corr.volumeDelta, 0);
+  assert.match(corr.note, /rejected by ERP/);
+});
+
+test('missing invoice: entire entitlement recoverable because engine claimed zero', () => {
+  __resetChargeSeqForTests();
+  const agreement = panEuAgreement();
+  // 6000 units qualifies at 1.5% tier => entitled 90; nothing was ever claimed.
+  const r = buildVariance({ agreement, scopeKey: 'PAN_EU', period: '2026', entitled: 90, claimed: 0, currency: 'EUR', contributingEvents: ['E1'], clauseRef: 'Clause 4.2', now: () => '2026-01-01T00:00:00Z' });
+  assert.equal(r.variance, 90);
+  assert.ok(r.charge);
 });
 
 // ---- rebate math ----

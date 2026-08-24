@@ -63,6 +63,11 @@ export const REG_NOTES = Object.freeze({
     regulation: 'A skipped internal scan does not negate delivery; goods reached the destination.',
     sourceLabel: 'Loss — reroute / skipped scan',
   },
+  MISSING_INVOICE: {
+    short: 'Goods were received (delivery note + goods-receipt exist) but the supplier invoice never arrived, or was rejected by the ERP as corrupt/incomplete. With no invoice, the internal CCOGS engine produced nothing and claimed zero — yet the goods are covered by the rebate agreement and were sold at the discounted price. The full entitlement is recoverable and the case is flagged for manual check.',
+    regulation: 'Rebate entitlement follows the qualifying volume actually received under the agreement, not the presence of a supplier invoice; a missing or rejected invoice does not extinguish the earned rebate.',
+    sourceLabel: 'Loss — goods received, no invoice / no CCOGS',
+  },
   ML_INPUTS: {
     short: 'The consolidated source data the model reads: invoices, delivery notes, goods receipts, missing-data events and CCOGS engine outputs.',
     regulation: 'Features are derived only from ingested, provenance-tracked records.',

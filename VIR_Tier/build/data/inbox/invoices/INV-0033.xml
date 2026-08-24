@@ -4,7 +4,7 @@
     <invoiceNumber>INV-0033</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-018</agreementId>
-    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <distributor id="SUP-BOTANI" name="Botanika Naturals"/>
     <country>PL</country>
     <poReference>PO-2026-4009</poReference>
     <invoiceDate>2026-01-17</invoiceDate>

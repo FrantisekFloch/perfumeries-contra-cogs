@@ -68,29 +68,32 @@ export function buildTrueUp(args) {
   const claimed = round2(engineClaimed);
   const variance = round2(entitled - claimed);
 
-  // Itemize causes. Each driver correction restored `volumeDelta` units; attribute
-  // a proportional share of the cumulative money delta to it. Lines are informational
-  // + auditable; they SUM to the headline variance.
+  // Itemize causes as an EXACT decomposition of the variance (so the line-level
+  // audit export reconciles to the headline to the cent — no small differences).
+  //
+  //   entitled = valueBase × rateAfter
+  //            = (baseValue × rateAfter) + Σ(driverUnits × unitValue × rateAfter)
+  //   variance = entitled − claimed
+  //            = [baseValue × rateAfter − claimed]  (the "base uplift" line)
+  //            + Σ(driverUnits × unitValue × rateAfter)  (one line per restored cause)
+  //
+  // The bracket is the base volume now repriced at the achieved (after) rate minus
+  // what the engine actually claimed on it — this captures BOTH the retrospective
+  // tier uplift on the base AND any under-claim on the base. The driver lines are
+  // the never-counted restored units at the after rate. By construction these sum
+  // to `variance`; we snap the base line to absorb any rounding drift last.
   const restored = corrections.reduce((s, c) => s + (c.volumeDelta || 0), 0);
+  const unitValue = valueBase / Math.max(1, reconstructedVolume); // value per qualifying unit
   const lines = [];
-  // 1) the base already-claimed move from before-rate to after-rate on the base volume
-  const baseUpliftValue = round2((baseVolume) * (rateAfter - rateBefore) * (valueBase / Math.max(1, reconstructedVolume)));
-  if (rateAfter > rateBefore && baseVolume > 0) {
-    lines.push({
-      cause: 'Tier uplift on already-received volume',
-      driver: 'TIER_UPLIFT',
-      qty: Math.round(baseVolume),
-      fromPct: round2(rateBefore * 100), toPct: round2(rateAfter * 100),
-      deltaValue: baseUpliftValue,
-      note: `Achieved tier lifted from ${(rateBefore * 100).toFixed(2)}% to ${(rateAfter * 100).toFixed(2)}% — retrospective on the base volume`,
-    });
-  }
-  // 2) each restored-unit cause, valued at the after-rate (they were never claimed at all)
+
+  // 2) driver lines first (compute their exact rounded contributions)
+  const driverLines = [];
+  let driverSum = 0;
   for (const c of corrections) {
     if (!c.volumeDelta) continue;
-    const share = valueBase / Math.max(1, reconstructedVolume);
-    const deltaValue = round2(c.volumeDelta * share * rateAfter);
-    lines.push({
+    const deltaValue = round2(c.volumeDelta * unitValue * rateAfter);
+    driverSum = round2(driverSum + deltaValue);
+    driverLines.push({
       cause: causeLabel(c.driver),
       driver: c.driver,
       qty: Math.round(c.volumeDelta),
@@ -99,6 +102,24 @@ export function buildTrueUp(args) {
       note: c.note || '',
     });
   }
+
+  // 1) base line = remainder so ALL lines sum EXACTLY to the variance. This equals
+  // (baseValue × rateAfter − claimed) up to rounding; we take it as variance − driverSum.
+  const baseLineValue = round2(variance - driverSum);
+  if (Math.abs(baseLineValue) > 0.005 || driverLines.length === 0) {
+    const upliftNote = rateAfter > rateBefore
+      ? `Achieved tier lifted from ${(rateBefore * 100).toFixed(2)}% to ${(rateAfter * 100).toFixed(2)}% — retrospective on the base volume`
+      : `Base volume repriced at ${(rateAfter * 100).toFixed(2)}% vs what the engine claimed`;
+    lines.push({
+      cause: (baseVolume > 0 || rateAfter > rateBefore) ? 'Tier uplift on already-received volume' : 'Entitlement not claimed by engine',
+      driver: 'TIER_UPLIFT',
+      qty: Math.round(baseVolume),
+      fromPct: round2(rateBefore * 100), toPct: round2(rateAfter * 100),
+      deltaValue: baseLineValue,
+      note: upliftNote,
+    });
+  }
+  lines.push(...driverLines);
 
   const calc = {
     agreementId: agreement.agreementId, scopeKey, period,

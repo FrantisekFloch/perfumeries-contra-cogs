@@ -1,2 +1,2 @@
-eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
-EVT-0019,RETURN_REJECTION,AGR-013,SUP-NORD,PL,SRM-030,500,PUR-0027,2026-01-20,
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate,reason
+EVT-0019,RETURN_REJECTION,AGR-013,SUP-ORIENT,PL,SRM-030,500,PUR-0027,2026-01-20,,

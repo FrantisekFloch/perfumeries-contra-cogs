@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-022</agreementId>
-  <supplierId>SUP-MAISON</supplierId>
-  <supplierName>Maison Aroma Distribution</supplierName>
+  <supplierId>SUP-NORD</supplierId>
+  <supplierName>Nordica Beauty Group</supplierName>
   <rebateStructure>FLAT_PERCENTAGE</rebateStructure>
   <basis>VALUE</basis>
   <period>QUARTER</period>
@@ -11,30 +11,32 @@
   <tierMeasure>COMBINED</tierMeasure>
   <windowType>QUARTER</windowType>
   <contractRef>CTR-2026-0022</contractRef>
-  <effectiveFrom>2026-04-01</effectiveFrom>
-  <effectiveTo>2026-06-30</effectiveTo>
+  <effectiveFrom>2026-01-01</effectiveFrom>
+  <effectiveTo>2026-03-31</effectiveTo>
   <signatory>Ing. Tomáš Blocal</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-04-01</signedDate>
+  <signedDate>2026-01-01</signedDate>
   <governingLaw>Czech Republic</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.03"/>
+    <tier threshold="0" rate="0.02"/>
   </tiers>
   <skuSet>
-    <sku>GFT-SET</sku>
-    <sku>LIP-004</sku>
     <sku>EDP-100</sku>
+    <sku>SRM-030</sku>
+    <sku>GFT-SET</sku>
+    <sku>EDT-075</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>GFT-SET</sku>
-    <sku>LIP-004</sku>
     <sku>EDP-100</sku>
+    <sku>SRM-030</sku>
+    <sku>GFT-SET</sku>
+    <sku>EDT-075</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>
   </currencies>
   <countries>
-    <country>SK</country>
+    <country>CZ</country>
   </countries>
   <clauses>
     <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>

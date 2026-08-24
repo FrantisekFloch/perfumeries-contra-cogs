@@ -4,7 +4,7 @@
     <invoiceNumber>INV-0028</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-014</agreementId>
-    <distributor id="SUP-MAISON" name="Maison Aroma Distribution"/>
+    <distributor id="SUP-LUMIERE" name="Lumière Cosmetics SA"/>
     <country>CZ</country>
     <poReference>PO-2026-2513</poReference>
     <invoiceDate>2026-01-14</invoiceDate>

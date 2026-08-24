@@ -3,41 +3,39 @@
   <header>
     <invoiceNumber>INV-0040</invoiceNumber>
     <type>final</type>
-    <agreementId>AGR-024</agreementId>
-    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
+    <agreementId>AGR-026</agreementId>
+    <distributor id="SUP-LUMIERE" name="Lumière Cosmetics SA"/>
     <country>SK</country>
-    <poReference>PO-2026-4866</poReference>
-    <invoiceDate>2026-06-10</invoiceDate>
-    <shipDate>2026-06-10</shipDate>
+    <poReference>PO-2026-9410</poReference>
+    <invoiceDate>2026-01-13</invoiceDate>
+    <shipDate>2026-01-13</shipDate>
     <incoterms>FOB_SHIPPING_POINT</incoterms>
     <currency>EUR</currency>
     <discount basis="total_volume">
-      <tier minQty="1" maxQty="90000" pct="0.8"/>
-      <tier minQty="90001" maxQty="180000" pct="1.4"/>
-      <tier minQty="180001" maxQty="" pct="2.2"/>
+      <tier minQty="1" maxQty="" pct="2"/>
     </discount>
-    <totalValueStandard>6536345.64</totalValueStandard>
+    <totalValueStandard>334175</totalValueStandard>
   </header>
   <lines>
     <line>
-      <stockId>EDP-100</stockId>
-      <description>Eau de Parfum 100ml</description>
-      <qtyInvoiced>60758</qtyInvoiced>
-      <unitPriceStandard>35.86</unitPriceStandard>
+      <stockId>MSC-200</stockId>
+      <description>Body Mist 200ml</description>
+      <qtyInvoiced>4456</qtyInvoiced>
+      <unitPriceStandard>25</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
-      <stockId>GFT-SET</stockId>
-      <description>Gift Set</description>
-      <qtyInvoiced>60758</qtyInvoiced>
-      <unitPriceStandard>35.86</unitPriceStandard>
+      <stockId>LIP-004</stockId>
+      <description>Lipstick 4g</description>
+      <qtyInvoiced>4456</qtyInvoiced>
+      <unitPriceStandard>25</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
     <line>
       <stockId>CRM-050</stockId>
       <description>Face Cream 50ml</description>
-      <qtyInvoiced>60758</qtyInvoiced>
-      <unitPriceStandard>35.86</unitPriceStandard>
+      <qtyInvoiced>4455</qtyInvoiced>
+      <unitPriceStandard>25</unitPriceStandard>
       <targetStorage>WH-SK-01</targetStorage>
     </line>
   </lines>

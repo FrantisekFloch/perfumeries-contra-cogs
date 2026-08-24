@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-021</agreementId>
-  <supplierId>SUP-ORIENT</supplierId>
-  <supplierName>Orient Essence Trading</supplierName>
-  <rebateStructure>SLIDING_INCREMENTAL</rebateStructure>
+  <supplierId>SUP-ATELIER</supplierId>
+  <supplierName>Atelier Parfums Group</supplierName>
+  <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
   <basis>UNITS</basis>
   <period>MONTH</period>
   <scope>PER_COUNTRY</scope>
@@ -11,32 +11,30 @@
   <tierMeasure>COMBINED</tierMeasure>
   <windowType>MONTH</windowType>
   <contractRef>CTR-2026-0021</contractRef>
-  <effectiveFrom>2026-03-01</effectiveFrom>
-  <effectiveTo>2026-03-31</effectiveTo>
-  <signatory>Dr. Martin Svoboda</signatory>
+  <effectiveFrom>2026-08-01</effectiveFrom>
+  <effectiveTo>2026-08-31</effectiveTo>
+  <signatory>Ing. Tomáš Blocal</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-03-01</signedDate>
-  <governingLaw>Poland</governingLaw>
+  <signedDate>2026-08-01</signedDate>
+  <governingLaw>Slovak Republic</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.008"/>
-    <tier threshold="90000" rate="0.014"/>
-    <tier threshold="180000" rate="0.022"/>
+    <tier threshold="0" rate="0.012"/>
+    <tier threshold="70000" rate="0.02"/>
+    <tier threshold="140000" rate="0.03"/>
   </tiers>
   <skuSet>
     <sku>EDP-100</sku>
-    <sku>LIP-004</sku>
-    <sku>EDT-075</sku>
+    <sku>SRM-030</sku>
   </skuSet>
   <engineConfiguredSkus>
     <sku>EDP-100</sku>
-    <sku>LIP-004</sku>
-    <sku>EDT-075</sku>
+    <sku>SRM-030</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>
   </currencies>
   <countries>
-    <country>SK</country>
+    <country>CZ</country>
   </countries>
   <clauses>
     <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>

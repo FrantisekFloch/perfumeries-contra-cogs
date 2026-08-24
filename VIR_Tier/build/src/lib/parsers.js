@@ -141,7 +141,7 @@ export function serializeReceiptCsv(receipts) {
 }
 
 // ---- Leakage event (CSV) -------------------------------------------------
-const EVENT_HEADERS = ['eventId', 'type', 'agreementId', 'supplierId', 'country', 'stockId', 'qty', 'refIds', 'eventDate', 'intendedDate'];
+const EVENT_HEADERS = ['eventId', 'type', 'agreementId', 'supplierId', 'country', 'stockId', 'qty', 'refIds', 'eventDate', 'intendedDate', 'reason'];
 export function parseEventCsv(text, provenance = null) {
   const { rows } = parseCsv(text);
   return rows.map((r) => createLeakageEvent({ ...r, provenance }));
@@ -150,7 +150,7 @@ export function serializeEventCsv(events) {
   return serializeCsv(EVENT_HEADERS, events.map((e) => ({
     ...e, supplierId: e.supplierId ?? '', stockId: e.stockId ?? '',
     refIds: Array.isArray(e.refIds) ? e.refIds.join('|') : (e.refIds ?? ''),
-    eventDate: e.eventDate ?? '', intendedDate: e.intendedDate ?? '',
+    eventDate: e.eventDate ?? '', intendedDate: e.intendedDate ?? '', reason: e.reason ?? '',
   })));
 }
 

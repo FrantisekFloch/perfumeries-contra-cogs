@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-023</agreementId>
-  <supplierId>SUP-ORIENT</supplierId>
-  <supplierName>Orient Essence Trading</supplierName>
+  <supplierId>SUP-BOTANI</supplierId>
+  <supplierName>Botanika Naturals</supplierName>
   <rebateStructure>PER_UNIT</rebateStructure>
   <basis>WEIGHT</basis>
   <period>YEAR</period>
@@ -13,30 +13,30 @@
   <contractRef>CTR-2026-0023</contractRef>
   <effectiveFrom>2026-01-01</effectiveFrom>
   <effectiveTo>2026-12-31</effectiveTo>
-  <signatory>Anna Wiśniewska</signatory>
+  <signatory>Dr. Martin Svoboda</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
   <signedDate>2026-01-01</signedDate>
-  <governingLaw>Czech Republic</governingLaw>
+  <governingLaw>Slovak Republic</governingLaw>
   <tiers>
     <tier threshold="0" rate="0.5"/>
   </tiers>
   <skuSet>
-    <sku>EDP-100</sku>
-    <sku>MSC-200</sku>
-    <sku>EDT-075</sku>
+    <sku>CRM-050</sku>
     <sku>LIP-004</sku>
+    <sku>EDP-100</sku>
+    <sku>SRM-030</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>EDP-100</sku>
-    <sku>MSC-200</sku>
-    <sku>EDT-075</sku>
+    <sku>CRM-050</sku>
     <sku>LIP-004</sku>
+    <sku>EDP-100</sku>
+    <sku>SRM-030</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>
   </currencies>
   <countries>
-    <country>PL</country>
+    <country>SK</country>
   </countries>
   <clauses>
     <clause key="tier">Clause 4.2 — Volume incentive tiers (VIR) measured over the agreement period.</clause>

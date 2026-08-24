@@ -1,2 +1,2 @@
-eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
-EVT-0012,REROUTE_SKIPPED_SCAN,AGR-010,SUP-VELVET,SK,LIP-004,378,PUR-0018,2026-01-16,
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate,reason
+EVT-0012,REROUTE_SKIPPED_SCAN,AGR-010,SUP-VELVET,SK,LIP-004,378,PUR-0018,2026-01-16,,

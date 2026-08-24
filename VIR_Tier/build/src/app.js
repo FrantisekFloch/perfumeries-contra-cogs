@@ -11,9 +11,10 @@ import { runDiscovery } from './lib/ml.js';
 import { StateStore } from './lib/store.js';
 import { t, setLang, getLang, LANGS } from './lib/i18n.js';
 import { runScan } from './lib/source.js';
-import { animateIngestFlow, FLOW_NODES } from './ui/ingestflow.js';
+import { animateIngestFlow, FLOW_NODES, mlAnalysisBlock, mlAnalysisStart, mlAnalysisComplete } from './ui/ingestflow.js';
 import { renderOverview, reviewModalHtml, renderAbout } from './ui/dashboards.js';
-import { renderInputs, renderMl, INPUT_CATS } from './ui/stages.js';
+import { renderInputs, renderMl, INPUT_CATS, tileDetail } from './ui/stages.js';
+import { renderAudit, auditDataset } from './ui/audit.js';
 import { renderConsolidatedDebit, chargesBySupplier } from './ui/consolidated.js';
 import { invoiceDocHtml, deliveryNoteDocHtml, receiptDocHtml, eventDocHtml, engineDocHtml, agreementDocHtml, contraCogsInvoiceHtml } from './ui/doc.js';
 import { serializeInvoiceXml, serializeDeliveryNoteXml, serializeReceiptCsv, serializeEventCsv, serializeCcogsEngineCsv, serializeAgreementXml } from './lib/parsers.js';
@@ -22,6 +23,12 @@ import { initTooltips } from './ui/tooltip.js';
 
 const app = document.getElementById('app');
 
+// HTML-escape helper used across the modal builders (add-source, mailbox scan,
+// ERP send flow, etc.). Module-scoped so every builder can use it. (Previously
+// only defined locally inside chargeToXml, which made the other builders throw
+// ReferenceError and render a blank modal.)
+const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
 const STAGES = [
   { id: 'inputs', label: 'navInputs', n: 1, render: renderInputs, sub: INPUT_CATS.map((c) => ({ key: c.key, label: c.label })) },
   // ML Discovery hidden from the sidebar (renderMl kept for reference/reuse) — its
@@ -29,6 +36,7 @@ const STAGES = [
   // Consolidated Debit "View details". Re-add here to restore it to the nav.
   { id: 'consol', label: 'navConsolidated', n: 2, render: renderConsolidatedDebit },
   { id: 'overview', label: 'navOverview', n: 3, render: renderOverview },
+  { id: 'audit', label: 'navAudit', n: 4, render: renderAudit },
 ];
 
 const state = {
@@ -42,6 +50,9 @@ const state = {
   stage: 'inputs',
   sub: 'summary',
   ingestDone: false,            // set true once the ingest-flow animation completes
+  mailboxScan: null,            // { scanned, emailCount, matchAgreementId, matchEur, email } once a shared-mailbox scan matches an email to a finding
+  erpSent: {},                  // chargeId -> { docNo, sys, amount, at } for charges "posted" to ERP this session (drives the Overview realized/pending tracker)
+  inputFilters: { suppliers: null, warehouses: null, sortKey: 'ccogs', sortDir: 'desc' }, // Inputs & Collection doc-list filter/sort (null set = all selected)
 };
 
 // ---- loaders ----
@@ -96,7 +107,7 @@ function sidebar() {
     return `<div class="nav-item ${active ? 'active' : ''}" data-stage="${st.id}"><span class="n">${st.n}</span>${t(st.label)}</div>${subs}`;
   }).join('');
   return `<aside class="sidebar">
-    <div class="logo">VIR<span class="tier">_Tier</span></div>
+    <div class="logo">CCOGS<span class="tier"> Reclaim</span></div>
     <div class="nav-group"><div class="g-label">${t('navPipeline')}</div>${items}</div>
     <div class="nav-group sidebar-foot">
       <div class="langs">${LANGS.map((l) => `<button data-lang="${l.code}" class="${getLang() === l.code ? 'active' : ''}">${l.flag} ${l.label}</button>`).join('')}</div>
@@ -127,6 +138,7 @@ function render() {
 }
 
 function bind() {
+  wireDelegates();   // install the one-time delegated click listener on `app`
   app.querySelectorAll('[data-stage]').forEach((el) => el.addEventListener('click', () => {
     state.stage = el.dataset.stage;
     const st = STAGES.find((s) => s.id === state.stage);
@@ -148,6 +160,25 @@ function bind() {
   // inputs summary: continue into Consolidated Debit (ML Discovery is hidden)
   const sumCont = app.querySelector('#sum-continue');
   if (sumCont) sumCont.addEventListener('click', () => { state.stage = 'consol'; render(); });
+
+  // inputs summary: clickable result tiles -> details modal (what/how/proposal/impact).
+  // The mailbox tile is special: unscanned -> open the scan flow; scanned -> details.
+  app.querySelectorAll('[data-tile]').forEach((b) => b.addEventListener('click', () => {
+    const id = b.dataset.tile;
+    if (id === 'mailbox' && !(state.mailboxScan && state.mailboxScan.scanned)) { openMailboxScan(); return; }
+    openTileDetails(id);
+  }));
+
+  // NOTE: the Add-source button (#iflAddSource) and the Audit Excel export
+  // (#auExport) are handled by a delegated click listener on `app` (installed
+  // once in wireDelegates), which is immune to re-render timing and any overlay
+  // stacking. Direct listeners here proved unreliable across renders.
+
+  // inputs doc-list: filter + sort bar
+  wireInputFilterBar();
+
+  // audit section: agreement/date filters, sortable headers, Excel export
+  wireAuditBar();
 
   // inputs: view / download documents
   app.querySelectorAll('[data-doc]').forEach((b) => b.addEventListener('click', () => openDoc(b.dataset.doc)));
@@ -174,6 +205,14 @@ function bind() {
   app.querySelectorAll('[data-consolgen]').forEach((b) => b.addEventListener('click', () => openConsolidatedInvoice(b.dataset.consolgen)));
   app.querySelectorAll('[data-consolagr]').forEach((b) => b.addEventListener('click', () => openConsolidatedAgreement(b.dataset.consolagr)));
   app.querySelectorAll('[data-consolview]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); openReviewReadOnly(b.dataset.consolview); }));
+  // Generate Contra-COGS invoice directly for this charge (same as View details -> Generate)
+  app.querySelectorAll('[data-genrow]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const charge = state.charges.find((c) => c.chargeId === b.dataset.genrow); if (!charge) return;
+    const group = state.consolidated.byAgreement.get(charge.agreementId);
+    const rec = state.reconstructions.find((r) => r.agreementId === charge.agreementId);
+    openContraInvoice(charge, group, rec);
+  }));
 }
 
 // ---- document view/download ----
@@ -320,6 +359,127 @@ function openReviewReadOnly(chargeId) {
   const close = () => holder.remove();
   holder.querySelector('#reviewBg').addEventListener('click', (e) => { if (e.target.id === 'reviewBg') close(); });
   holder.querySelector('[data-closemodal]').addEventListener('click', close);
+  // Per-case "Generate Contra-COGS Invoice for this case" — generates the
+  // supplier-facing debit note for THIS single charge (not the consolidated
+  // multi-agreement one). Closes the read-only review, then opens the invoice.
+  const genOne = holder.querySelector('[data-genreadonly]');
+  if (genOne) genOne.addEventListener('click', () => { close(); openContraInvoice(charge, group, rec); });
+}
+
+// ---- Summary result-tile details (what/how found, proposal, pre/post impact) ----
+function openTileDetails(id) {
+  const inner = tileDetail(state, id);
+  const holder = document.createElement('div');
+  holder.innerHTML = `<div class="modal-bg" id="tdBg"><div class="modal docwide">
+    <div style="margin:0 0 14px">${inner}</div>
+    <div class="actions"><button class="btn ghost" id="tdClose">${t('close')}</button></div>
+  </div></div>`;
+  document.body.appendChild(holder);
+  initTooltips(holder);
+  const close = () => holder.remove();
+  holder.querySelector('#tdBg').addEventListener('click', (e) => { if (e.target.id === 'tdBg') close(); });
+  holder.querySelector('#tdClose').addEventListener('click', close);
+}
+
+// ---- Add source (EDI / API / Folder / Mailbox intake & email scan) ----------
+// Demonstration intake panel. EDI/API/Folder are shown as connectable source
+// types; the Mailbox option launches the shared-mailbox email scan (the one that
+// can surface a missing-invoice update).
+function openAddSource() {
+  const SOURCES = [
+    { id: 'edi', logo: 'EDI', name: t('srcEdiName'), sub: t('srcEdiSub') },
+    { id: 'api', logo: 'API', name: t('srcApiName'), sub: t('srcApiSub') },
+    { id: 'folder', logo: '📁', name: t('srcFolderName'), sub: t('srcFolderSub') },
+    { id: 'mailbox', logo: '✉', name: t('srcMailboxName'), sub: t('srcMailboxSub'), primary: true },
+  ];
+  const holder = document.createElement('div');
+  holder.innerHTML = `<div class="modal-bg" id="asBg"><div class="modal">
+    <div class="erp-head"><span class="erp-badge">＋</span><div>
+      <h2>${t('addSourceTitle')}</h2><div class="sub">${t('addSourceLead')}</div></div></div>
+    <div class="erp-syslist">
+      ${SOURCES.map((s) => `<button class="erp-sys as-src${s.primary ? ' as-primary' : ''}" data-src="${s.id}">
+        <span class="erp-logo erp-logo-${s.id}">${s.logo}</span>
+        <span class="erp-sys-main"><span class="erp-sys-name">${esc(s.name)}</span><span class="erp-sys-sub">${esc(s.sub)}</span></span>
+        <span class="as-arrow">→</span>
+      </button>`).join('')}
+    </div>
+    <div class="actions"><button class="btn ghost" id="asClose">${t('cancel')}</button></div>
+  </div></div>`;
+  document.body.appendChild(holder);
+  const close = () => holder.remove();
+  holder.querySelector('#asBg').addEventListener('click', (e) => { if (e.target.id === 'asBg') close(); });
+  holder.querySelector('#asClose').addEventListener('click', close);
+  holder.querySelectorAll('[data-src]').forEach((b) => b.addEventListener('click', () => {
+    const id = b.dataset.src;
+    close();
+    if (id === 'mailbox') openMailboxScan();
+    else flash(t('srcConnectedMsg', { name: SOURCES.find((s) => s.id === id).name }));
+  }));
+}
+
+// Find the missing-invoice finding the scanned email should attach to (prefer
+// the "never arrived" AGR so the demo email reads naturally).
+function missingInvoiceMatch() {
+  const findings = state.discovery?.findings || [];
+  const mi = findings.filter((f) => f.missingInvoice);
+  return mi.find((f) => f.missingInvoice.reason === 'NEVER_ARRIVED') || mi[0] || null;
+}
+
+// ---- Shared-mailbox email scan ----------------------------------------------
+// Demonstration only: a scan button, a list of selectable emails (one clearly
+// relates to the missing invoice), then ingest -> attaches the email as EVIDENCE
+// to the matching finding (no engine recompute) and flips the mailbox tile red.
+// One-click shared-mailbox scan (demo). Clicking the "possible update" tile opens
+// this scanning window directly; it auto-runs a scan, auto-closes after ~4s, and
+// flips the mailbox tile to its "found & matched" (red) state — the relevant
+// email is auto-ingested as evidence on the matching missing-invoice finding.
+// No manual scan/select steps.
+function openMailboxScan() {
+  const match = missingInvoiceMatch();
+  const matchAgr = match ? match.agreementId : 'AGR-020';
+  const matchEur = match ? Math.round(match.leakage) : null;
+  const cur = match ? match.currency : 'EUR';
+  const relEmail = {
+    from: 'accounts@atelier-parfums.example',
+    subject: `Missing invoice for ${matchAgr} — January SK delivery`,
+    date: '2027-01-09',
+    body: `Dear Finance team,<br><br>Following your query, please find attached the <strong>outstanding invoice</strong> for the goods delivered under agreement <strong>${matchAgr}</strong> (January shipment to the SK main warehouse). The invoice was not transmitted at the time of delivery due to an issue on our billing side.<br><br>The delivery was received in full (GRN on file). Kindly process the corresponding rebate (Contra-COGS) accordingly.<br><br>Best regards,<br>Atelier Parfums — Accounts Receivable`,
+  };
+
+  const holder = document.createElement('div');
+  holder.innerHTML = `<div class="modal-bg" id="mbxBg"><div class="modal">
+    <div class="erp-head"><span class="erp-badge">✉</span><div>
+      <h2>${t('mbxTitle')}</h2><div class="sub">${t('mbxLead')}</div></div></div>
+    <div class="mbx-scanning" id="mbxScanning">
+      <div class="mbx-spinner" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg></div>
+      <div class="mbx-scan-text" id="mbxScanText">${t('mbxScanning')}</div>
+      <div class="mbx-scan-sub small" id="mbxScanSub">${t('mbxScanExplain')}</div>
+    </div>
+  </div></div>`;
+  document.body.appendChild(holder);
+  const close = () => holder.remove();
+  holder.querySelector('#mbxBg').addEventListener('click', (e) => { if (e.target.id === 'mbxBg') close(); });
+
+  const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const foundMs = reduced ? 300 : 2600;   // show "match found" partway through
+  const closeMs = reduced ? 500 : 4000;   // then auto-close + flip the tile
+
+  setTimeout(() => {
+    const txt = holder.querySelector('#mbxScanText');
+    const sub = holder.querySelector('#mbxScanSub');
+    const box = holder.querySelector('#mbxScanning');
+    if (box) box.classList.add('found');
+    if (txt) txt.textContent = t('mbxFoundOne');
+    if (sub) sub.innerHTML = `<strong>${esc(relEmail.subject)}</strong><br>${esc(relEmail.from)}`;
+  }, foundMs);
+
+  setTimeout(() => {
+    state.mailboxScan = { scanned: true, emailCount: 3, matchAgreementId: matchAgr, matchEur, currency: cur, email: relEmail };
+    if (match) match.mailboxEvidence = { from: relEmail.from, subject: relEmail.subject, date: relEmail.date, body: relEmail.body };
+    close();
+    render();
+    flash(t('mbxIngestedMatch', { agr: matchAgr }));
+  }, closeMs);
 }
 
 // ---- Contra-COGS invoice document (generated from the review modal) ----
@@ -330,6 +490,7 @@ function openContraInvoice(charge, group, rec) {
     <div style="margin:0 0 14px">${inner}</div>
     <div class="actions">
       <button class="btn" id="ciPrint">${t('print')}</button>
+      <button class="btn dark" id="ciErp">${t('sendToErp')}</button>
       <button class="btn ghost" id="ciClose">${t('close')}</button>
     </div></div></div>`;
   document.body.appendChild(holder);
@@ -338,6 +499,128 @@ function openContraInvoice(charge, group, rec) {
   holder.querySelector('#ciBg').addEventListener('click', (e) => { if (e.target.id === 'ciBg') close(); });
   holder.querySelector('#ciClose').addEventListener('click', close);
   holder.querySelector('#ciPrint').addEventListener('click', () => printHtml(inner));
+  holder.querySelector('#ciErp').addEventListener('click', () => openErpSendFlow(charge));
+}
+
+// ---- Simulated "Send to ERP Billing System" bill-run flow -------------------
+// A demonstration only — NO real network calls. Mimics posting the Contra-COGS
+// debit note into an ERP billing engine (SAP SD "Create Billing Documents"
+// VF06 / billing due list VF04 style): pick the target system, kick off a bill
+// run, watch the posting steps, then receive a billing document number + an
+// FI accounting posting confirmation (status "C — posting document created").
+const ERP_SYSTEMS = [
+  { id: 'sap', name: 'SAP S/4HANA', sub: 'SD Billing · VF06', logo: 'SAP' },
+  { id: 'oracle', name: 'Oracle ERP Cloud', sub: 'Receivables · AutoInvoice', logo: 'ORA' },
+  { id: 'd365', name: 'Microsoft Dynamics 365 F&O', sub: 'Accounts receivable · Invoice journal', logo: 'D365' },
+  { id: 'netsuite', name: 'Oracle NetSuite', sub: 'Billing · Invoice run', logo: 'NS' },
+];
+
+function erpDocNo(sys) {
+  const base = { sap: '90', oracle: 'AR-', d365: 'INV-', netsuite: 'INV' }[sys] || 'BD-';
+  const n = Math.floor(1000000 + Math.random() * 8999999);
+  return sys === 'sap' ? `${base}${n}` : `${base}${n}`;
+}
+
+function openErpSendFlow(charge) {
+  const amount = `${Number(charge.variance || charge.entitledCcogs || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${charge.currency || 'EUR'}`;
+  const holder = document.createElement('div');
+  holder.innerHTML = `<div class="modal-bg" id="erpBg"><div class="modal erpmodal">
+    <div id="erpStage"></div>
+  </div></div>`;
+  document.body.appendChild(holder);
+  const stage = holder.querySelector('#erpStage');
+  const close = () => holder.remove();
+  holder.querySelector('#erpBg').addEventListener('click', (e) => { if (e.target.id === 'erpBg') close(); });
+
+  // --- Phase 1: select target ERP + review the posting header ---
+  const renderSelect = () => {
+    stage.innerHTML = `
+      <div class="erp-head"><span class="erp-badge">ERP</span><div>
+        <h2>${t('erpTitle')}</h2><div class="sub">${t('erpSelectLead')}</div></div></div>
+      <div class="erp-syslist">
+        ${ERP_SYSTEMS.map((s, i) => `<label class="erp-sys${i === 0 ? ' sel' : ''}">
+          <input type="radio" name="erpsys" value="${s.id}" ${i === 0 ? 'checked' : ''}/>
+          <span class="erp-logo erp-logo-${s.id}">${s.logo}</span>
+          <span class="erp-sys-main"><span class="erp-sys-name">${s.name}</span><span class="erp-sys-sub">${s.sub}</span></span>
+          <span class="erp-sys-tick">✓</span>
+        </label>`).join('')}
+      </div>
+      <div class="erp-postbox">
+        <div class="erp-post-h">${t('erpPostHeader')}</div>
+        <div class="erp-kv"><span>${t('erpDocType')}</span><span>Contra-COGS Debit Note</span></div>
+        <div class="erp-kv"><span>${t('erpBillingParty')}</span><span>${esc(charge.supplierId || '—')}</span></div>
+        <div class="erp-kv"><span>${t('erpReference')}</span><span class="mono">${esc(charge.chargeId)}</span></div>
+        <div class="erp-kv"><span>${t('erpAmount')}</span><span class="erp-amt">${esc(amount)}</span></div>
+      </div>
+      <div class="actions">
+        <button class="btn dark" id="erpRun">${t('erpStartRun')}</button>
+        <button class="btn ghost" id="erpCancel">${t('cancel')}</button>
+      </div>`;
+    stage.querySelectorAll('.erp-sys').forEach((lab) => lab.addEventListener('click', () => {
+      stage.querySelectorAll('.erp-sys').forEach((l) => l.classList.remove('sel'));
+      lab.classList.add('sel'); lab.querySelector('input').checked = true;
+    }));
+    stage.querySelector('#erpCancel').addEventListener('click', close);
+    stage.querySelector('#erpRun').addEventListener('click', () => {
+      const sys = stage.querySelector('input[name=erpsys]:checked')?.value || 'sap';
+      renderRun(ERP_SYSTEMS.find((s) => s.id === sys) || ERP_SYSTEMS[0]);
+    });
+  };
+
+  // --- Phase 2: the bill-run posting animation ---
+  const renderRun = (sysObj) => {
+    const steps = [t('erpStep1'), t('erpStep2'), t('erpStep3'), t('erpStep4'), t('erpStep5')];
+    stage.innerHTML = `
+      <div class="erp-head"><span class="erp-badge">${sysObj.logo}</span><div>
+        <h2>${t('erpRunTitle')}</h2><div class="sub">${sysObj.name} · ${sysObj.sub}</div></div></div>
+      <div class="erp-progress"><i id="erpBar"></i></div>
+      <ul class="erp-steps" id="erpSteps">
+        ${steps.map((s, i) => `<li class="erp-st" data-i="${i}"><span class="erp-st-ico"></span>${esc(s)}</li>`).join('')}
+      </ul>`;
+    const bar = stage.querySelector('#erpBar');
+    const stEls = [...stage.querySelectorAll('.erp-st')];
+    const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let i = 0;
+    const advance = () => {
+      if (i > 0) stEls[i - 1].classList.replace('run', 'done');
+      if (i >= stEls.length) { renderDone(sysObj); return; }
+      stEls[i].classList.add('run');
+      if (bar) bar.style.width = Math.round(((i + 1) / stEls.length) * 100) + '%';
+      i += 1;
+      setTimeout(advance, reduced ? 120 : (650 + Math.random() * 500));
+    };
+    advance();
+  };
+
+  // --- Phase 3: posting confirmation (billing doc + FI accounting posting) ---
+  const renderDone = (sysObj) => {
+    const docNo = erpDocNo(sysObj.id);
+    const fiNo = `49${Math.floor(1000000 + Math.random() * 8999999)}`;
+    const today = new Date().toISOString().slice(0, 10);
+    // Record this charge as REALIZED (posted to ERP) so the Finance Overview
+    // pending/realized tracker reflects it.
+    if (charge && charge.chargeId) {
+      state.erpSent[charge.chargeId] = { docNo, sys: sysObj.name, amount, at: today, agreementId: charge.agreementId, variance: charge.variance };
+    }
+    stage.innerHTML = `
+      <div class="erp-done">
+        <div class="erp-check">✓</div>
+        <h2>${t('erpDoneTitle')}</h2>
+        <p class="sub">${t('erpDoneLead', { sys: sysObj.name })}</p>
+        <div class="erp-postbox">
+          <div class="erp-kv"><span>${t('erpBillingDoc')}</span><span class="mono erp-docno">${docNo}</span></div>
+          <div class="erp-kv"><span>${t('erpFiDoc')}</span><span class="mono">${fiNo}</span></div>
+          <div class="erp-kv"><span>${t('erpPostingStatus')}</span><span class="erp-status-ok">${t('erpStatusPosted')}</span></div>
+          <div class="erp-kv"><span>${t('erpPostingDate')}</span><span>${today}</span></div>
+          <div class="erp-kv"><span>${t('erpAmount')}</span><span class="erp-amt">${esc(amount)}</span></div>
+        </div>
+        <div class="erp-note small">${t('erpDemoNote')}</div>
+      </div>
+      <div class="actions"><button class="btn dark" id="erpDoneClose">${t('close')}</button></div>`;
+    stage.querySelector('#erpDoneClose').addEventListener('click', close);
+  };
+
+  renderSelect();
 }
 
 // ---- Export as CSV/XML (format chooser dialog) ----
@@ -421,6 +704,222 @@ function archiveFinding(charge, comment) {
   state.charges = state.charges.filter((c) => c.chargeId !== charge.chargeId);
 }
 
+// ---- Inputs doc-list filter + sort bar wiring -------------------------------
+function wireInputFilterBar() {
+  const bar = app.querySelector('.fltbar');
+  if (!bar) return;
+  const f = state.inputFilters;
+
+  // open/close a filter popup in place (no full re-render, so it stays open)
+  bar.querySelectorAll('[data-fltmenu]').forEach((btn) => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const kind = btn.dataset.fltmenu;
+    const pop = bar.querySelector(`[data-fltpop="${kind}"]`);
+    const wasHidden = pop.hasAttribute('hidden');
+    bar.querySelectorAll('.flt-pop').forEach((p) => p.setAttribute('hidden', ''));
+    if (wasHidden) pop.removeAttribute('hidden');
+  }));
+  // clicking inside a popup shouldn't close it
+  bar.querySelectorAll('.flt-pop').forEach((p) => p.addEventListener('click', (e) => e.stopPropagation()));
+
+  // collect the currently-checked values for a kind into a Set (or null if ALL are checked)
+  const collect = (kind) => {
+    const boxes = [...bar.querySelectorAll(`[data-fltopt="${kind}"]`)];
+    const checked = boxes.filter((b) => b.checked).map((b) => b.value);
+    if (checked.length === boxes.length) return null; // all => null (keep future values selected)
+    return new Set(checked);
+  };
+  const applyKind = (kind) => {
+    const set = collect(kind);
+    if (kind === 'sup') f.suppliers = set; else f.warehouses = set;
+    render();
+  };
+
+  bar.querySelectorAll('[data-fltopt]').forEach((b) => b.addEventListener('change', () => applyKind(b.dataset.fltopt)));
+  bar.querySelectorAll('[data-fltall]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const kind = b.dataset.fltall;
+    if (kind === 'sup') f.suppliers = null; else f.warehouses = null;
+    render();
+  }));
+  bar.querySelectorAll('[data-fltnone]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const kind = b.dataset.fltnone;
+    if (kind === 'sup') f.suppliers = new Set(); else f.warehouses = new Set();
+    render();
+  }));
+
+  // sort buttons: same key toggles asc/desc; a new key defaults to desc
+  bar.querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => {
+    const key = b.dataset.sort;
+    if (f.sortKey === key) f.sortDir = f.sortDir === 'asc' ? 'desc' : 'asc';
+    else { f.sortKey = key; f.sortDir = 'desc'; }
+    render();
+  }));
+}
+
+// ---- Audit section: filter/sort wiring + multi-sheet Excel export -----------
+function wireAuditBar() {
+  const bar = app.querySelector('.au-fltbar');
+  if (!bar) return;
+  if (!state.auditFilters) state.auditFilters = { suppliers: null, validities: null, caseTypes: null, from: '', to: '', sortKey: 'LineValue', sortDir: 'desc' };
+  const f = state.auditFilters;
+  // map popup kind -> the filter field it drives
+  const FIELD = { sup: 'suppliers', val: 'validities', case: 'caseTypes' };
+
+  // multiselect popups (supplier / validity / case-type) — open/close in place
+  bar.querySelectorAll('[data-aumenu]').forEach((btn) => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const kind = btn.dataset.aumenu;
+    const pop = bar.querySelector(`[data-aupop="${kind}"]`);
+    const wasHidden = pop.hasAttribute('hidden');
+    bar.querySelectorAll('.flt-pop').forEach((p) => p.setAttribute('hidden', ''));
+    if (wasHidden) pop.removeAttribute('hidden');
+  }));
+  bar.querySelectorAll('.flt-pop').forEach((p) => p.addEventListener('click', (e) => e.stopPropagation()));
+
+  const collect = (kind) => {
+    const boxes = [...bar.querySelectorAll(`[data-auopt="${kind}"]`)];
+    const checked = boxes.filter((b) => b.checked).map((b) => b.value);
+    return checked.length === boxes.length ? null : new Set(checked);
+  };
+  bar.querySelectorAll('[data-auopt]').forEach((b) => b.addEventListener('change', () => { f[FIELD[b.dataset.auopt]] = collect(b.dataset.auopt); render(); }));
+  bar.querySelectorAll('[data-auall]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); f[FIELD[b.dataset.auall]] = null; render(); }));
+  bar.querySelectorAll('[data-aunone]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); f[FIELD[b.dataset.aunone]] = new Set(); render(); }));
+
+  // date range + clear
+  bar.querySelectorAll('[data-audate]').forEach((inp) => inp.addEventListener('change', () => { f[inp.dataset.audate] = inp.value; render(); }));
+  const clear = bar.querySelector('[data-auclear]'); if (clear) clear.addEventListener('click', () => { f.suppliers = null; f.validities = null; f.caseTypes = null; f.from = ''; f.to = ''; render(); });
+
+  // sort buttons (Value / Qty) — toggle asc/desc
+  bar.querySelectorAll('[data-ausortbtn]').forEach((b) => b.addEventListener('click', () => {
+    const key = b.dataset.ausortbtn;
+    if (f.sortKey === key) f.sortDir = f.sortDir === 'asc' ? 'desc' : 'asc';
+    else { f.sortKey = key; f.sortDir = 'desc'; }
+    render();
+  }));
+
+  // sortable column headers (kept in addition to the sort buttons)
+  app.querySelectorAll('.au-table [data-ausort]').forEach((thEl) => thEl.addEventListener('click', () => {
+    const key = thEl.dataset.ausort;
+    if (f.sortKey === key) f.sortDir = f.sortDir === 'asc' ? 'desc' : 'asc';
+    else { f.sortKey = key; f.sortDir = (key === 'LineValue' || key === 'Qty') ? 'desc' : 'asc'; }
+    render();
+  }));
+
+  // (Excel export button #auExport is handled by the delegated listener.)
+}
+
+// One delegated click listener on `app`, installed ONCE, for the buttons that
+// were unreliable with per-render direct listeners (add-source, audit export).
+// Delegation survives re-renders and is unaffected by overlay/stacking issues.
+let __delegatesInstalled = false;
+function wireDelegates() {
+  if (__delegatesInstalled) return;
+  __delegatesInstalled = true;
+  app.addEventListener('click', (e) => {
+    const addSrc = e.target.closest && e.target.closest('#iflAddSource');
+    if (addSrc) { e.preventDefault(); openAddSource(); return; }
+    const exp = e.target.closest && e.target.closest('#auExport');
+    if (exp) { e.preventDefault(); exportAuditExcel(); return; }
+  });
+}
+
+// Load SheetJS on demand: the offline bundle inlines it onto window.XLSX; online
+// we lazy-load it from a CDN. Returns a promise resolving to the XLSX global.
+function ensureXlsx() {
+  if (typeof window !== 'undefined' && window.XLSX) return Promise.resolve(window.XLSX);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    // styling fork (drop-in SheetJS API + cell styles for colored tables)
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
+    s.onload = () => resolve(window.XLSX);
+    s.onerror = () => reject(new Error('SheetJS failed to load'));
+    document.head.appendChild(s);
+  });
+}
+
+// Build a styled worksheet from row objects, presented as a colored table using
+// the tool's palette (green header, white bold text, banded rows, thin borders,
+// autofilter, frozen header, auto column widths). Uses the xlsx-js-style fork.
+function styledSheet(XLSX, rows, opts = {}) {
+  const headers = opts.headers || (rows[0] ? Object.keys(rows[0]) : []);
+  const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  const GREEN = '00B67A', DARK = '1A1A1A', BAND = 'F2FAF6', LINE = 'E5E5E5';
+  const numeric = new Set(opts.numeric || []);
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    const isHeader = R === 0;
+    const band = !isHeader && (R % 2 === 0);
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({ r: R, c: C });
+      const cell = ws[addr]; if (!cell) continue;
+      const key = headers[C];
+      if (isHeader) {
+        cell.s = {
+          fill: { fgColor: { rgb: GREEN } },
+          font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+          alignment: { horizontal: 'left', vertical: 'center' },
+          border: { bottom: { style: 'thin', color: { rgb: GREEN } } },
+        };
+      } else {
+        cell.s = {
+          fill: { fgColor: { rgb: band ? BAND : 'FFFFFF' } },
+          font: { color: { rgb: DARK }, sz: 10 },
+          alignment: { horizontal: numeric.has(key) ? 'right' : 'left', vertical: 'center' },
+          border: { bottom: { style: 'hair', color: { rgb: LINE } } },
+        };
+        // TOTAL row emphasis (summary sheet)
+        if (String(cell.v).toUpperCase() === 'TOTAL') cell.s.font = { bold: true, color: { rgb: DARK } };
+      }
+    }
+  }
+  // column widths from content
+  ws['!cols'] = headers.map((h) => {
+    let w = String(h).length;
+    for (const r of rows) { const v = r[h]; if (v != null) w = Math.max(w, String(v).length); }
+    return { wch: Math.min(48, Math.max(8, w + 2)) };
+  });
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: range.s.c }, e: { r: 0, c: range.e.c } }) };
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+  ws['!views'] = [{ state: 'frozen', ySplit: 1, topLeftCell: 'A2' }];
+  return ws;
+}
+
+async function exportAuditExcel() {
+  let XLSX;
+  try { XLSX = await ensureXlsx(); }
+  catch { flash(t('auditExportFailed')); return; }
+  const ds = auditDataset(state);
+  if (!ds.lineRows.length) { flash(t('fltNoneMatch')); return; }
+  const wb = XLSX.utils.book_new();
+  // Sheet 0 — pivoted summary (the "page zero" that reads like the invoice header)
+  const summaryHeaders = ['Supplier', 'Agreements', 'ClaimedBefore', 'EntitledAfter', 'AdditionalCcogs', 'Currency', 'MissingInvoiceCases'];
+  XLSX.utils.book_append_sheet(wb, styledSheet(XLSX, ds.summaryRows, { headers: summaryHeaders, numeric: ['Agreements', 'ClaimedBefore', 'EntitledAfter', 'AdditionalCcogs', 'MissingInvoiceCases'] }), 'Summary');
+  // Sheet 1 — full line/SKU detail (incl. warehouse split + delivery dates)
+  const lineHeaders = ['LineRef', 'Supplier', 'Agreement', 'CaseType', 'Scope', 'Period', 'Validity', 'ValidFrom', 'ValidTo', 'Basis', 'SKU', 'Warehouse', 'WarehouseSplit', 'DeliveryNotes', 'DeliveryDates', 'GoodsReceiptDates', 'Cause', 'Driver', 'Qty', 'RateFromPct', 'RateToPct', 'LineValue', 'Currency', 'MissingInvoice', 'Note'];
+  XLSX.utils.book_append_sheet(wb, styledSheet(XLSX, ds.lineRows, { headers: lineHeaders, numeric: ['Qty', 'RateFromPct', 'RateToPct', 'LineValue'] }), 'Line detail');
+  // Sheet 2 — additional CCOGS requested (points back to LineRefs)
+  const ccogsHeaders = ['DebitRef', 'Supplier', 'Agreement', 'Scope', 'Period', 'ClaimedBefore', 'EntitledAfter', 'AdditionalCcogs', 'Currency', 'EurEquivalent', 'Type', 'Status', 'LineRefs'];
+  XLSX.utils.book_append_sheet(wb, styledSheet(XLSX, ds.ccogsRows, { headers: ccogsHeaders, numeric: ['ClaimedBefore', 'EntitledAfter', 'AdditionalCcogs', 'EurEquivalent'] }), 'CCOGS requested');
+  const name = `CCOGS_Audit_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  // Prefer a Blob download (works reliably from a single offline HTML file);
+  // fall back to XLSX.writeFile if the array write path is unavailable.
+  try {
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  } catch (err) {
+    try { XLSX.writeFile(wb, name); } catch { flash(t('auditExportFailed')); return; }
+  }
+  flash(t('auditExportedMsg', { n: ds.lineRows.length }));
+}
+
 function flash(text) { const el = document.createElement('div'); el.className = 'flash'; el.textContent = text; document.body.appendChild(el); setTimeout(() => el.remove(), 2400); }
 function download(name, text, type = 'text/csv') { const blob = new Blob([text], { type }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
 
@@ -467,13 +966,58 @@ function playIngestFlow() {
   const counts = {};
   const collOf = { invoices: 'invoices', deliveryNotes: 'deliveryNotes', receipts: 'receipts', events: 'events', ccogsEngine: 'ccogsEngine', agreements: 'agreements' };
   for (const n of FLOW_NODES) counts[n.key] = state.store.all(collOf[n.key] || n.key).length;
+
+  // Sequence:
+  //  1) ML panel stays BLOCKED ("waiting for data collection") while the live
+  //     ingestion runs.
+  //  2) When ingestion completes, the ML analysis starts (~6-8s). As soon as it
+  //     starts we reveal the results container and stagger the tiles in one-by-one
+  //     (random timing, like the ingest nodes) WHILE the analysis is still running.
+  //  3) When the analysis completes, the ML panel settles and any remaining tiles
+  //     + the closing row are shown.
+  mlAnalysisBlock(app);
   animateIngestFlow(app, counts, {
     onDone: () => {
-      state.ingestDone = true;
-      const res = app.querySelector('#sumResult');
-      if (res) res.classList.remove('sum-result-hidden');
+      mlAnalysisStart(app, {
+        onDone: () => {
+          state.ingestDone = true;
+          mlAnalysisComplete(app);
+          revealAllTiles();   // ensure everything is shown when analysis finishes
+        },
+      });
+      beginTileReveal(app.querySelector('#mlAnalysis')?.__mlaFinishMs || 7000);
     },
   });
+}
+
+// Reveal the results container, then stagger each tile (and finally the close
+// row) in over the given window (ms) so they pop in like the ingest nodes.
+function beginTileReveal(windowMs) {
+  const res = app.querySelector('#sumResult');
+  if (!res) return;
+  res.classList.remove('sum-result-hidden');
+  const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const tiles = [...res.querySelectorAll('.sum-tile')];
+  const closeRow = res.querySelector('.sum-close-row');
+  const note = res.querySelector('.sum-tiles-note');
+  if (reduced) { tiles.forEach((el) => el.classList.add('tile-in')); if (closeRow) closeRow.classList.add('tile-in'); if (note) note.classList.add('tile-in'); return; }
+  // hide everything first, then stagger in across ~80% of the analysis window
+  [note, ...tiles, closeRow].forEach((el) => el && el.classList.add('tile-pre'));
+  const span = Math.max(1500, windowMs * 0.8);
+  if (note) setTimeout(() => note.classList.add('tile-in'), 150);
+  tiles.forEach((el) => {
+    const ms = 300 + Math.random() * span;
+    setTimeout(() => el.classList.add('tile-in'), ms);
+  });
+  if (closeRow) setTimeout(() => closeRow.classList.add('tile-in'), span + 250);
+}
+
+function revealAllTiles() {
+  const res = app.querySelector('#sumResult');
+  if (!res) return;
+  res.classList.remove('sum-result-hidden');
+  res.querySelectorAll('.tile-pre').forEach((el) => el.classList.add('tile-in'));
+  res.querySelectorAll('.sum-tile, .sum-close-row, .sum-tiles-note').forEach((el) => el.classList.add('tile-in'));
 }
 
 function startApp() { main().catch((e) => { app.innerHTML = `<div class="work"><h2>Startup error</h2><pre class="mono">${e.message}</pre></div>`; }); }

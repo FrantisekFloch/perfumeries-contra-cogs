@@ -1,0 +1,2 @@
+outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
+ENG-0026,AGR-028,SUP-VELVET,CZ,2026,VALUE,5885423.95,0.03,176562.72,EUR,CCOGS_INVOICE,INV-0042,DN-0028,RCP-0133|RCP-0134,5885424 value @ 3.00% = 176562.72 EUR (full combined volume; no leakage)

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T13:37:17.747Z",
+  "generatedAt": "2026-08-24T09:37:10.673Z",
   "categories": {
     "agreements": [
       "AGR-001.xml",
@@ -27,7 +27,9 @@
       "AGR-023.xml",
       "AGR-024.xml",
       "AGR-025.xml",
-      "AGR-026.xml"
+      "AGR-026.xml",
+      "AGR-027.xml",
+      "AGR-028.xml"
     ],
     "invoices": [
       "INV-0001.xml",
@@ -99,7 +101,9 @@
       "DN-0023.xml",
       "DN-0024.xml",
       "DN-0025.xml",
-      "DN-0026.xml"
+      "DN-0026.xml",
+      "DN-0027.xml",
+      "DN-0028.xml"
     ],
     "purchases": [
       "AGR-001_purchases.csv",
@@ -127,7 +131,9 @@
       "AGR-023_purchases.csv",
       "AGR-024_purchases.csv",
       "AGR-025_purchases.csv",
-      "AGR-026_purchases.csv"
+      "AGR-026_purchases.csv",
+      "AGR-027_purchases.csv",
+      "AGR-028_purchases.csv"
     ],
     "receipts": [
       "AGR-001_receipts.csv",
@@ -155,7 +161,9 @@
       "AGR-023_receipts.csv",
       "AGR-024_receipts.csv",
       "AGR-025_receipts.csv",
-      "AGR-026_receipts.csv"
+      "AGR-026_receipts.csv",
+      "AGR-027_receipts.csv",
+      "AGR-028_receipts.csv"
     ],
     "events": [
       "AGR-001_events.csv",
@@ -174,7 +182,9 @@
       "AGR-014_events.csv",
       "AGR-015_events.csv",
       "AGR-016_events.csv",
-      "AGR-018_events.csv"
+      "AGR-018_events.csv",
+      "AGR-020_events.csv",
+      "AGR-021_events.csv"
     ],
     "claimed": [],
     "ccogs_engine": [
@@ -203,7 +213,9 @@
       "AGR-023_ccogs_engine.csv",
       "AGR-024_ccogs_engine.csv",
       "AGR-025_ccogs_engine.csv",
-      "AGR-026_ccogs_engine.csv"
+      "AGR-026_ccogs_engine.csv",
+      "AGR-027_ccogs_engine.csv",
+      "AGR-028_ccogs_engine.csv"
     ]
   }
 }

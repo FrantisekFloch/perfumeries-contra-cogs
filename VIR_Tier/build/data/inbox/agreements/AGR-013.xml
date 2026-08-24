@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-013</agreementId>
-  <supplierId>SUP-NORD</supplierId>
-  <supplierName>Nordica Beauty Group</supplierName>
+  <supplierId>SUP-ORIENT</supplierId>
+  <supplierName>Orient Essence Trading</supplierName>
   <rebateStructure>SLIDING_INCREMENTAL</rebateStructure>
   <basis>VALUE</basis>
   <period>QUARTER</period>

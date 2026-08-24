@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deliveryNote>
+  <deliveryNoteId>DN-0027</deliveryNoteId>
+  <invoiceNumber>INV-0041</invoiceNumber>
+  <invoiceRefs>INV-0041</invoiceRefs>
+  <agreementId>AGR-027</agreementId>
+  <targetStorageId>WH-CZ-01</targetStorageId>
+  <country>CZ</country>
+  <shipDate>2026-01-09</shipDate>
+  <deliveryStatus>Received</deliveryStatus>
+  <expectedDate></expectedDate>
+  <lines>
+    <line><stockId>GFT-SET</stockId><qtyShipped>5668</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0041</invoiceRef></line>
+    <line><stockId>SRM-030</stockId><qtyShipped>5668</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef>INV-0041</invoiceRef></line>
+  </lines>
+</deliveryNote>

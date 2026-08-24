@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-015</agreementId>
-  <supplierId>SUP-MAISON</supplierId>
-  <supplierName>Maison Aroma Distribution</supplierName>
+  <supplierId>SUP-LUMIERE</supplierId>
+  <supplierName>Lumière Cosmetics SA</supplierName>
   <rebateStructure>PER_UNIT</rebateStructure>
   <basis>UNITS</basis>
   <period>MONTH</period>

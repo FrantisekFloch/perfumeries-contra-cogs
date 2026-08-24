@@ -4,7 +4,7 @@
     <invoiceNumber>INV-0024</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-012</agreementId>
-    <distributor id="SUP-NORD" name="Nordica Beauty Group"/>
+    <distributor id="SUP-ORIENT" name="Orient Essence Trading"/>
     <country>SK</country>
     <poReference>PO-2026-3012</poReference>
     <invoiceDate>2026-09-14</invoiceDate>

@@ -23,8 +23,8 @@ const MODULES = [
   'lib/version', 'lib/enums', 'lib/i18n', 'lib/periods', 'lib/money', 'lib/audit',
   'lib/store', 'lib/xml', 'lib/csv', 'lib/models', 'lib/parsers', 'lib/ingest',
   'lib/companies', 'lib/consolidation', 'lib/reconstruction', 'lib/rebate', 'lib/variance', 'lib/trueup', 'lib/pipeline',
-  'lib/ml', 'lib/source', 'lib/approval', 'lib/injection', 'lib/regnotes',
-  'ui/tooltip', 'ui/charts', 'ui/boot', 'ui/ingestflow', 'ui/doc', 'ui/stages', 'ui/dashboards', 'ui/consolidated',
+  'lib/ml', 'lib/source', 'lib/approval', 'lib/injection', 'lib/regnotes', 'lib/audit_export',
+  'ui/tooltip', 'ui/charts', 'ui/boot', 'ui/ingestflow', 'ui/doc', 'ui/stages', 'ui/dashboards', 'ui/consolidated', 'ui/audit',
   'app',
 ];
 
@@ -92,6 +92,12 @@ function collectData() {
 function main() {
   const data = collectData();
   const css = read(join(SRC, 'ui', 'styles.css'));
+  // Inline SheetJS (styling fork: xlsx-js-style) so the offline Excel export works
+  // with no network AND supports header fills / colored tables. Falls back to the
+  // plain xlsx build if the styling vendor file is absent.
+  const styleJsPath = join(ROOT, 'vendor', 'xlsx-js-style.js');
+  const plainJsPath = join(ROOT, 'vendor', 'xlsx.full.min.js');
+  const sheetjs = existsSync(styleJsPath) ? read(styleJsPath) : (existsSync(plainJsPath) ? read(plainJsPath) : '');
 
   const loader = `
 const __M = {};
@@ -127,13 +133,14 @@ __require('app');
   const html = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>VIR_Tier — Offline Demo</title>
-<style>${css}</style></head>
+<title>CCOGS Reclaim Tool — Offline Demo</title>
+<style>${css}</style>
+<script>${sheetjs}</script></head>
 <body>
 <div id="login-screen" class="login-screen">
   <form id="login-card" class="login-card" autocomplete="off">
-    <div class="login-brand">VIR<span class="tier">_Tier</span></div>
-    <p class="login-sub" id="login-sub">CCOGS Recovery Engine</p>
+    <div class="login-brand">CCOGS<span class="tier"> Reclaim</span></div>
+    <p class="login-sub" id="login-sub">Reclaim Tool</p>
     <label class="login-fld"><span id="login-user-label">User</span>
       <input id="login-user" type="text" autocomplete="username" /></label>
     <label class="login-fld"><span id="login-pass-label">Password</span>

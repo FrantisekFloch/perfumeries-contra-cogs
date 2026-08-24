@@ -52,7 +52,10 @@ const SUPPLIERS = [
   { id: 'SUP-NORD', name: 'Nordica Beauty Group' },
   { id: 'SUP-ORIENT', name: 'Orient Essence Trading' },
   { id: 'SUP-BOTANI', name: 'Botanika Naturals' },
+  // Carries the missing-invoice discrepancy cases (goods received, no invoice / no CCOGS).
+  { id: 'SUP-ATELIER', name: 'Atelier Parfums Group' },
 ];
+const SUPPLIER_BY_ID = Object.fromEntries(SUPPLIERS.map((s) => [s.id, s]));
 const SKUS = [
   { id: 'EDP-050', desc: 'Eau de Parfum 50ml', wpu: 0.28 },
   { id: 'EDP-100', desc: 'Eau de Parfum 100ml', wpu: 0.46 },
@@ -166,8 +169,13 @@ function unitValueFor(currency) {
 }
 
 // Build a fully-formed case (agreement + purchases + receipts + events + claimed)
-function buildCase({ scenario, year, structure, basis, period, scope, countries, currencies }) {
-  const supplier = pick(SUPPLIERS);
+function buildCase({ scenario, year, structure, basis, period, scope, countries, currencies, supplierId = null }) {
+  const supplier = supplierId ? (SUPPLIER_BY_ID[supplierId] || pick(SUPPLIERS)) : pick(SUPPLIERS);
+  // Missing-invoice scenarios: goods received (delivery note + GRN) but the supplier
+  // invoice never arrived, or was rejected by ERP as corrupt/incomplete, so the CCOGS
+  // engine produced nothing. Two flavours drive the finding narrative + manual-check reason.
+  const isMissingInvoice = scenario === 'missing_invoice_never' || scenario === 'missing_invoice_rejected';
+  const missingReason = scenario === 'missing_invoice_rejected' ? 'ERP_REJECTED' : 'NEVER_ARRIVED';
   const ladder = pick(TIER_LADDERS);
   const isTiered = structure === RebateStructure.RETROSPECTIVE_TIERED || structure === RebateStructure.SLIDING_INCREMENTAL;
   const tiers = isTiered ? ladder
@@ -231,7 +239,11 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
   // Tier-movement scenarios: base sits in the LOWEST tier so restored units lift it.
   const tierMove = ['both_causes', 'forgotten_sku', 'found_pallet', 'expired_late', 'reroute', 'tt_sku', 'tt_pallet'].includes(scenario);
   let perCountryBase;
-  if (scenario === 'tt_sku' || scenario === 'tt_pallet') {
+  if (isMissingInvoice) {
+    // Goods received sit comfortably inside a rebate tier; the entire entitlement is
+    // recoverable because the engine claimed nothing (no invoice → no CCOGS).
+    perCountryBase = Math.max(200, Math.floor(tier1 * 1.15));
+  } else if (scenario === 'tt_sku' || scenario === 'tt_pallet') {
     // single-cause pan-EU headline: base just inside tier 1 so the one correction
     // (across 3 countries combined) lifts it one tier.
     perCountryBase = Math.max(200, Math.floor(tier1 * 0.85));
@@ -270,24 +282,32 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
     baseByCountry[country] = (baseByCountry[country] ?? 0) + baseQty;
     if (sampleUnitValue == null) sampleUnitValue = uv;
 
-    // supplier invoice for this delivery (reuses old tool's XML shape; new values)
-    const iid = invId();
-    const tierXml = tiers.map((t, i) => ({ minQty: t.threshold + 1, maxQty: i + 1 < tiers.length ? tiers[i + 1].threshold : '', pct: Math.round(t.rate * 1000) / 10 }));
-    invoices.push({
-      invoiceNumber: iid, type: 'final', agreementId,
-      supplierId: supplier.id, supplierName: supplier.name, country,
-      poReference: po, invoiceDate: orderDate, shipDate: orderDate,
-      incoterms: 'FOB_SHIPPING_POINT', currency: cur, discountTiers: tierXml, totalValue: round2(baseQty * uv),
-      lines: skuSetObjs.map((skuObj, si) => ({ stockId: skuObj.id, description: skuObj.desc, qtyInvoiced: perSku[si], unitPrice: uv, targetStorage: isReroute ? townWh : storage })),
-    });
-    invoiceRefs.push(iid);
+    // supplier invoice for this delivery (reuses old tool's XML shape; new values).
+    // MISSING-INVOICE cases: the goods were received but NO invoice exists (it never
+    // arrived, or ERP rejected it as corrupt) — so we deliberately create no invoice
+    // and leave the receipt's invoiceRef null. That is the whole discrepancy.
+    const iid = isMissingInvoice ? null : invId();
+    if (!isMissingInvoice) {
+      const tierXml = tiers.map((t, i) => ({ minQty: t.threshold + 1, maxQty: i + 1 < tiers.length ? tiers[i + 1].threshold : '', pct: Math.round(t.rate * 1000) / 10 }));
+      invoices.push({
+        invoiceNumber: iid, type: 'final', agreementId,
+        supplierId: supplier.id, supplierName: supplier.name, country,
+        poReference: po, invoiceDate: orderDate, shipDate: orderDate,
+        incoterms: 'FOB_SHIPPING_POINT', currency: cur, discountTiers: tierXml, totalValue: round2(baseQty * uv),
+        lines: skuSetObjs.map((skuObj, si) => ({ stockId: skuObj.id, description: skuObj.desc, qtyInvoiced: perSku[si], unitPrice: uv, targetStorage: isReroute ? townWh : storage })),
+      });
+      invoiceRefs.push(iid);
+    }
 
     // GOODS RECEIPTS: one receipt per contract SKU (matching the per-SKU purchase
     // split), so weight/value reconstruction lines up exactly with the engine base.
     // Reroute => receipts land at the TOWN WH with scannedAtMain=false (skipped scan).
     const grnIdsForCountry = [];
-    // for expired-late: unload happens AFTER the contract window ends
-    const lateReceiptBase = scenario === 'expired_late' ? monthAfter(effTo, between(1, 2)) : null;
+    // for expired-late: unload happens AFTER the contract window ends.
+    // for missing_invoice_never: goods keep arriving late too, illustrating that the
+    // absent invoice may still show up even after the agreement's validity has passed.
+    const lateReceiptBase = scenario === 'expired_late' ? monthAfter(effTo, between(1, 2))
+      : (scenario === 'missing_invoice_never' ? monthAfter(effTo, 1) : null);
     skuSetObjs.forEach((skuObj, k) => {
       const qtyPart = perSku[k];
       const rid = rcId();
@@ -380,6 +400,19 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
     if (scenario === 'reroute' && first) {
       events.push({ eventId: evId(), type: LeakageDriver.REROUTE_SKIPPED_SCAN, agreementId, supplierId: supplier.id, country, stockId: ev0, qty: between(200, 700), refIds: [pid], eventDate: `${year}-${orderMonth}-16` });
     }
+    // MISSING INVOICE: goods received under the agreement but never billed — emit a
+    // marker event per country (qty = full received base) tagging WHY the invoice is
+    // absent. The event carries the GRN receipt refs as proof of delivery. It adds no
+    // volume (goods already in the base via their receipts); the recoverable arises
+    // because the engine claimed nothing.
+    if (isMissingInvoice) {
+      events.push({
+        eventId: evId(), type: LeakageDriver.MISSING_INVOICE, agreementId, supplierId: supplier.id,
+        country, stockId: ev0, qty: baseQty, refIds: grnIdsForCountry,
+        eventDate: scenario === 'missing_invoice_never' ? monthAfter(effTo, 1) + '-08' : `${year}-${orderMonth}-24`,
+        reason: missingReason,
+      });
+    }
   }
 
   // CONSOLIDATED delivery notes (breaks the artificial 1:1):
@@ -400,11 +433,12 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
   } else {
     for (const d of perCountryDelivery) {
       const did = dnId();
+      // Missing-invoice: goods were delivered but there is no invoice to reference.
       deliveryNotes.push({
-        deliveryNoteId: did, invoiceNumber: d.iid, invoiceRefs: [d.iid],
+        deliveryNoteId: did, invoiceNumber: d.iid || null, invoiceRefs: d.iid ? [d.iid] : [],
         agreementId, targetStorageId: d.storage, country: d.country,
-        shipDate: d.shipDate, deliveryStatus: 'Received',
-        lines: d.skuLines.map((sl) => ({ stockId: sl.stockId, qtyShipped: sl.qty, invoiceRef: d.iid, targetStorage: d.storage })),
+        shipDate: d.shipDate, deliveryStatus: isMissingInvoice ? 'Received — no invoice' : 'Received',
+        lines: d.skuLines.map((sl) => ({ stockId: sl.stockId, qtyShipped: sl.qty, invoiceRef: d.iid || null, targetStorage: d.storage })),
       });
       deliveryNoteRefs.push(did);
     }
@@ -435,7 +469,11 @@ function buildCase({ scenario, year, structure, basis, period, scope, countries,
   const claimBasisNote = basis;
 
   const links = { invoiceRefs, deliveryNoteRefs, receiptRefs };
-  if (scenario === 'zero_variance' || isClean) {
+  if (isMissingInvoice) {
+    // No CCOGS engine output at all — there was no invoice for the engine to process,
+    // so the "before" claimed amount is ZERO. The full reconstructed entitlement is
+    // therefore recoverable. (Intentionally push nothing to ccogsEngine.)
+  } else if (scenario === 'zero_variance' || isClean) {
     // engine already claimed the correct amount on the full combined volume -> no recovery
     const engV = countries.reduce((s, c) => s + countryBasisVolume(c), 0);
     const amt = round2(entitledFor(tiers, engV, structure));
@@ -471,13 +509,17 @@ function buildAll() {
     'tt_sku', 'tt_pallet', 'found_pallet', 'forgotten_sku', 'both_causes', 'expired_late', 'reroute',
     // original coverage
     'pan_eu', 'return_rejection', 'overage', 'backorder', 'late', 'retro', 'mixed_fx', 'zero_variance',
+    // NEW: goods received but no invoice / no CCOGS (manual-check discrepancy).
+    //   missing_invoice_never    -> supplier never sent the invoice (may arrive after validity)
+    //   missing_invoice_rejected -> invoice submitted but ERP rejected it as corrupt/incomplete
+    'missing_invoice_never', 'missing_invoice_rejected',
     // clean, fully-closed deliveries with NO issue found (padding realism so the
     // portfolio is not 100% problems — feeds the "Skipped — no issue" figure)
     'clean',
   ];
   // clean gets the most reps so most deliveries are healthy; a few headline
   // loss scenarios repeat so the suggestions list stays rich.
-  const repCount = { clean: 7, tt_sku: 1, tt_pallet: 1, both_causes: 2, reroute: 2, expired_late: 2, pan_eu: 2 };
+  const repCount = { clean: 7, tt_sku: 1, tt_pallet: 1, both_causes: 2, reroute: 2, expired_late: 2, pan_eu: 2, missing_invoice_never: 1, missing_invoice_rejected: 1 };
   const year = 2026;
   let rot = 0;
   for (const scenario of scenarios) {
@@ -485,16 +527,24 @@ function buildAll() {
     for (let rep = 0; rep < reps; rep++) {
       rot++;
       // scenarios whose whole point is a TIER MOVEMENT must use a tiered structure
+      const isMissingInvoiceScenario = scenario === 'missing_invoice_never' || scenario === 'missing_invoice_rejected';
       const tierMoveScenario = ['tt_sku', 'tt_pallet', 'both_causes', 'forgotten_sku', 'found_pallet', 'expired_late', 'reroute', 'pan_eu', 'mixed_fx'].includes(scenario);
-      const structure = tierMoveScenario ? RebateStructure.RETROSPECTIVE_TIERED : STRUCTURES[rot % STRUCTURES.length];
+      // Missing-invoice also uses a retrospective tiered contract so the entitlement (all
+      // recoverable, since claimed = 0) is a clean tier % of the received volume.
+      const structure = (tierMoveScenario || isMissingInvoiceScenario) ? RebateStructure.RETROSPECTIVE_TIERED : STRUCTURES[rot % STRUCTURES.length];
       // Tier-movement scenarios stay UNITS basis so the plain-language story reads
       // in honest unit terms ("on a volume of N units"). The recoverable size comes
       // from the tier RATES (see TIER_LADDERS), not invoice value. mixed_fx stays
       // UNITS (mixed currencies, FX-converted).
-      const basis = tierMoveScenario ? Basis.UNITS : BASES[rot % BASES.length];
+      const basis = (tierMoveScenario || isMissingInvoiceScenario) ? Basis.UNITS : BASES[rot % BASES.length];
       const period = scenario === 'backorder' || scenario === 'late' ? Period.MONTH : PERIODS[rot % PERIODS.length];
-      let scope, countries, currencies;
-      if (scenario === 'pan_eu' || scenario === 'mixed_fx' || scenario === 'tt_sku' || scenario === 'tt_pallet') {
+      let scope, countries, currencies, forceSupplierId = null;
+      if (isMissingInvoiceScenario) {
+        // Single-country, standalone — one clean uncovered delivery per case, all on
+        // the dedicated Atelier Parfums supplier so the demo groups them together.
+        scope = Scope.PER_COUNTRY; countries = [scenario === 'missing_invoice_never' ? 'SK' : 'CZ']; currencies = ['EUR'];
+        forceSupplierId = 'SUP-ATELIER';
+      } else if (scenario === 'pan_eu' || scenario === 'mixed_fx' || scenario === 'tt_sku' || scenario === 'tt_pallet') {
         scope = Scope.PAN_EU; countries = ['SK', 'PL', 'CZ'];
         currencies = scenario === 'mixed_fx' ? ['PLN', 'EUR'] : ['EUR'];
       } else if (scenario === 'clean') {
@@ -508,7 +558,7 @@ function buildAll() {
       }
       // give retro a prior-year sibling so PRIOR_PERIODS reopening has data
       const useYear = (scenario === 'retro' && rep === 2) ? year - 1 : year;
-      cases.push(buildCase({ scenario, year: useYear, structure, basis, period, scope, countries, currencies }));
+      cases.push(buildCase({ scenario, year: useYear, structure, basis, period, scope, countries, currencies, supplierId: forceSupplierId }));
     }
   }
   return cases;

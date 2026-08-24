@@ -1,0 +1,2 @@
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate,reason
+EVT-0028,MISSING_INVOICE,AGR-021,SUP-ATELIER,CZ,EDP-100,80366,RCP-0112|RCP-0113,2026-08-24,,ERP_REJECTED

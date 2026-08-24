@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <deliveryNote>
   <deliveryNoteId>DN-0021</deliveryNoteId>
-  <invoiceNumber>INV-0037</invoiceNumber>
-  <invoiceRefs>INV-0037</invoiceRefs>
+  <invoiceNumber></invoiceNumber>
+  <invoiceRefs></invoiceRefs>
   <agreementId>AGR-021</agreementId>
-  <targetStorageId>WH-SK-01</targetStorageId>
-  <country>SK</country>
-  <shipDate>2026-03-17</shipDate>
-  <deliveryStatus>Received</deliveryStatus>
+  <targetStorageId>WH-CZ-01</targetStorageId>
+  <country>CZ</country>
+  <shipDate>2026-08-13</shipDate>
+  <deliveryStatus>Received — no invoice</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>EDP-100</stockId><qtyShipped>60579</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0037</invoiceRef></line>
-    <line><stockId>LIP-004</stockId><qtyShipped>60579</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0037</invoiceRef></line>
-    <line><stockId>EDT-075</stockId><qtyShipped>60580</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0037</invoiceRef></line>
+    <line><stockId>EDP-100</stockId><qtyShipped>40183</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef></invoiceRef></line>
+    <line><stockId>SRM-030</stockId><qtyShipped>40183</qtyShipped><targetStorage>WH-CZ-01</targetStorage><invoiceRef></invoiceRef></line>
   </lines>
 </deliveryNote>

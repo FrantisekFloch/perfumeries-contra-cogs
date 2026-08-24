@@ -4,7 +4,7 @@
     <invoiceNumber>INV-0013</invoiceNumber>
     <type>final</type>
     <agreementId>AGR-007</agreementId>
-    <distributor id="SUP-LUMIERE" name="Lumière Cosmetics SA"/>
+    <distributor id="SUP-VELVET" name="Velvet &amp; Co. Fragrances"/>
     <country>PL</country>
     <poReference>PO-2026-1882</poReference>
     <invoiceDate>2026-03-08</invoiceDate>

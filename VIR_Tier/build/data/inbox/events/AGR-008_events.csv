@@ -1,2 +1,2 @@
-eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
-EVT-0010,EXPIRED_WINDOW_LATE_DELIVERY,AGR-008,SUP-VELVET,SK,SRM-030,810,PUR-0014,2026-09-10,2026-08-20
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate,reason
+EVT-0010,EXPIRED_WINDOW_LATE_DELIVERY,AGR-008,SUP-VELVET,SK,SRM-030,810,PUR-0014,2026-09-10,2026-08-20,

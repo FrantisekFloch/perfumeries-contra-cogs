@@ -187,6 +187,8 @@ export function createLeakageEvent(raw) {
     eventDate: raw.eventDate ?? null,
     // For LATE_SHIPMENT / BACKORDERING: the intended (pre-slip) period date, if provided.
     intendedDate: raw.intendedDate ?? null,
+    // For MISSING_INVOICE: why the invoice is absent ('NEVER_ARRIVED' | 'ERP_REJECTED').
+    reason: raw.reason ?? null,
     provenance: raw.provenance ?? null,
   };
 }

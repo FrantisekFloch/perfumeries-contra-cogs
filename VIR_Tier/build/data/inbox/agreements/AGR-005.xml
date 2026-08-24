@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-005</agreementId>
-  <supplierId>SUP-VELVET</supplierId>
-  <supplierName>Velvet &amp; Co. Fragrances</supplierName>
+  <supplierId>SUP-NORD</supplierId>
+  <supplierName>Nordica Beauty Group</supplierName>
   <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
   <basis>UNITS</basis>
   <period>YEAR</period>

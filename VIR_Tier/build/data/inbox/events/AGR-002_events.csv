@@ -1,2 +1,2 @@
-eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
-EVT-0002,FOUND_LATER_PALLET,AGR-002,SUP-LUMIERE,SK,EDP-100,36209,PUR-0004,2026-02-05,2026-01-07
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate,reason
+EVT-0002,FOUND_LATER_PALLET,AGR-002,SUP-VELVET,SK,EDP-100,36209,PUR-0004,2026-02-05,2026-01-07,

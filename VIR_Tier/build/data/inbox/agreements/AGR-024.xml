@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <agreement>
   <agreementId>AGR-024</agreementId>
-  <supplierId>SUP-ORIENT</supplierId>
-  <supplierName>Orient Essence Trading</supplierName>
+  <supplierId>SUP-BOTANI</supplierId>
+  <supplierName>Botanika Naturals</supplierName>
   <rebateStructure>RETROSPECTIVE_TIERED</rebateStructure>
   <basis>UNITS</basis>
   <period>MONTH</period>
@@ -11,26 +11,24 @@
   <tierMeasure>COMBINED</tierMeasure>
   <windowType>MONTH</windowType>
   <contractRef>CTR-2026-0024</contractRef>
-  <effectiveFrom>2026-06-01</effectiveFrom>
-  <effectiveTo>2026-06-30</effectiveTo>
-  <signatory>Anna Wiśniewska</signatory>
+  <effectiveFrom>2026-02-01</effectiveFrom>
+  <effectiveTo>2026-02-28</effectiveTo>
+  <signatory>Ing. Tomáš Blocal</signatory>
   <signatoryTitle>Head of Procurement</signatoryTitle>
-  <signedDate>2026-06-01</signedDate>
+  <signedDate>2026-02-01</signedDate>
   <governingLaw>Poland</governingLaw>
   <tiers>
-    <tier threshold="0" rate="0.008"/>
-    <tier threshold="90000" rate="0.014"/>
-    <tier threshold="180000" rate="0.022"/>
+    <tier threshold="0" rate="0.012"/>
+    <tier threshold="70000" rate="0.02"/>
+    <tier threshold="140000" rate="0.03"/>
   </tiers>
   <skuSet>
-    <sku>EDP-100</sku>
-    <sku>GFT-SET</sku>
-    <sku>CRM-050</sku>
+    <sku>LIP-004</sku>
+    <sku>SRM-030</sku>
   </skuSet>
   <engineConfiguredSkus>
-    <sku>EDP-100</sku>
-    <sku>GFT-SET</sku>
-    <sku>CRM-050</sku>
+    <sku>LIP-004</sku>
+    <sku>SRM-030</sku>
   </engineConfiguredSkus>
   <currencies>
     <currency>EUR</currency>

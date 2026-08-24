@@ -1,2 +1,2 @@
-eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate
-EVT-0022,LATE_SHIPMENT,AGR-016,SUP-LUMIERE,CZ,SRM-030,315,PUR-0030,2026-08-12,2026-07-09
+eventId,type,agreementId,supplierId,country,stockId,qty,refIds,eventDate,intendedDate,reason
+EVT-0022,LATE_SHIPMENT,AGR-016,SUP-LUMIERE,CZ,SRM-030,315,PUR-0030,2026-08-12,2026-07-09,

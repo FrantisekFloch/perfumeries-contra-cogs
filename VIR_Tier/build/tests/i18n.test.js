@@ -5,7 +5,7 @@ import { t, setLang, getLang, LANGS } from '../src/lib/i18n.js';
 test('default language is en', () => {
   setLang('en');
   assert.equal(getLang(), 'en');
-  assert.match(t('appTitle'), /VIR_Tier/);
+  assert.match(t('appTitle'), /CCOGS Reclaim Tool/);
 });
 
 test('four languages present incl. PL and CZ', () => {

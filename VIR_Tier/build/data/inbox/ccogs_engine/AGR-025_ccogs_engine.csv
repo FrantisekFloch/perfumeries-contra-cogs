@@ -1,2 +1,2 @@
 outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
-ENG-0025,AGR-025,SUP-ORIENT,CZ,2026,VALUE,7749074.86,0.022,168499.65,EUR,CCOGS_INVOICE,INV-0041,DN-0025,RCP-0125|RCP-0126,7749075 value @ 2.20% = 168499.65 EUR (full combined volume; no leakage)
+ENG-0023,AGR-025,SUP-NORD,PL,2026,VALUE,5503488.7299999995,0.025,135487.22,EUR,CCOGS_INVOICE,INV-0039,DN-0025,RCP-0124|RCP-0125|RCP-0126|RCP-0127,5503489 value @ 2.50% = 135487.22 EUR (full combined volume; no leakage)

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <deliveryNote>
   <deliveryNoteId>DN-0023</deliveryNoteId>
-  <invoiceNumber>INV-0039</invoiceNumber>
-  <invoiceRefs>INV-0039</invoiceRefs>
+  <invoiceNumber>INV-0037</invoiceNumber>
+  <invoiceRefs>INV-0037</invoiceRefs>
   <agreementId>AGR-023</agreementId>
-  <targetStorageId>WH-PL-01</targetStorageId>
-  <country>PL</country>
+  <targetStorageId>WH-SK-01</targetStorageId>
+  <country>SK</country>
   <shipDate>2026-01-18</shipDate>
   <deliveryStatus>Received</deliveryStatus>
   <expectedDate></expectedDate>
   <lines>
-    <line><stockId>EDP-100</stockId><qtyShipped>3144</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0039</invoiceRef></line>
-    <line><stockId>MSC-200</stockId><qtyShipped>3144</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0039</invoiceRef></line>
-    <line><stockId>EDT-075</stockId><qtyShipped>3144</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0039</invoiceRef></line>
-    <line><stockId>LIP-004</stockId><qtyShipped>3143</qtyShipped><targetStorage>WH-PL-01</targetStorage><invoiceRef>INV-0039</invoiceRef></line>
+    <line><stockId>CRM-050</stockId><qtyShipped>2968</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0037</invoiceRef></line>
+    <line><stockId>LIP-004</stockId><qtyShipped>2968</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0037</invoiceRef></line>
+    <line><stockId>EDP-100</stockId><qtyShipped>2968</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0037</invoiceRef></line>
+    <line><stockId>SRM-030</stockId><qtyShipped>2969</qtyShipped><targetStorage>WH-SK-01</targetStorage><invoiceRef>INV-0037</invoiceRef></line>
   </lines>
 </deliveryNote>

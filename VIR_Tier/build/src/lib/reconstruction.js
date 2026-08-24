@@ -149,6 +149,20 @@ export function reconstructVolume({ agreement, purchases = [], receipts = [], ev
         delta = safeWeight(ev.qty, basis, info);
         note = `Reroute / skipped scan: +${ev.qty} units delivered to town WH without the main-WH unload scan`;
         break;
+      case LeakageDriver.MISSING_INVOICE:
+        // Goods physically received (delivery note + GRN exist) but the supplier
+        // invoice never arrived — or was rejected by ERP as corrupt/incomplete — so
+        // the internal CCOGS engine never processed it and claimed ZERO.
+        //
+        // The received units are ALREADY in the base volume via their GRN receipts,
+        // so this correction must NOT add volume again (delta = 0) or we would
+        // double-count. The recoverable True-Up arises purely because the engine
+        // claimed nothing (claimed = 0) against that qualifying base. This entry is
+        // an explanatory MARKER that flags the case for manual check and records the
+        // reason the invoice is absent.
+        delta = 0;
+        note = `Goods received but no supplier invoice / no CCOGS generated — ${ev.qty} units delivered under the agreement yet never billed (manual check: ${ev.reason === 'ERP_REJECTED' ? 'invoice submitted but rejected by ERP as corrupt/incomplete' : 'invoice never arrived — may still arrive after agreement validity'})`;
+        break;
       default:
         throw new Error(`reconstruction: unknown leakage driver "${ev.type}"`);
     }

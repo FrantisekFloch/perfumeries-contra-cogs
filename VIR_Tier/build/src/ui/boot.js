@@ -28,7 +28,7 @@ function bootShell() {
     </div>`).join('');
   return `
     <div class="boot">
-      <div class="boot-badge">VIR<span class="tier">_Tier</span></div>
+      <div class="boot-badge">CCOGS<span class="tier"> Reclaim</span></div>
       <h1>${t('bootWelcome')}</h1>
       <div class="tagline">${t('bootConnecting')}</div>
       <div class="pipe" id="pipe">${steps}</div>

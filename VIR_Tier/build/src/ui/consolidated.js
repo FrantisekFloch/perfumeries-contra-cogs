@@ -81,7 +81,10 @@ export function renderConsolidatedDebit(state) {
         <td class="mono">${esc(c.agreementId)}</td>
         <td>${esc(c.scopeKey)}${dur ? ` · <span class="small">${esc(dur)}</span>` : ''}</td>
         <td class="num"><strong style="color:var(--gold)">${money(c.variance, c.currency)}</strong></td>
-        <td><button class="btn tint-ghost consol-view" data-consolview="${esc(c.chargeId)}">${t('viewDetails')}</button></td>
+        <td><div class="consol-rowbtns">
+          <button class="btn tint-ghost consol-view" data-consolview="${esc(c.chargeId)}">${t('viewDetails')}</button>
+          <button class="btn tint-green-soft consol-gen" data-genrow="${esc(c.chargeId)}">${t('genContraInvoice')}</button>
+        </div></td>
       </tr>`;
     }).join('');
     return `<div class="supgrp ${isActive ? 'active' : ''}" data-consolsup="${esc(g.supplierId)}">
@@ -135,7 +138,7 @@ export function renderConsolidatedDebit(state) {
         <tbody>${scopeRows || `<tr><td colspan="4" class="small">—</td></tr>`}</tbody></table>
 
       <div class="cd-actions">
-        <button class="btn tint-blue big" data-consolgen="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('genContraInvoice')}</button>
+        <button class="btn tint-blue" data-consolgen="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('genConsolidatedContra')}</button>
         <button class="btn tint-amber" data-consolagr="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('showAgreement')}</button>
       </div>
     </div>`;

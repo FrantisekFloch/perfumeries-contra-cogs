@@ -1,2 +1,2 @@
 outputId,agreementId,supplierId,scopeKey,period,basis,engineVolume,tierApplied,amountClaimed,currency,documentType,invoiceRefs,deliveryNoteRefs,receiptRefs,calcNote
-ENG-0019,AGR-019,SUP-ORIENT,CZ,2026,VALUE,326821,0.5,163410.5,EUR,CCOGS_INVOICE,INV-0035,DN-0019,RCP-0106|RCP-0107|RCP-0108|RCP-0109,326821 value @ 50.00% = 163410.5 EUR (full combined volume; no leakage)
+ENG-0019,AGR-019,SUP-BOTANI,CZ,2026,VALUE,326821,0.5,163410.5,EUR,CCOGS_INVOICE,INV-0035,DN-0019,RCP-0106|RCP-0107|RCP-0108|RCP-0109,326821 value @ 50.00% = 163410.5 EUR (full combined volume; no leakage)
