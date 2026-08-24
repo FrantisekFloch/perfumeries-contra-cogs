@@ -43,36 +43,6 @@ export function renderOverview(state) {
   const byScope = agg((b) => b.scopeKey);
   const byPeriod = agg((b) => b.period);
 
-  // top recovery opportunities, GROUPED by supplier then contract validity —
-  // a supplier subtotal row leads each group, then its recoverable agreements.
-  const WIN_LBL = { MONTH: 'Monthly', QUARTER: 'Quarterly', HALF_YEAR: 'Half-year', YEAR: 'Yearly', CUSTOM: 'Custom' };
-  const validityOf = (agreementId) => {
-    const g = state.consolidated?.byAgreement?.get(agreementId);
-    return WIN_LBL[g?.agreement?.windowType] || '—';
-  };
-  const recoverable = [...beforeAfter].filter((b) => b.recoverable);
-  const bySup = {};
-  for (const b of recoverable) { const k = b.supplierName || b.supplierId || '—'; (bySup[k] ||= []).push(b); }
-  const supOrder = Object.entries(bySup)
-    .map(([sup, items]) => ({ sup, items, total: items.reduce((s, b) => s + val(b), 0) }))
-    .sort((a, b) => b.total - a.total);
-  let groupedRows = '';
-  for (const grp of supOrder) {
-    const cur = grp.items[0].currency;
-    groupedRows += `<tr class="grp-head"><td colspan="6"><strong>${grp.sup}</strong></td><td class="num"><strong style="color:var(--gold)">${fmtN(grp.total)} ${cur}</strong></td></tr>`;
-    for (const b of [...grp.items].sort((a, b2) => val(b2) - val(a))) {
-      groupedRows += `<tr>
-        <td class="sub-cell"></td>
-        <td>${validityOf(b.agreementId)}</td>
-        <td class="mono">${b.agreementId}</td>
-        <td>${b.scopeKey}</td>
-        <td class="num">${fmtN(b.before.claimed)} ${b.currency}</td>
-        <td class="num">${fmtN(b.after.entitled)} ${b.currency}</td>
-        <td class="num"><strong style="color:var(--gold)">${fmtN(val(b))} ${b.currency}</strong></td>
-      </tr>`;
-    }
-  }
-
   // all goods movements across the portfolio drive the finance process-journey
   const allReceipts = state.consolidated ? [...state.consolidated.byAgreement.values()].flatMap((g) => g.receipts || []) : [];
   const allCorrections = (state.reconstructions || []).flatMap((r) => r.corrections || []);
@@ -84,18 +54,31 @@ export function renderOverview(state) {
   const archived = state.archived || [];
   // group per supplier -> compact boxes (included findings + excluded/archived)
   const wlSup = new Map();
-  const wlBucket = (name) => { if (!wlSup.has(name)) wlSup.set(name, { name, items: [], total: 0, cur: 'EUR' }); return wlSup.get(name); };
-  for (const f of findings) { const b = wlBucket(f.supplierName || f.supplierId); b.items.push({ status: 'include', id: f.agreementId, amt: f.leakage || 0 }); b.total += (f.leakage || 0); b.cur = f.currency || 'EUR'; }
+  const wlBucket = (name) => { if (!wlSup.has(name)) wlSup.set(name, { name, items: [], total: 0, issues: 0, cur: 'EUR' }); return wlSup.get(name); };
+  for (const f of findings) { const b = wlBucket(f.supplierName || f.supplierId); b.items.push({ status: 'include', id: f.agreementId, amt: f.leakage || 0 }); b.total += (f.leakage || 0); b.issues += 1; b.cur = f.currency || 'EUR'; }
   for (const a of archived) { const b = wlBucket(a.supplierName || a.agreementId); b.items.push({ status: 'excluded', id: a.agreementId, amt: 0, note: a.comment }); }
   const wlIncludedCount = findings.length;
   const wlIncTotal = findings.reduce((s, f) => s + (f.leakage || 0), 0);
-  const wlBoxes = [...wlSup.values()].sort((a, b) => b.total - a.total).map((b) => {
+
+  // Top 3 suppliers by the active sort: amount (total leakage desc) or issue count (# findings desc).
+  const wlSort = state.wlSort === 'issues' ? 'issues' : 'amount';
+  const wlSortLabel = wlSort === 'issues' ? t('wlByIssues') : t('wlByAmount');
+  const wlSortFn = wlSort === 'issues'
+    ? (a, b) => (b.issues - a.issues) || (b.total - a.total)
+    : (a, b) => (b.total - a.total) || (b.issues - a.issues);
+  const wlTop = [...wlSup.values()].sort(wlSortFn).slice(0, 3);
+  const wlBoxes = wlTop.map((b) => {
     const chips = b.items.map((it) => `<span class="wl-chip ${it.status}" title="${it.status === 'include' ? fmtN(it.amt) + ' ' + b.cur : (it.note || t('wlExcluded'))}"><span class="mono">${it.id}</span>${it.status === 'include' ? ` · ${fmtN(it.amt)}` : ' ✕'}</span>`).join('');
     return `<div class="wl-box">
       <div class="wl-box-h"><span class="wl-box-n">${b.name}</span><span class="wl-box-t euro">${fmtN(b.total)} ${b.cur}</span></div>
+      <div class="wl-box-meta">${b.issues} ${b.issues === 1 ? t('wlIssue') : t('wlIssues')}</div>
       <div class="wl-chips">${chips}</div>
     </div>`;
   }).join('');
+  const wlSortBtns = `<span class="wl-sort">
+    <button class="wl-sortbtn ${wlSort === 'amount' ? 'active' : ''}" data-wlsort="amount">${t('wlByAmount')}</button>
+    <button class="wl-sortbtn ${wlSort === 'issues' ? 'active' : ''}" data-wlsort="issues">${t('wlByIssues')}</button>
+  </span>`;
   // ---- (A) ML findings summary + CCOGS delta + pending/realized tracker -------
   // CCOGS delta = what the engine claimed (before) vs what the tool reconstructs
   // you are entitled to (after). The delta is the additional CCOGS found to reclaim.
@@ -116,18 +99,6 @@ export function renderOverview(state) {
   // (missing-invoice cases flagged) so Finance sees WHAT the model surfaced.
   const findingsAll = [...(state.discovery?.findings || [])].sort((a, b) => (b.leakage || 0) - (a.leakage || 0));
   const miCount = findingsAll.filter((f) => f.missingInvoice).length;
-  const findingRows = findingsAll.slice(0, 8).map((f) => {
-    const badge = f.missingInvoice
-      ? `<span class="of-badge mi">⚑ ${t('miBadge')}</span>`
-      : (f.scopeKey === 'PAN_EU' ? `<span class="of-badge pan">Pan-EU</span>` : '');
-    return `<tr>
-      <td>${f.supplierName || f.supplierId} <span class="mono small">${f.agreementId}</span> ${badge}</td>
-      <td>${f.scopeKey}</td>
-      <td class="num">${fmtN(f.claimed)} ${f.currency}</td>
-      <td class="num">${fmtN(f.entitled)} ${f.currency}</td>
-      <td class="num"><strong style="color:var(--gold)">${fmtN(f.leakage)} ${f.currency}</strong></td>
-    </tr>`;
-  }).join('');
 
   const findingsSummaryBlock = `
     <h3 class="ov-h">${t('ovFindingsTitle')}</h3>
@@ -155,16 +126,11 @@ export function renderOverview(state) {
         <span class="ovt-leg realized"><b>${eur(realizedEur)}</b> ${t('ovRealized')} (${realized.length})</span>
         <span class="ovt-leg pending"><b>${eur(pendingEur)}</b> ${t('ovPending')} (${pending.length})</span>
       </div>
-    </div>
-
-    <div class="table-wrap"><table class="ov-findings"><thead><tr>
-      <th>${t('supplier')} / ${t('agreement')}</th><th>${t('scope')}</th>
-      <th class="num">${t('colOriginal')}</th><th class="num">${t('colRecomputed')}</th><th class="num">${t('colTrueUp')}</th>
-    </tr></thead><tbody>${findingRows || `<tr><td colspan="5" class="small">—</td></tr>`}</tbody></table></div>`;
+    </div>`;
 
   const worklistBlock = `
-    <h3 class="ov-h">${t('wlTitle')}</h3>
-    <p class="muted small">${t('wlNote')}</p>
+    <h3 class="ov-h wl-title-row">${t('wlTitle')} — ${t('wlTop3By')} ${wlSortBtns}</h3>
+    <p class="muted small">${t('wlTop3Note', { by: wlSortLabel })}</p>
     <div class="card wl-card">
       <div class="wl-head"><span>${wlIncludedCount} ${t('wlInRun')} · ${wlSup.size} ${t('wlSuppliers')}</span><span class="euro" style="font-weight:800;color:var(--gold)">${fmtN(wlIncTotal)} EUR</span></div>
       <div class="wl-boxes">${wlBoxes || `<div class="small">—</div>`}</div>
@@ -263,13 +229,6 @@ export function renderOverview(state) {
         </tr></thead><tbody>${winTableCompact || `<tr><td colspan="4" class="small">—</td></tr>`}</tbody></table></div>
       </div>
     </div>
-
-    <h3 class="ov-h">${t('topOpportunities')}</h3>
-    <p class="muted small">${t('topOpportunitiesNote')}</p>
-    <div class="table-wrap"><table><thead><tr>
-      <th>${t('supplier')}</th><th>${t('validity')}</th><th>${t('agreement')}</th><th>${t('scope')}</th>
-      <th class="num">${t('engineClaimed')}</th><th class="num">${t('toolEntitled')}</th><th class="num">True-Up</th>
-    </tr></thead><tbody>${groupedRows || `<tr><td colspan="7" class="small">—</td></tr>`}</tbody></table></div>
   `;
 }
 

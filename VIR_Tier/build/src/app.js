@@ -15,6 +15,7 @@ import { animateIngestFlow, FLOW_NODES, mlAnalysisBlock, mlAnalysisStart, mlAnal
 import { renderOverview, reviewModalHtml, renderAbout } from './ui/dashboards.js';
 import { renderInputs, renderMl, INPUT_CATS, tileDetail } from './ui/stages.js';
 import { renderAudit, auditDataset } from './ui/audit.js';
+import { renderMappingFlow, playMappingFlow, showNextSteps } from './ui/mappingflow.js';
 import { renderConsolidatedDebit, chargesBySupplier } from './ui/consolidated.js';
 import { invoiceDocHtml, deliveryNoteDocHtml, receiptDocHtml, eventDocHtml, engineDocHtml, agreementDocHtml, contraCogsInvoiceHtml } from './ui/doc.js';
 import { serializeInvoiceXml, serializeDeliveryNoteXml, serializeReceiptCsv, serializeEventCsv, serializeCcogsEngineCsv, serializeAgreementXml } from './lib/parsers.js';
@@ -37,6 +38,10 @@ const STAGES = [
   { id: 'consol', label: 'navConsolidated', n: 2, render: renderConsolidatedDebit },
   { id: 'overview', label: 'navOverview', n: 3, render: renderOverview },
   { id: 'audit', label: 'navAudit', n: 4, render: renderAudit },
+  // Part #5 — Mapping Logic (animated model workflow) HIDDEN for now while we
+  // refine it. Re-enable by uncommenting this line (module + i18n + CSS are all
+  // still in place). See src/ui/mappingflow.js.
+  // { id: 'mapping', label: 'navMapping', n: 5, render: renderMappingFlow },
 ];
 
 const state = {
@@ -53,6 +58,7 @@ const state = {
   mailboxScan: null,            // { scanned, emailCount, matchAgreementId, matchEur, email } once a shared-mailbox scan matches an email to a finding
   erpSent: {},                  // chargeId -> { docNo, sys, amount, at } for charges "posted" to ERP this session (drives the Overview realized/pending tracker)
   inputFilters: { suppliers: null, warehouses: null, sortKey: 'ccogs', sortDir: 'desc' }, // Inputs & Collection doc-list filter/sort (null set = all selected)
+  miContacted: false,           // missing-invoice: set true once the supplier has been contacted (unlocks recalculate)
 };
 
 // ---- loaders ----
@@ -135,6 +141,8 @@ function render() {
   initTooltips(app);
   // If the Summary ingest-flow is on screen, (re)play its fill animation.
   if (app.querySelector('#ingestFlow')) playIngestFlow();
+  // Mapping Logic stage (#5): auto-play the animated model workflow.
+  if (app.querySelector('#mfScreen')) playMappingFlow(app);
 }
 
 function bind() {
@@ -160,6 +168,15 @@ function bind() {
   // inputs summary: continue into Consolidated Debit (ML Discovery is hidden)
   const sumCont = app.querySelector('#sum-continue');
   if (sumCont) sumCont.addEventListener('click', () => { state.stage = 'consol'; render(); });
+
+  // Finance Overview — Claim builder Summary "Top 3 by" sort buttons (amount | issue count)
+  app.querySelectorAll('[data-wlsort]').forEach((b) => b.addEventListener('click', () => { state.wlSort = b.dataset.wlsort; render(); }));
+
+  // Mapping Logic stage (#5): Replay restarts the animation; Next steps reveals Scene D.
+  const mfReplay = app.querySelector('#mfReplay');
+  if (mfReplay) mfReplay.addEventListener('click', () => playMappingFlow(app));
+  const mfNextBtn = app.querySelector('#mfNextBtn');
+  if (mfNextBtn) mfNextBtn.addEventListener('click', () => showNextSteps(app));
 
   // inputs summary: clickable result tiles -> details modal (what/how/proposal/impact).
   // The mailbox tile is special: unscanned -> open the scan flow; scanned -> details.
@@ -379,6 +396,16 @@ function openTileDetails(id) {
   const close = () => holder.remove();
   holder.querySelector('#tdBg').addEventListener('click', (e) => { if (e.target.id === 'tdBg') close(); });
   holder.querySelector('#tdClose').addEventListener('click', close);
+  // missing-invoice supplier-action flow: Contact supplier -> (enables) Recalculate.
+  const contactBtn = holder.querySelector('[data-micontact]');
+  if (contactBtn) contactBtn.addEventListener('click', () => {
+    state.miContacted = true;
+    flash(t('miContactedMsg'));
+    close();
+    openTileDetails('missing_invoice');   // reopen with the step marked done + recalc enabled
+  });
+  const recalcBtn = holder.querySelector('[data-mirecalc]');
+  if (recalcBtn) recalcBtn.addEventListener('click', () => { if (recalcBtn.disabled) return; flash(t('miRecalcMsg')); });
 }
 
 // ---- Add source (EDI / API / Folder / Mailbox intake & email scan) ----------

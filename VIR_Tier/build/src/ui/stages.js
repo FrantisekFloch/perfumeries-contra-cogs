@@ -234,40 +234,23 @@ export function summaryTiles(state) {
     return g && (g.events || []).some((e) => scanKeys.includes(e.type));
   }).reduce((s, b) => s + recEur(b), 0);
 
+  // Two aligned rows of taller tiles (4-col grid; portfolio spans 2).
+  // ROW 1: portfolio (wide) · confirmed-complete · shared mailbox
+  // ROW 2: late · pan-EU · scan/config · missing-invoice (far right, odd one out)
   const tiles = [];
-  // portfolio — wide, neutral
+  // -- Row 1 --
   tiles.push({ id: 'portfolio', size: 'wide', kind: 'info', icon: 'portfolio',
     title: t('tilePortfolio'), big: `${nf(totalPortfolioEur)} EUR`,
     subs: [`${nf(totalUnits)} ${t('tileUnits')}`, `${ba.length} ${t('tileAgreements')}`] });
-  // confirmed complete — normal, positive
   tiles.push({ id: 'complete', size: 'normal', kind: 'ok', icon: 'complete',
     title: t('tileComplete'), big: `${nf(clean.length)}`,
     subs: [`${nf(cleanEur)} EUR`, `${nf(clean.length)} ${t('tileOrders')}`] });
-  // missing invoice — TALL, danger (the headline new issue). review=true -> tinted.
-  if (mi.length) tiles.push({ id: 'missing_invoice', size: 'tall', kind: 'danger', icon: 'missing', flag: true, review: true,
-    title: t('tileMissingInvoice'), big: `${nf(miEur)} EUR`,
-    subs: [`${mi.length} ${t('tileCases')}`, `${nf(miUnits)} ${t('tileUnits')}`, `${miSuppliers} ${t('tileSuppliers')}`],
-    note: t('tileMissingInvoiceNote') });
-  // late delivery — normal, warn, needs review -> tinted
-  if (lateUnits) tiles.push({ id: 'late', size: 'normal', kind: 'warn', icon: 'late', review: true,
-    title: t('tileLate'), big: `${nf(lateEur)} EUR`,
-    subs: [`${lateSuppliers} ${t('tileSuppliers')}`, `${nf(lateUnits)} ${t('tileUnits')}`] });
-  // pan-EU aggregation — recovery opportunity, needs review -> tinted
-  if (panEu.length) tiles.push({ id: 'paneu', size: 'normal', kind: 'warn', icon: 'paneu', review: true,
-    title: t('tilePanEu'), big: `${nf(panEuEur)} EUR`,
-    subs: [`${panEu.length} ${t('tileAgreements')}`] });
-  // scan/config issues — normal, warn, needs review -> tinted
-  if (scanUnits) tiles.push({ id: 'scan', size: 'normal', kind: 'warn', icon: 'scan', review: true,
-    title: t('tileScan'), big: `${nf(scanEur)} EUR`,
-    subs: [`${nf(scanUnits)} ${t('tileUnits')}`] });
-
-  // mailbox scan — starts AMBER ("possible update, click to scan"); once the
-  // user runs the scan and matches an email to a finding it turns RED with the
-  // matched Contra-COGS opportunity value. state.mailboxScan drives the switch.
+  // shared mailbox — row 1. Starts AMBER ("possible update, click to scan"); once
+  // scanned + matched it becomes INCORPORATED (light-green) like the lenses below.
   const ms2 = state.mailboxScan || null;
   if (ms2 && ms2.scanned) {
     const matchEur = ms2.matchEur != null ? `${nf(ms2.matchEur)} EUR` : t('mbxMatched');
-    tiles.push({ id: 'mailbox', size: 'normal', kind: 'danger', icon: 'mailbox', flag: true, review: true,
+    tiles.push({ id: 'mailbox', size: 'normal', kind: 'ok', icon: 'mailbox', incorporated: true, flag: true,
       title: t('tileMailbox'), big: matchEur,
       subs: [`${ms2.emailCount || 1} ${t('mbxEmails')}`, ms2.matchAgreementId ? `${t('agreement')} ${ms2.matchAgreementId}` : ''].filter(Boolean),
       note: t('tileMailboxFoundNote') });
@@ -276,6 +259,25 @@ export function summaryTiles(state) {
       title: t('tileMailbox'), big: t('mbxPossible'),
       subs: [t('mbxSharedMailbox')], note: t('tileMailboxNote') });
   }
+
+  // -- Row 2 -- issue lenses ALREADY incorporated into the Consolidated Debit
+  // (light-green), then the missing-invoice odd-one-out last (far right).
+  if (lateUnits) tiles.push({ id: 'late', size: 'normal', kind: 'ok', icon: 'late', incorporated: true,
+    title: t('tileLate'), big: `${nf(lateEur)} EUR`,
+    subs: [`${lateSuppliers} ${t('tileSuppliers')}`, `${nf(lateUnits)} ${t('tileUnits')}`] });
+  if (panEu.length) tiles.push({ id: 'paneu', size: 'normal', kind: 'ok', icon: 'paneu', incorporated: true,
+    title: t('tilePanEu'), big: `${nf(panEuEur)} EUR`,
+    subs: [`${panEu.length} ${t('tileAgreements')}`] });
+  if (scanUnits) tiles.push({ id: 'scan', size: 'normal', kind: 'ok', icon: 'scan', incorporated: true,
+    title: t('tileScan'), big: `${nf(scanEur)} EUR`,
+    subs: [`${nf(scanUnits)} ${t('tileUnits')}`] });
+  // missing invoice — NOT yet incorporated. Needs a supplier action (get the
+  // invoice) before the missing CCOGS can be recalculated. Danger/red + the
+  // needsSupplierAction flag drives the contact-supplier -> recalculate flow.
+  if (mi.length) tiles.push({ id: 'missing_invoice', size: 'normal', kind: 'danger', icon: 'missing', flag: true, review: true, needsSupplierAction: true,
+    title: t('tileMissingInvoice'), big: `${nf(miEur)} EUR`,
+    subs: [`${mi.length} ${t('tileCases')}`, `${nf(miUnits)} ${t('tileUnits')}`, `${miSuppliers} ${t('tileSuppliers')}`],
+    note: t('tileMissingInvoiceNote') });
 
   return { tiles, totals: { findN: recoverable.length, cleanN: clean.length, recoverEur, totalUnits, totalPortfolioEur } };
 }
@@ -315,7 +317,7 @@ export function tileDetail(state, id) {
     if (!s || !s.scanned) return `<div class="td"><h2>${t('tileMailbox')}</h2><p>${t('mbxNotScannedYet')}</p></div>`;
     const e = s.email;
     return `<div class="td">
-      <h2>${t('tileMailbox')}</h2>
+      <h2>${t('tileMailbox')} <span class="td-incorp">✓ ${t('tileIncorporatedBanner')}</span></h2>
       <div class="td-grid">
         <div class="td-block"><div class="td-k">${t('tdWhat')}</div><div>${t('tdMailboxWhat')}</div></div>
         <div class="td-block"><div class="td-k">${t('tdHow')}</div><div>${t('tdMailboxHow')}</div></div>
@@ -335,12 +337,60 @@ export function tileDetail(state, id) {
     </div>`;
   }
 
+  // missing-invoice tile: NOT auto-incorporated — needs a supplier action (obtain
+  // the invoice) before the missing CCOGS can be recalculated. Show the two-step
+  // action flow; app.js wires the demo (contact supplier -> enable recalculate).
+  if (id === 'missing_invoice') {
+    const rows = recoverable.filter((b) => consolidated?.byAgreement?.get(b.agreementId)?.hasMissingInvoice);
+    const before = rows.reduce((s, b) => s + (b.before?.claimed || 0), 0);
+    const after = rows.reduce((s, b) => s + (b.after?.entitled || b.before?.claimed || 0), 0);
+    const rec = rows.filter((b) => b.recoverable).reduce((s, b) => s + recEur(b), 0);
+    const contacted = !!state.miContacted;
+    const drill = rows.slice(0, 40).map((b) => `<tr>
+      <td class="mono">${esc(b.agreementId)}</td><td>${esc(b.supplierName || b.supplierId)}</td><td>${esc(b.scopeKey)}</td>
+      <td class="num">${nf(b.before?.claimed || 0)} ${esc(b.currency)}</td>
+      <td class="num">${nf(b.after?.entitled || 0)} ${esc(b.currency)}</td>
+      <td class="num gold">${b.recoverable ? nf(recEur(b)) + ' EUR' : '—'}</td>
+    </tr>`).join('');
+    return `
+    <div class="td">
+      <h2>${t('tileMissingInvoice')} <span class="td-action">⚑ ${t('miActionBanner')}</span></h2>
+      <div class="td-grid">
+        <div class="td-block"><div class="td-k">${t('tdWhat')}</div><div>${t('tdMissingWhat')}</div></div>
+        <div class="td-block"><div class="td-k">${t('tdHow')}</div><div>${t('tdMissingHow')}</div></div>
+        <div class="td-block"><div class="td-k">${t('tdProposal')}</div><div>${t('tdMissingProp')}</div></div>
+      </div>
+      <div class="mi-action">
+        <div class="mi-action-h">${t('miActionTitle')}</div>
+        <ol class="mi-steps">
+          <li class="${contacted ? 'done' : 'active'}">${t('miStep1')} ${contacted ? `<span class="mi-step-ok">✓ ${t('miStepDone')}</span>` : `<button class="btn tint-blue mi-contact" data-micontact="1">${t('miContactBtn')}</button>`}</li>
+          <li class="${contacted ? 'active' : ''}">${t('miStep2')} <button class="btn tint-green-soft mi-recalc" data-mirecalc="1" ${contacted ? '' : 'disabled'}>${t('miRecalcBtn')}</button></li>
+        </ol>
+        <p class="small mi-action-note">${t('miActionNote')}</p>
+      </div>
+      <div class="td-impact">
+        <div class="td-imp"><div class="l">${t('tdBefore')}</div><div class="v">${nf(before)} EUR</div></div>
+        <div class="td-arrow">→</div>
+        <div class="td-imp"><div class="l">${t('tdAfter')}</div><div class="v">${nf(after)} EUR</div></div>
+        <div class="td-imp gold"><div class="l">${t('tdImpact')}</div><div class="v">${nf(rec)} EUR</div></div>
+      </div>
+      <h4>${t('tdBreakdown')} <span class="small">(${rows.length})</span></h4>
+      <table><thead><tr>
+        <th>${t('agreement')}</th><th>${t('supplier')}</th><th>${t('scope')}</th>
+        <th class="num">${t('colOriginal')}</th><th class="num">${t('colRecomputed')}</th><th class="num">${t('colTrueUp')}</th>
+      </tr></thead><tbody>${drill || `<tr><td colspan="6" class="small">—</td></tr>`}</tbody></table>
+    </div>`;
+  }
+
   if (!meta) return `<div class="doc">—</div>`;
 
   const rows = meta.rows;
   const before = rows.reduce((s, b) => s + (b.before?.claimed || 0), 0);
   const after = rows.reduce((s, b) => s + (b.after?.entitled || b.before?.claimed || 0), 0);
   const rec = rows.filter((b) => b.recoverable).reduce((s, b) => s + recEur(b), 0);
+  // late / paneu / scan are already incorporated into the Consolidated Debit
+  const incorporatedIds = new Set(['late', 'paneu', 'scan']);
+  const incorpBanner = incorporatedIds.has(id) ? ` <span class="td-incorp">✓ ${t('tileIncorporatedBanner')}</span>` : '';
 
   const drill = rows.slice(0, 40).map((b) => `<tr>
     <td class="mono">${esc(b.agreementId)}</td><td>${esc(b.supplierName || b.supplierId)}</td><td>${esc(b.scopeKey)}</td>
@@ -351,7 +401,7 @@ export function tileDetail(state, id) {
 
   return `
     <div class="td">
-      <h2>${t(meta.titleKey)}</h2>
+      <h2>${t(meta.titleKey)}${incorpBanner}</h2>
       <div class="td-grid">
         <div class="td-block"><div class="td-k">${t('tdWhat')}</div><div>${t(meta.what)}</div></div>
         <div class="td-block"><div class="td-k">${t('tdHow')}</div><div>${t(meta.how)}</div></div>
@@ -373,10 +423,16 @@ export function tileDetail(state, id) {
 
 function tileCard(tl) {
   const subs = (tl.subs || []).map((s) => `<span class="tile-sub">${esc(s)}</span>`).join('');
-  const flag = tl.flag ? `<span class="tile-flag">⚑ ${esc(t('miBadge'))}</span>` : '';
-  const note = tl.note ? `<div class="tile-note">${esc(tl.note)}</div>` : '';
-  return `<button class="sum-tile tile-${tl.size} tile-${tl.kind}${tl.review ? ' tile-review' : ''}" data-tile="${esc(tl.id)}">
-    <div class="tile-h"><span class="tile-ico">${tileIcon(tl.icon)}</span><span class="tile-title">${esc(tl.title)}</span>${flag}</div>
+  // chip: incorporated (green ✓) > supplier-action (red ⚑) > generic missing flag
+  let chip = '';
+  if (tl.incorporated) chip = `<span class="tile-chip incorporated">✓ ${esc(t('tileIncorporatedChip'))}</span>`;
+  else if (tl.needsSupplierAction) chip = `<span class="tile-chip action">⚑ ${esc(t('tileActionChip'))}</span>`;
+  else if (tl.flag) chip = `<span class="tile-flag">⚑ ${esc(t('miBadge'))}</span>`;
+  // note: incorporated tiles show the "already incorporated" line
+  const noteText = tl.incorporated ? t('tileIncorporatedNote') : tl.note;
+  const note = noteText ? `<div class="tile-note${tl.incorporated ? ' incorporated' : ''}">${esc(noteText)}</div>` : '';
+  return `<button class="sum-tile tile-${tl.size} tile-${tl.kind}${tl.review ? ' tile-review' : ''}${tl.incorporated ? ' tile-incorporated' : ''}" data-tile="${esc(tl.id)}">
+    <div class="tile-h"><span class="tile-ico">${tileIcon(tl.icon)}</span><span class="tile-title">${esc(tl.title)}</span>${chip}</div>
     <div class="tile-big">${esc(tl.big)}</div>
     <div class="tile-subs">${subs}</div>
     ${note}
