@@ -33,14 +33,15 @@ const SYS_SVG = {
 const sysGlyph = (sys) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SYS_SVG[sys] || SYS_SVG.DB}</svg>`;
 
 // Build one node's card markup. `pos` = 'top' | 'bottom'. The whole card is a
-// button so it can be clicked to open that document category (data-sub), just
-// like the old ingested-volume tiles. It starts in the "loading" state (spinner
+// button that opens the Documents collection at "Latest received"
+// (data-ingestnode); the user then narrows to a category via the top control.
+// It starts in the "loading" state (spinner
 // overlay) and the count is shown immediately (real value).
 function nodeCard(n, count, pos, done) {
   const sysLabel = t('sys' + n.sys); // sysEDI / sysDB / sysAPI
   const stateCls = done ? 'lit' : 'loading';
   return `<div class="ifl-node ifl-${pos} ${stateCls}" data-flow="${esc(n.key)}">
-    <button class="ifl-card" data-sub="${esc(n.key)}" title="${esc(t(labelKey(n.key)))}">
+    <button class="ifl-card" data-ingestnode="${esc(n.key)}" title="${esc(t(labelKey(n.key)))}">
       <div class="ifl-spin" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg></div>
       <div class="ifl-card-h"><span class="ifl-sys ifl-sys-${n.sys.toLowerCase()}">${sysGlyph(n.sys)} ${esc(sysLabel)}</span></div>
       <div class="ifl-count">${nf(count)}</div>

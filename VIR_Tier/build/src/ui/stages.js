@@ -123,38 +123,129 @@ function inputFilterBar(catKey, items, state) {
 export function renderInputs(state) {
   const sub = state.sub || 'summary';
   if (sub === 'summary') return renderInputsSummary(state);
+  // collection view (opened via left-nav "Documents"). "latest" is the default
+  // segment showing the newest documents mixed across all types.
+  const isLatest = sub === 'latest';
+  // segmented control: Latest received (first) + the six categories
+  const seg = `<button class="seg-btn cat-latest ${isLatest ? 'active' : ''}" data-sub="latest"><span class="sdot"></span>${t('latestReceived')}</button>`
+    + DOC_CATS.map((c) =>
+      `<button class="seg-btn ${DOC_COLOR[c.key] || ''} ${c.key === sub ? 'active' : ''}" data-sub="${c.key}"><span class="sdot"></span>${t(c.label)}<span class="scnt">${state.store.all(c.coll).length}</span></button>`).join('');
+
+  const backBtn = `<button class="btn tint-green back-btn" data-sub="summary">← ${t('backToSummary')}</button>`;
+
+  if (isLatest) {
+    const n = state.latestN === 50 ? 50 : 10;
+    const merged = latestReceived(state, n);
+    const cards = merged.map((row) => docCardHtml(row.catKey, row.o, state)).join('');
+    const nToggle = `<div class="latest-toggle">
+      <span class="lt-lbl">${t('latestShow')}</span>
+      <button class="lt-btn ${n === 10 ? 'active' : ''}" data-latestn="10">10</button>
+      <button class="lt-btn ${n === 50 ? 'active' : ''}" data-latestn="50">50</button>
+    </div>`;
+    return `
+      ${backBtn}
+      <p class="lead">${t('latestLead')}</p>
+      <div class="seg">${seg}</div>
+      ${nToggle}
+      <div class="doclist v2">${cards || `<div class="small">${t('fltNoneMatch')}</div>`}</div>
+    `;
+  }
+
   const cat = DOC_CATS.find((c) => c.key === sub) || DOC_CATS[0];
   const allItems = state.store.all(cat.coll);
-  const tabs = INPUT_CATS.map((c) =>
-    `<div class="filecat ${c.key === sub ? 'active' : ''}" data-sub="${c.key}">${t(c.label)}${c.summary ? '' : `<span class="cnt">${state.store.all(c.coll).length}</span>`}</div>`).join('');
-  // apply the top-of-screen filter + sort (default: all selected, sort by ccogs desc)
   const items = applyInputFilterSort(cat.key, allItems, state);
-  const cards = items.slice(0, 120).map((o) => {
-    const id = cat.id(o);
-    const a = docAttrs(cat.key, o, state);
-    return `<div class="doccard">
-      <div class="id">${esc(id)}</div>
-      <div class="meta">${esc(cat.meta(o))}</div>
-      <div class="doccard-attrs">
-        <span class="dca">${esc(a.supplierName)}</span>
-        <span class="dca">${esc(a.warehouse)}</span>
-        <span class="dca num">${nf(a.ccogs)} € ${t('fltSortCcogs').toLowerCase()}</span>
-      </div>
-      <div class="row">
-        <button class="btn primary" data-doc="${cat.key}|${esc(id)}">${t('view')}</button>
-        <button class="btn ghost" data-dl="${cat.key}|${esc(id)}">${t('download')}</button>
-      </div>
-    </div>`;
-  }).join('');
+  const cards = items.slice(0, 120).map((o) => docCardHtml(cat.key, o, state)).join('');
   const shown = Math.min(items.length, 120);
   return `
-    <button class="btn tint-green back-btn" data-sub="summary">← ${t('backToSummary')}</button>
+    ${backBtn}
     <p class="lead">${t('filesLead')}</p>
-    <div class="filecats">${tabs}</div>
+    <div class="seg">${seg}</div>
     ${inputFilterBar(cat.key, allItems, state)}
     <div class="flt-result small">${t('fltShowing', { shown, total: allItems.length })}</div>
-    <div class="doclist">${cards || `<div class="small">${t('fltNoneMatch')}</div>`}</div>
+    <div class="doclist v2">${cards || `<div class="small">${t('fltNoneMatch')}</div>`}</div>
   `;
+}
+
+// one document card (reused by per-category grid + Latest received merged list)
+function docCardHtml(catKey, o, state) {
+  const cat = DOC_CATS.find((c) => c.key === catKey) || DOC_CATS[0];
+  const id = cat.id(o);
+  const a = docAttrs(catKey, o, state);
+  const flag = docFlag(catKey, o);   // { txt, amber } | null
+  const zero = catKey === 'events' && (a.ccogs || 0) === 0;
+  const colorCls = DOC_COLOR[catKey] || '';
+  return `<div class="doccard v2 ${colorCls}${flag ? (flag.amber ? ' flagged-amber' : ' flagged') : ''}">
+    <div class="dc-top">
+      <span class="dc-type">${docCatIcon(catKey)}${t(cat.label)}</span>
+      ${flag ? `<span class="dc-flag${flag.amber ? ' amber' : ''}">${flag.amber ? '' : '⚠ '}${esc(flag.txt)}</span>` : ''}
+    </div>
+    <div class="id">${esc(id)}</div>
+    <div class="meta">${esc(cat.meta(o))}</div>
+    <div class="dc-bottom">
+      <div class="dc-tags"><span class="dca">${esc(a.supplierName)}</span><span class="dca">${esc(a.warehouse)}</span></div>
+      <div class="dc-amt${zero ? ' zero' : ''}">${nf(a.ccogs)} <span>€${zero ? ' ' + t('fltSortCcogs').toLowerCase() : ''}</span></div>
+    </div>
+    <div class="row">
+      <button class="btn primary" data-doc="${catKey}|${esc(id)}">${t('view')}</button>
+      <button class="btn ghost" data-dl="${catKey}|${esc(id)}">${t('download')}</button>
+    </div>
+  </div>`;
+}
+
+// best-available "received" date for a document (per category), for sorting the
+// Latest-received list. Falls back to store order when no date is present.
+function docReceivedDate(catKey, o) {
+  const d = o.receiptDate || o.deliveryDate || o.invoiceDate || o.shipDate || o.date || o.orderDate || o.effectiveFrom || null;
+  const t = d ? Date.parse(d) : NaN;
+  return Number.isNaN(t) ? null : t;
+}
+// "Latest received" = a deliberate MIX of document types, not a strict global
+// date sort. A strict newest-first sort is dominated by whichever category has
+// the most/newest rows (goods receipts), so instead we sort each category
+// newest-first internally and round-robin across categories. The result always
+// alternates types (invoice → delivery → goods → engine → agreement → missing →
+// repeat) even when the dates don't line up neatly.
+function latestReceived(state, n) {
+  // per-category queues, each newest-first
+  const queues = DOC_CATS.map((cat) => {
+    const items = state.store.all(cat.coll).map((o, i) => ({ catKey: cat.key, o, ts: docReceivedDate(cat.key, o), ord: i }));
+    items.sort((a, b) => {
+      if (a.ts != null && b.ts != null) return b.ts - a.ts;
+      if (a.ts != null) return -1;
+      if (b.ts != null) return 1;
+      return b.ord - a.ord; // later store position = more recent
+    });
+    return items;
+  }).filter((q) => q.length);
+
+  // round-robin: take one from each non-empty queue per pass until we hit n
+  const out = [];
+  let idx = 0;
+  while (out.length < n && queues.length) {
+    const q = queues[idx % queues.length];
+    out.push(q.shift());
+    if (!q.length) queues.splice(idx % queues.length, 1); else idx++;
+  }
+  return out;
+}
+
+// per-category colour class (reuses existing palette tokens via CSS)
+const DOC_COLOR = { invoices: 'cat-invoices', deliveryNotes: 'cat-dn', receipts: 'cat-receipts', events: 'cat-events', ccogsEngine: 'cat-engine', agreements: 'cat-agreements' };
+// type icon on the card (reuses the SUM_SVG glyph set defined below)
+function docCatIcon(key) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SUM_SVG[key] || SUM_SVG.agreements}</svg>`;
+}
+// status flag surfaced on a card: missing-invoice events (red) / late delivery notes (amber)
+function docFlag(catKey, o) {
+  if (catKey === 'events') {
+    const ty = String(o.type || '').toUpperCase();
+    if (ty.includes('MISSING') || ty.includes('INVOICE')) return { txt: t('miBadge'), amber: false };
+  }
+  if (catKey === 'deliveryNotes') {
+    const st = String(o.deliveryStatus || '').toLowerCase();
+    if (st.includes('late')) return { txt: 'Late', amber: true };
+  }
+  return null;
 }
 
 // ---- Inputs SUMMARY sub-page (landing page after boot) ------------------

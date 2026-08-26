@@ -125,26 +125,39 @@ function activeSupplier(state, groups) {
   return groups.length ? groups[0].supplierId : null;
 }
 
-// selection set of chargeIds (default: all selected)
-function selSet(state) {
-  if (!state.consolSel) {
-    state.consolSel = new Set((state.charges || []).map((c) => c.chargeId));
-  }
-  return state.consolSel;
+// (The previous checkbox + "Generate Contra-COGS Invoice" version of this page
+// was replaced by the review-then-include implementation below, which is now
+// the canonical Consolidated Debit view.)
+
+// ===========================================================================
+// Consolidated Debit — review-then-include model.
+// Nothing is pre-selected (state.stageSel is empty by default). Each charge
+// row has a prominent "Add" button (data-stageadd) that adds it to the live
+// debit; once added the button flips to an "Added" toggle that removes it.
+// The live document preview on the right stays blank until something is added
+// and then updates live; each included line in the "Agreements included"
+// table also carries a "Remove" button (data-stageremove) so a charge can be
+// deselected straight from the document. View details, Generate consolidated
+// and Show agreement summary behave as before.
+// ===========================================================================
+
+// selection set (default: EMPTY — nothing pre-included)
+function stageSet(state) {
+  if (!state.stageSel) state.stageSel = new Set();
+  return state.stageSel;
 }
 
 export function renderConsolidatedDebit(state) {
   const bar = consolFilterBar(state);
-  // group, then apply the global filter to each supplier's charges; drop empties.
   const groups = chargesBySupplier(state)
     .map((g) => ({ ...g, charges: g.charges.filter((c) => consolPass(state, c)) }))
     .filter((g) => g.charges.length);
-  if (!groups.length) return `<p class="lead">${t('consolLead')}</p>${bar}<div class="small">${t('consolNothing')}</div>`;
-  const sel = selSet(state);
+  if (!groups.length) return `<p class="lead">${t('stgLead')}</p>${bar}<div class="small">${t('consolNothing')}</div>`;
+  const sel = stageSet(state);
   const activeId = activeSupplier(state, groups);
   const active = groups.find((g) => g.supplierId === activeId) || groups[0];
 
-  // ---- LEFT: suppliers with per-charge checkboxes ----
+  // ---- LEFT: suppliers with per-charge checkbox + Add button ----
   const left = groups.map((g) => {
     const isActive = g.supplierId === active.supplierId;
     const supTotal = g.charges.filter((c) => sel.has(c.chargeId)).reduce((s, c) => s + (c.variance || 0), 0);
@@ -153,14 +166,20 @@ export function renderConsolidatedDebit(state) {
       const on = sel.has(c.chargeId);
       const grp = state.consolidated?.byAgreement?.get(c.agreementId);
       const dur = grp?.agreement?.windowType ? t('dur' + grp.agreement.windowType.replace(/_/g, '')) : '';
+      // Add button (replaces the "Generate Contra-COGS Invoice" row button).
+      // When the charge is already in the debit it becomes a subtle "Added"
+      // state that removes it again — mirrors the preview's Remove control.
+      const addBtn = on
+        ? `<button class="btn tint-ghost stg-added" data-stageremove="${esc(c.chargeId)}">✓ ${t('stgAdded')}</button>`
+        : `<button class="btn tint-green stg-addbtn" data-stageadd="${esc(c.chargeId)}">＋ ${t('stgAdd')}</button>`;
       return `<tr class="${on ? '' : 'off'}">
-        <td><input type="checkbox" data-consoltoggle="${esc(c.chargeId)}" ${on ? 'checked' : ''}></td>
+        <td><input type="checkbox" data-stagetoggle="${esc(c.chargeId)}" ${on ? 'checked' : ''}></td>
         <td class="mono">${esc(c.agreementId)}</td>
         <td>${esc(c.scopeKey)}${dur ? ` · <span class="small">${esc(dur)}</span>` : ''}<div>${statusChip(c.status)}</div></td>
         <td class="num"><strong style="color:var(--gold)">${money(c.variance, c.currency)}</strong></td>
         <td><div class="consol-rowbtns">
           <button class="btn tint-ghost consol-view" data-consolview="${esc(c.chargeId)}">${t('viewDetails')}</button>
-          <button class="btn tint-green-soft consol-gen" data-genrow="${esc(c.chargeId)}">${t('genContraInvoice')}</button>
+          ${addBtn}
         </div></td>
       </tr>`;
     }).join('');
@@ -171,14 +190,13 @@ export function renderConsolidatedDebit(state) {
     </div>`;
   }).join('');
 
-  // ---- RIGHT: live consolidated preview for the active supplier ----
+  // ---- RIGHT: live preview for the active supplier (blank until something added) ----
   const selCharges = active.charges.filter((c) => sel.has(c.chargeId));
   const cur = active.charges[0]?.currency || 'EUR';
   const totalClaimed = selCharges.reduce((s, c) => s + (c.claimedCcogs || 0), 0);
   const totalEntitled = selCharges.reduce((s, c) => s + (c.entitledCcogs || 0), 0);
   const totalVar = selCharges.reduce((s, c) => s + (c.variance || 0), 0);
 
-  // all itemized cause lines across the selected charges
   const lineRows = selCharges.flatMap((c) =>
     (c.lines && c.lines.length ? c.lines : [{ cause: 'Volume rebate adjustment', qty: 0, fromPct: c.tierFromPct, toPct: c.tierToPct, deltaValue: c.variance, note: '' }])
       .map((l) => `<tr>
@@ -188,13 +206,28 @@ export function renderConsolidatedDebit(state) {
         <td class="num">${money(l.deltaValue, c.currency)}</td>
       </tr>`)).join('');
 
-  const scopeRows = selCharges.map((c) => `<tr><td class="mono">${esc(c.agreementId)}</td><td>${esc(c.scopeKey)}</td><td>${esc(c.period)}</td><td class="num">${money(c.variance, c.currency)}</td></tr>`).join('');
+  // "Agreements included" rows — each with a Remove button so a charge can be
+  // deselected straight from the live document.
+  const scopeRows = selCharges.map((c) => `<tr>
+    <td class="mono">${esc(c.agreementId)}</td><td>${esc(c.scopeKey)}</td><td>${esc(c.period)}</td>
+    <td class="num">${money(c.variance, c.currency)}</td>
+    <td class="num"><button class="btn tint-ghost stg-remove" data-stageremove="${esc(c.chargeId)}" title="${t('stgRemove')}">✕ ${t('stgRemove')}</button></td>
+  </tr>`).join('');
 
   const canGen = selCharges.length > 0;
-  const preview = `
+
+  // When nothing is selected for the active supplier, show a clear empty state
+  // instead of a zero-filled document.
+  const emptyPreview = `
+    <div class="consol-doc stg-doc-empty">
+      <div class="cd-head"><div><div class="cd-kick">${t('consolPreview')}</div><h3>${t('contraDebitTitle')}</h3></div></div>
+      <div class="stg-empty">${t('stgPreviewEmpty')}</div>
+    </div>`;
+
+  const filledPreview = `
     <div class="consol-doc">
       <div class="cd-head">
-        <div><div class="cd-kick">${t('consolPreview')}</div><h3>${t('contraInvoiceTitle')}</h3>
+        <div><div class="cd-kick">${t('consolPreview')}</div><h3>${t('contraDebitTitle')}</h3>
           <div class="small">${t('consolFor')}: <strong>${esc(active.supplierName)}</strong> · ${selCharges.length} ${t('consolLinesLabel')}</div></div>
         <div class="cd-tot"><div class="small">${t('totalRecoverable')}</div><div class="cd-eur euro">${money(totalVar, cur)}</div></div>
       </div>
@@ -207,21 +240,23 @@ export function renderConsolidatedDebit(state) {
 
       <h5>${t('consolItemized')}</h5>
       <table class="cd-lines"><thead><tr><th>Cause</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
-        <tbody>${lineRows || `<tr><td colspan="4" class="small">${t('consolNothing')}</td></tr>`}
-        ${selCharges.length ? `<tr class="mf-total"><td colspan="3">${t('consolTotalLine')}</td><td class="num">${money(totalVar, cur)}</td></tr>` : ''}</tbody></table>
+        <tbody>${lineRows}
+        <tr class="mf-total"><td colspan="3">${t('consolTotalLine')}</td><td class="num">${money(totalVar, cur)}</td></tr></tbody></table>
 
       <h5>${t('consolScopes')}</h5>
-      <table class="cd-lines"><thead><tr><th>${t('agreement')}</th><th>${t('scope')}</th><th>${t('period')}</th><th class="num">True-Up</th></tr></thead>
-        <tbody>${scopeRows || `<tr><td colspan="4" class="small">—</td></tr>`}</tbody></table>
+      <table class="cd-lines"><thead><tr><th>${t('agreement')}</th><th>${t('scope')}</th><th>${t('period')}</th><th class="num">True-Up</th><th style="width:1%"></th></tr></thead>
+        <tbody>${scopeRows}</tbody></table>
 
       <div class="cd-actions">
-        <button class="btn tint-blue" data-consolgen="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('genConsolidatedContra')}</button>
-        <button class="btn tint-amber" data-consolagr="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('showAgreement')}</button>
+        <button class="btn tint-blue" data-stagegen="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('genConsolidatedContra')}</button>
+        <button class="btn tint-amber" data-stageagr="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('showAgreement')}</button>
       </div>
     </div>`;
 
+  const preview = canGen ? filledPreview : emptyPreview;
+
   return `
-    <p class="lead">${t('consolLead')}</p>
+    <p class="lead">${t('stgLead')}</p>
     ${bar}
     <div class="consol-grid">
       <div class="consol-left">${left}</div>

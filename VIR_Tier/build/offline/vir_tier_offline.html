@@ -330,6 +330,57 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .doccard-attrs .dca.num { color: #0a7a53; background: var(--accent-soft); border-color: #cdeede; font-variant-numeric: tabular-nums; }
 .doccard .row { display: flex; gap: 8px; }
 
+/* ===== Inputs "collection" sub-view — segmented control + document grid ===== */
+/* per-category colours reuse existing palette tokens (no new colours) */
+:root { --cat-invoices: var(--info); --cat-dn: var(--violet); --cat-receipts: #0a8a63; --cat-events: var(--gold); --cat-engine: #6b6b6b; --cat-agreements: var(--ink); }
+.seg { display: inline-flex; gap: 6px; background: #f0f1f3; border-radius: 10px; padding: 4px; margin: 0 0 16px; flex-wrap: wrap; }
+.seg-btn { font: inherit; font-size: 13px; border: 0; background: transparent; color: var(--muted); padding: 7px 13px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.seg-btn.active { background: #fff; color: var(--ink); font-weight: 600; box-shadow: var(--shadow); }
+.seg-btn .sdot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; flex: 0 0 auto; }
+.seg-btn .scnt { color: var(--muted); font-size: 12px; }
+.seg-btn.active .scnt { color: var(--accent); font-weight: 700; }
+.seg-btn.cat-invoices .sdot { background: var(--cat-invoices); }
+.seg-btn.cat-dn .sdot { background: var(--cat-dn); }
+.seg-btn.cat-receipts .sdot { background: var(--cat-receipts); }
+.seg-btn.cat-events .sdot { background: var(--cat-events); }
+.seg-btn.cat-engine .sdot { background: var(--cat-engine); }
+.seg-btn.cat-agreements .sdot { background: var(--cat-agreements); }
+.seg-btn.cat-latest .sdot { background: var(--accent); }
+.latest-toggle { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; }
+.lt-lbl { font-size: 12px; color: var(--muted); }
+.lt-btn { font: inherit; font-size: 13px; border: 1px solid var(--line); background: #fff; color: var(--muted); border-radius: 8px; padding: 5px 12px; cursor: pointer; }
+.lt-btn.active { background: var(--accent-soft); color: #0a7a53; border-color: #bfe8d8; font-weight: 600; }
+
+.doclist.v2 { grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); }
+.doccard.v2 { padding: 14px 16px 14px 18px; border-left: 4px solid var(--muted); }
+.doccard.v2.cat-invoices { border-left-color: var(--cat-invoices); }
+.doccard.v2.cat-dn { border-left-color: var(--cat-dn); }
+.doccard.v2.cat-receipts { border-left-color: var(--cat-receipts); }
+.doccard.v2.cat-events { border-left-color: var(--cat-events); }
+.doccard.v2.cat-engine { border-left-color: var(--cat-engine); }
+.doccard.v2.cat-agreements { border-left-color: var(--cat-agreements); }
+.doccard.v2.flagged { box-shadow: 0 0 0 1px var(--danger-soft), var(--shadow); }
+.doccard.v2.flagged-amber { box-shadow: 0 0 0 1px var(--warn-soft), var(--shadow); }
+.doccard.v2 .dc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.doccard.v2 .dc-type { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.doccard.v2 .dc-type svg { width: 15px; height: 15px; }
+.doccard.v2.cat-invoices .dc-type { color: var(--cat-invoices); }
+.doccard.v2.cat-dn .dc-type { color: var(--cat-dn); }
+.doccard.v2.cat-receipts .dc-type { color: var(--cat-receipts); }
+.doccard.v2.cat-events .dc-type { color: var(--cat-events); }
+.doccard.v2.cat-engine .dc-type { color: var(--cat-engine); }
+.doccard.v2.cat-agreements .dc-type { color: var(--cat-agreements); }
+.doccard.v2 .dc-flag { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--danger-soft); color: var(--danger); white-space: nowrap; }
+.doccard.v2 .dc-flag.amber { background: var(--warn-soft); color: var(--warn); }
+.doccard.v2 .id { font-weight: 700; font-family: ui-monospace, monospace; font-size: 13px; }
+.doccard.v2 .meta { color: var(--muted); font-size: 13px; margin: 4px 0 6px; min-height: 32px; }
+.doccard.v2 .dc-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin: 6px 0 10px; }
+.doccard.v2 .dc-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.doccard.v2 .dc-amt { font-weight: 800; font-size: 19px; color: #0a7a53; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.doccard.v2 .dc-amt span { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 2px; }
+.doccard.v2 .dc-amt.zero { color: var(--danger); }
+.doccard.v2 .dc-amt.zero span { color: var(--danger); opacity: .75; }
+
 /* inputs filter + sort bar (also reused by the Audit view) */
 .fltbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
 .flt-spacer { flex: 1; }
@@ -1046,6 +1097,59 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .consol-rowbtns { display: flex; gap: 6px; justify-content: flex-end; }
 .consol-left .consol-gen { font-size: 11.5px; padding: 4px 9px; white-space: nowrap; }
 
+/* ---- EXPERIMENTAL: Consolidated Debit (Staging) — review-then-include ---- */
+.stg-selbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #0f1c17; color: #fff; border-radius: 10px; padding: 11px 16px; font-size: 13.5px; margin: 0 0 16px; }
+.stg-selbar .big { font-weight: 800; font-size: 16px; }
+.stg-selbar .euro { color: #7ee6b8; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stg-selbar .flagn { color: #f0c674; font-weight: 700; }
+.stg-selbar .sp { flex: 1; }
+.stg-selbar .btn { background: #1d2f27; border: 1px solid #33473c; color: #dff5ec; font-size: 12.5px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.stg-selbar .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.stg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 1050px) { .stg-grid { grid-template-columns: 1fr; } }
+.stg-colhead { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+.stg-colhead.in { color: #0a7a53; }
+.stg-coln { font-size: 11px; font-weight: 700; background: #eef0f2; color: var(--muted); border-radius: 999px; padding: 1px 9px; }
+.stg-colhead.in .stg-coln { background: var(--accent-soft); color: #0a7a53; }
+
+.stg-tray { border: 1px solid #b7e6d3; border-radius: var(--radius); background: var(--accent-soft); padding: 10px; min-height: 160px; }
+.stg-tray.empty { border-style: dashed; border-color: var(--line); background: #fbfbfb; display: grid; place-items: center; }
+
+.stg-supgrp { border: 1px solid var(--line); border-radius: 10px; background: #fff; margin-bottom: 12px; overflow: hidden; }
+.stg-supgrp.in { margin-bottom: 10px; }
+.stg-suphead { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #f7f8fa; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 13.5px; }
+.stg-supn { font-size: 11px; font-weight: 700; background: #eef0f2; color: var(--muted); border-radius: 999px; padding: 1px 8px; }
+.stg-suptot { margin-left: auto; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stg-suphead .stg-gen { font-size: 11.5px; padding: 5px 11px; white-space: nowrap; }
+
+.stg-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid #f1f1f1; }
+.stg-item:last-child { border-bottom: 0; }
+.stg-item.in { background: #fff; }
+.stg-badges { display: flex; flex-wrap: wrap; gap: 4px; flex: 0 0 auto; max-width: 200px; }
+.stg-item-main { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.stg-item-main .mono { font-size: 12px; }
+.stg-sub { font-size: 11.5px; color: var(--muted); }
+.stg-amt { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stg-item .btn { font-size: 11.5px; padding: 5px 11px; white-space: nowrap; }
+
+.stg-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 22px 12px; }
+.stg-hint { color: var(--muted); font-size: 12px; margin: 10px 2px 0; font-style: italic; }
+
+/* staging exception chips (mirror the ideas mockup colour language) */
+.stg-item .chip, .stg-badges .chip { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 1px 8px; border: 1px solid var(--line); background: #fafafa; color: var(--muted); }
+.chip.ready { color: #0a7a53; background: var(--accent-soft); border-color: #b7e6d3; }
+.chip.flag { color: #8a5a12; background: var(--warn-soft); border-color: #EAD9B0; }
+.chip.dispute { color: var(--danger); background: var(--danger-soft); border-color: #F3C6C1; }
+.chip.fx { color: var(--info); background: #EAF1FE; border-color: #c6d6f7; }
+
+/* staging: row Add / Added buttons + preview Remove + empty preview state */
+.consol-left .stg-addbtn, .consol-left .stg-added { font-size: 11.5px; padding: 4px 10px; white-space: nowrap; }
+.consol-left .stg-added { color: #0a7a53; }
+.cd-lines .stg-remove { font-size: 11px; padding: 3px 8px; white-space: nowrap; }
+.stg-doc-empty { display: flex; flex-direction: column; min-height: 260px; }
+.stg-doc-empty .stg-empty { flex: 1; display: grid; place-items: center; text-align: center; color: var(--muted); font-size: 13.5px; padding: 30px 18px; border: 1px dashed var(--line); border-radius: 10px; margin-top: 10px; background: #fbfbfb; }
+
 /* ---- Finance: Claim Builder Summary (compact per-supplier boxes) ---- */
 .wl-card { padding: 14px 16px; }
 .wl-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
@@ -1545,8 +1649,19 @@ const STRINGS = {
     csDisputePrompt: 'Reason the supplier gave (optional):', csSettlePrompt: 'Amount the supplier agreed to settle:',
     navPipeline: 'Pipeline', navInputs: 'Inputs & Collection', navConsolidation: 'Consolidation', navMl: 'ML Discovery',
     navProcess: 'CCOGS process', navAnalytics: 'Analytics & reporting', navHowItWorks: 'How it works',
-    stepIngest: 'Ingest', stepReview: 'Review', stepBill: 'Select & bill', stepHere: 'you are here',
+    stepIngest: 'Ingest', stepReview: 'Summary of findings', stepBill: 'Select & bill', stepHere: 'you are here',
+    navDocuments: 'Documents', latestReceived: 'Latest received', latestLead: 'The most recently received documents across every source, newest first.', latestShow: 'Show',
     navAnalyst: 'Analyst Review', navApprover: 'Finance Approver', navOverview: 'Finance Overview', navConsolidated: 'Consolidated Debit',
+    navConsolStaging: 'Consolidated Debit (Staging)',
+    stgLead: 'Assemble the debit yourself: review each charge and add the ones you want to include. Nothing is pre-selected — you build the batch, then generate.',
+    stgReady: 'Ready', stgAdd: 'Add', stgRemove: 'Remove', stgGenerate: 'Generate',
+    stgIncluded: 'included', stgFlaggedN: 'flagged', stgClear: 'Clear all',
+    stgReadyCol: 'Ready to include', stgTrayCol: 'In this debit',
+    stgTrayEmpty: 'No charges added yet. Click “Add” on a charge to start building the debit.',
+    stgAllIncluded: 'All charges have been added to the debit.',
+    stgHint: 'Review flagged charges before including them. Generate one consolidated debit per supplier.',
+    stgFlagMissingInv: 'Missing invoice', stgFlagOrphan: 'Orphan receipt', stgFlagDisputed: 'Disputed', stgFlagFx: 'FX estimated',
+    stgAdded: 'Added', contraDebitTitle: 'Contra-COGS Debit Note', stgPreviewEmpty: 'Add agreements from the left to build this debit note. The document updates live as you add or remove them.',
     consolLead: 'Build one consolidated Contra-COGS debit per supplier. Tick the agreements to include on the left; the document preview on the right updates live. Then generate the invoice or open the agreement summary.',
     consolPreview: 'Live document preview', consolFor: 'For', consolLinesLabel: 'agreement(s) selected', consolItemized: 'Itemized causes', consolNothing: 'Select at least one agreement on the left.', consolTotalLine: 'Total recoverable (consolidated)', consolScopes: 'Agreements included',
     navMore: 'More', navAbout: 'About & Manual', navAudit: 'Audit/Reporting', navRole: 'Role',
@@ -1610,7 +1725,7 @@ const STRINGS = {
     summaryIngested: 'Ingested volumes', summaryDiscrepancies: 'Discrepancies found', summaryClean: 'Clean — no issue', summaryRecoverable: 'Recoverable (True-Up)',
     // ---- ingestion flow infographic ----
     flowKick: 'Live data ingestion', flowConnecting: 'Connecting to sources…', flowIngesting: 'Ingesting volumes across sources…', flowComplete: 'All sources ingested',
-    flowClickHint: 'click any source to see the items', backToSummary: 'Back to summary',
+    flowClickHint: 'click any source to open the documents', backToSummary: 'Back to summary',
     sysEDI: 'EDI', sysDB: 'Database', sysAPI: 'API',
     flowInvoicesDesc: 'Supplier invoices from the billing database',
     flowDeliveryDesc: 'Dispatch / ASN delivery notes via EDI',
@@ -2014,8 +2129,19 @@ const STRINGS = {
     inputsLead: 'Čo CCOGS Engine vyprodukoval z neúplných dát a čo nástroj rekonštruuje ako skutočný nárok.',
     navPipeline: 'Proces', navInputs: 'Vstupy a zber', navConsolidation: 'Konsolidácia', navMl: 'ML objav',
     navProcess: 'Proces CCOGS', navAnalytics: 'Analýzy a reporting', navHowItWorks: 'Ako to funguje',
-    stepIngest: 'Načítanie', stepReview: 'Kontrola', stepBill: 'Výber a fakturácia', stepHere: 'ste tu',
+    stepIngest: 'Načítanie', stepReview: 'Súhrn zistení', stepBill: 'Výber a fakturácia', stepHere: 'ste tu',
+    navDocuments: 'Dokumenty', latestReceived: 'Naposledy prijaté', latestLead: 'Naposledy prijaté dokumenty zo všetkých zdrojov, najnovšie prvé.', latestShow: 'Zobraziť',
     navAnalyst: 'Kontrola analytika', navApprover: 'Finančný schvaľovateľ', navOverview: 'Finančný prehľad', navConsolidated: 'Konsolidovaný dobropis',
+    navConsolStaging: 'Konsolidovaný dobropis (príprava)',
+    stgLead: 'Zostavte dobropis sami: skontrolujte každú položku a pridajte tie, ktoré chcete zahrnúť. Nič nie je predvolene vybrané — dávku zostavíte vy, potom vygenerujete.',
+    stgReady: 'Pripravené', stgAdd: 'Pridať', stgRemove: 'Odobrať', stgGenerate: 'Vygenerovať',
+    stgIncluded: 'zahrnuté', stgFlaggedN: 'označené', stgClear: 'Vymazať všetko',
+    stgReadyCol: 'Pripravené na zahrnutie', stgTrayCol: 'V tomto dobropise',
+    stgTrayEmpty: 'Zatiaľ nie sú pridané žiadne položky. Kliknutím na „Pridať“ začnite zostavovať dobropis.',
+    stgAllIncluded: 'Všetky položky boli pridané do dobropisu.',
+    stgHint: 'Označené položky pred zahrnutím skontrolujte. Vygenerujte jeden konsolidovaný dobropis na dodávateľa.',
+    stgFlagMissingInv: 'Chýbajúca faktúra', stgFlagOrphan: 'Osirotený príjem', stgFlagDisputed: 'Sporné', stgFlagFx: 'Odhad FX',
+    stgAdded: 'Pridané', contraDebitTitle: 'Contra-COGS dobropis', stgPreviewEmpty: 'Pridajte zmluvy zľava a zostavte tento dobropis. Dokument sa aktualizuje naživo pri pridávaní alebo odoberaní.',
     consolLead: 'Vytvorte jeden konsolidovaný Contra-COGS dobropis na dodávateľa. Vľavo zaškrtnite zmluvy na zahrnutie; náhľad dokumentu vpravo sa aktualizuje naživo. Potom vygenerujte faktúru alebo otvorte súhrn zmluvy.',
     consolPreview: 'Živý náhľad dokumentu', consolFor: 'Pre', consolLinesLabel: 'vybraných zmlúv', consolItemized: 'Rozpísané príčiny', consolNothing: 'Vľavo vyberte aspoň jednu zmluvu.', consolTotalLine: 'Celkovo získateľné (konsolidované)', consolScopes: 'Zahrnuté zmluvy',
     navMore: 'Viac', navAbout: 'O aplikácii', navAudit: 'Audit log', navRole: 'Rola',
@@ -2090,7 +2216,7 @@ const STRINGS = {
     summaryIngested: 'Načítané objemy', summaryDiscrepancies: 'Nájdené nezrovnalosti', summaryClean: 'Čisté — bez problému', summaryRecoverable: 'Získateľné (True-Up)',
     // ---- ingestion flow infographic ----
     flowKick: 'Živý zber údajov', flowConnecting: 'Pripájanie k zdrojom…', flowIngesting: 'Načítavanie objemov zo zdrojov…', flowComplete: 'Všetky zdroje načítané',
-    flowClickHint: 'kliknite na zdroj pre zobrazenie položiek', backToSummary: 'Späť na súhrn',
+    flowClickHint: 'kliknite na zdroj pre otvorenie dokumentov', backToSummary: 'Späť na súhrn',
     sysEDI: 'EDI', sysDB: 'Databáza', sysAPI: 'API',
     flowInvoicesDesc: 'Faktúry dodávateľov z fakturačnej databázy',
     flowDeliveryDesc: 'Dodacie / ASN listy cez EDI',
@@ -2495,8 +2621,19 @@ const STRINGS = {
     inputsLead: 'Co silnik CCOGS wytworzył na niepełnych danych i co narzędzie rekonstruuje jako rzeczywiste należne.',
     navPipeline: 'Proces', navInputs: 'Dane i zbiór', navConsolidation: 'Konsolidacja', navMl: 'Odkrycia ML',
     navProcess: 'Proces CCOGS', navAnalytics: 'Analityka i raporty', navHowItWorks: 'Jak to działa',
-    stepIngest: 'Wczytanie', stepReview: 'Przegląd', stepBill: 'Wybór i fakturowanie', stepHere: 'jesteś tutaj',
+    stepIngest: 'Wczytanie', stepReview: 'Podsumowanie ustaleń', stepBill: 'Wybór i fakturowanie', stepHere: 'jesteś tutaj',
+    navDocuments: 'Dokumenty', latestReceived: 'Ostatnio otrzymane', latestLead: 'Najnowsze otrzymane dokumenty ze wszystkich źródeł, najnowsze pierwsze.', latestShow: 'Pokaż',
     navAnalyst: 'Przegląd analityka', navApprover: 'Zatwierdzający finansowy', navOverview: 'Przegląd finansowy', navConsolidated: 'Nota skonsolidowana',
+    navConsolStaging: 'Nota skonsolidowana (przygotowanie)',
+    stgLead: 'Zbuduj notę samodzielnie: przejrzyj każdą pozycję i dodaj te, które chcesz uwzględnić. Nic nie jest wstępnie zaznaczone — to Ty tworzysz partię, a następnie generujesz.',
+    stgReady: 'Gotowe', stgAdd: 'Dodaj', stgRemove: 'Usuń', stgGenerate: 'Generuj',
+    stgIncluded: 'uwzględnione', stgFlaggedN: 'oznaczone', stgClear: 'Wyczyść wszystko',
+    stgReadyCol: 'Gotowe do uwzględnienia', stgTrayCol: 'W tej nocie',
+    stgTrayEmpty: 'Nie dodano jeszcze żadnych pozycji. Kliknij „Dodaj”, aby zacząć budować notę.',
+    stgAllIncluded: 'Wszystkie pozycje zostały dodane do noty.',
+    stgHint: 'Przejrzyj oznaczone pozycje przed ich uwzględnieniem. Wygeneruj jedną notę skonsolidowaną na dostawcę.',
+    stgFlagMissingInv: 'Brak faktury', stgFlagOrphan: 'Osierocony odbiór', stgFlagDisputed: 'Sporne', stgFlagFx: 'Szacowany FX',
+    stgAdded: 'Dodano', contraDebitTitle: 'Nota debetowa Contra-COGS', stgPreviewEmpty: 'Dodaj umowy z lewej strony, aby zbudować tę notę. Dokument aktualizuje się na żywo przy dodawaniu i usuwaniu.',
     consolLead: 'Zbuduj jedną skonsolidowaną notę debetową Contra-COGS na dostawcę. Po lewej zaznacz umowy do uwzględnienia; podgląd dokumentu po prawej aktualizuje się na żywo. Następnie wygeneruj fakturę lub otwórz podsumowanie umowy.',
     consolPreview: 'Podgląd dokumentu na żywo', consolFor: 'Dla', consolLinesLabel: 'wybranych umów', consolItemized: 'Wyszczególnione przyczyny', consolNothing: 'Zaznacz co najmniej jedną umowę po lewej.', consolTotalLine: 'Łącznie do odzyskania (skonsolidowane)', consolScopes: 'Uwzględnione umowy',
     navMore: 'Więcej', navAbout: 'O aplikacji', navAudit: 'Dziennik audytu', navRole: 'Rola',
@@ -2571,7 +2708,7 @@ const STRINGS = {
     summaryIngested: 'Wczytane wolumeny', summaryDiscrepancies: 'Znalezione rozbieżności', summaryClean: 'Czyste — bez problemu', summaryRecoverable: 'Do odzyskania (True-Up)',
     // ---- ingestion flow infographic ----
     flowKick: 'Wczytywanie danych na żywo', flowConnecting: 'Łączenie ze źródłami…', flowIngesting: 'Wczytywanie wolumenów ze źródeł…', flowComplete: 'Wszystkie źródła wczytane',
-    flowClickHint: 'kliknij źródło, aby zobaczyć elementy', backToSummary: 'Powrót do podsumowania',
+    flowClickHint: 'kliknij źródło, aby otworzyć dokumenty', backToSummary: 'Powrót do podsumowania',
     sysEDI: 'EDI', sysDB: 'Baza danych', sysAPI: 'API',
     flowInvoicesDesc: 'Faktury dostawców z bazy rozliczeniowej',
     flowDeliveryDesc: 'Listy przewozowe / ASN przez EDI',
@@ -2975,8 +3112,19 @@ const STRINGS = {
     inputsLead: 'Co CCOGS Engine vytvořil z neúplných dat a co nástroj rekonstruuje jako skutečný nárok.',
     navPipeline: 'Proces', navInputs: 'Vstupy a sběr', navConsolidation: 'Konsolidace', navMl: 'ML objevy',
     navProcess: 'Proces CCOGS', navAnalytics: 'Analýzy a reporting', navHowItWorks: 'Jak to funguje',
-    stepIngest: 'Načtení', stepReview: 'Kontrola', stepBill: 'Výběr a fakturace', stepHere: 'jste zde',
+    stepIngest: 'Načtení', stepReview: 'Souhrn zjištění', stepBill: 'Výběr a fakturace', stepHere: 'jste zde',
+    navDocuments: 'Dokumenty', latestReceived: 'Naposledy přijaté', latestLead: 'Nejnovější přijaté dokumenty ze všech zdrojů, nejnovější první.', latestShow: 'Zobrazit',
     navAnalyst: 'Kontrola analytika', navApprover: 'Finanční schvalovatel', navOverview: 'Finanční přehled', navConsolidated: 'Konsolidovaný dobropis',
+    navConsolStaging: 'Konsolidovaný dobropis (příprava)',
+    stgLead: 'Sestavte dobropis sami: zkontrolujte každou položku a přidejte ty, které chcete zahrnout. Nic není předvybráno — dávku sestavíte vy, poté vygenerujete.',
+    stgReady: 'Připraveno', stgAdd: 'Přidat', stgRemove: 'Odebrat', stgGenerate: 'Vygenerovat',
+    stgIncluded: 'zahrnuto', stgFlaggedN: 'označeno', stgClear: 'Vymazat vše',
+    stgReadyCol: 'Připraveno k zahrnutí', stgTrayCol: 'V tomto dobropise',
+    stgTrayEmpty: 'Zatím nebyly přidány žádné položky. Kliknutím na „Přidat“ začněte sestavovat dobropis.',
+    stgAllIncluded: 'Všechny položky byly přidány do dobropisu.',
+    stgHint: 'Označené položky před zahrnutím zkontrolujte. Vygenerujte jeden konsolidovaný dobropis na dodavatele.',
+    stgFlagMissingInv: 'Chybějící faktura', stgFlagOrphan: 'Osiřelý příjem', stgFlagDisputed: 'Sporné', stgFlagFx: 'Odhad FX',
+    stgAdded: 'Přidáno', contraDebitTitle: 'Contra-COGS dobropis', stgPreviewEmpty: 'Přidejte smlouvy zleva a sestavte tento dobropis. Dokument se aktualizuje živě při přidávání i odebírání.',
     consolLead: 'Vytvořte jeden konsolidovaný Contra-COGS dobropis na dodavatele. Vlevo zaškrtněte smlouvy k zahrnutí; náhled dokumentu vpravo se aktualizuje živě. Poté vygenerujte fakturu nebo otevřete souhrn smlouvy.',
     consolPreview: 'Živý náhled dokumentu', consolFor: 'Pro', consolLinesLabel: 'vybraných smluv', consolItemized: 'Rozepsané příčiny', consolNothing: 'Vlevo vyberte alespoň jednu smlouvu.', consolTotalLine: 'Celkem získatelné (konsolidované)', consolScopes: 'Zahrnuté smlouvy',
     navMore: 'Více', navAbout: 'O aplikaci', navAudit: 'Auditní log', navRole: 'Role',
@@ -3051,7 +3199,7 @@ const STRINGS = {
     summaryIngested: 'Načtené objemy', summaryDiscrepancies: 'Nalezené nesrovnalosti', summaryClean: 'Čisté — bez problému', summaryRecoverable: 'Získatelné (True-Up)',
     // ---- ingestion flow infographic ----
     flowKick: 'Živý sběr dat', flowConnecting: 'Připojování ke zdrojům…', flowIngesting: 'Načítání objemů ze zdrojů…', flowComplete: 'Všechny zdroje načteny',
-    flowClickHint: 'klikněte na zdroj pro zobrazení položek', backToSummary: 'Zpět na souhrn',
+    flowClickHint: 'klikněte na zdroj pro otevření dokumentů', backToSummary: 'Zpět na souhrn',
     sysEDI: 'EDI', sysDB: 'Databáze', sysAPI: 'API',
     flowInvoicesDesc: 'Faktury dodavatelů z fakturační databáze',
     flowDeliveryDesc: 'Dodací / ASN listy přes EDI',
@@ -7091,14 +7239,15 @@ const SYS_SVG = {
 const sysGlyph = (sys) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SYS_SVG[sys] || SYS_SVG.DB}</svg>`;
 
 // Build one node's card markup. `pos` = 'top' | 'bottom'. The whole card is a
-// button so it can be clicked to open that document category (data-sub), just
-// like the old ingested-volume tiles. It starts in the "loading" state (spinner
+// button that opens the Documents collection at "Latest received"
+// (data-ingestnode); the user then narrows to a category via the top control.
+// It starts in the "loading" state (spinner
 // overlay) and the count is shown immediately (real value).
 function nodeCard(n, count, pos, done) {
   const sysLabel = t('sys' + n.sys); // sysEDI / sysDB / sysAPI
   const stateCls = done ? 'lit' : 'loading';
   return `<div class="ifl-node ifl-${pos} ${stateCls}" data-flow="${esc(n.key)}">
-    <button class="ifl-card" data-sub="${esc(n.key)}" title="${esc(t(labelKey(n.key)))}">
+    <button class="ifl-card" data-ingestnode="${esc(n.key)}" title="${esc(t(labelKey(n.key)))}">
       <div class="ifl-spin" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg></div>
       <div class="ifl-card-h"><span class="ifl-sys ifl-sys-${n.sys.toLowerCase()}">${sysGlyph(n.sys)} ${esc(sysLabel)}</span></div>
       <div class="ifl-count">${nf(count)}</div>
@@ -8059,38 +8208,129 @@ function inputFilterBar(catKey, items, state) {
 function renderInputs(state) {
   const sub = state.sub || 'summary';
   if (sub === 'summary') return renderInputsSummary(state);
+  // collection view (opened via left-nav "Documents"). "latest" is the default
+  // segment showing the newest documents mixed across all types.
+  const isLatest = sub === 'latest';
+  // segmented control: Latest received (first) + the six categories
+  const seg = `<button class="seg-btn cat-latest ${isLatest ? 'active' : ''}" data-sub="latest"><span class="sdot"></span>${t('latestReceived')}</button>`
+    + DOC_CATS.map((c) =>
+      `<button class="seg-btn ${DOC_COLOR[c.key] || ''} ${c.key === sub ? 'active' : ''}" data-sub="${c.key}"><span class="sdot"></span>${t(c.label)}<span class="scnt">${state.store.all(c.coll).length}</span></button>`).join('');
+
+  const backBtn = `<button class="btn tint-green back-btn" data-sub="summary">← ${t('backToSummary')}</button>`;
+
+  if (isLatest) {
+    const n = state.latestN === 50 ? 50 : 10;
+    const merged = latestReceived(state, n);
+    const cards = merged.map((row) => docCardHtml(row.catKey, row.o, state)).join('');
+    const nToggle = `<div class="latest-toggle">
+      <span class="lt-lbl">${t('latestShow')}</span>
+      <button class="lt-btn ${n === 10 ? 'active' : ''}" data-latestn="10">10</button>
+      <button class="lt-btn ${n === 50 ? 'active' : ''}" data-latestn="50">50</button>
+    </div>`;
+    return `
+      ${backBtn}
+      <p class="lead">${t('latestLead')}</p>
+      <div class="seg">${seg}</div>
+      ${nToggle}
+      <div class="doclist v2">${cards || `<div class="small">${t('fltNoneMatch')}</div>`}</div>
+    `;
+  }
+
   const cat = DOC_CATS.find((c) => c.key === sub) || DOC_CATS[0];
   const allItems = state.store.all(cat.coll);
-  const tabs = INPUT_CATS.map((c) =>
-    `<div class="filecat ${c.key === sub ? 'active' : ''}" data-sub="${c.key}">${t(c.label)}${c.summary ? '' : `<span class="cnt">${state.store.all(c.coll).length}</span>`}</div>`).join('');
-  // apply the top-of-screen filter + sort (default: all selected, sort by ccogs desc)
   const items = applyInputFilterSort(cat.key, allItems, state);
-  const cards = items.slice(0, 120).map((o) => {
-    const id = cat.id(o);
-    const a = docAttrs(cat.key, o, state);
-    return `<div class="doccard">
-      <div class="id">${esc(id)}</div>
-      <div class="meta">${esc(cat.meta(o))}</div>
-      <div class="doccard-attrs">
-        <span class="dca">${esc(a.supplierName)}</span>
-        <span class="dca">${esc(a.warehouse)}</span>
-        <span class="dca num">${nf(a.ccogs)} € ${t('fltSortCcogs').toLowerCase()}</span>
-      </div>
-      <div class="row">
-        <button class="btn primary" data-doc="${cat.key}|${esc(id)}">${t('view')}</button>
-        <button class="btn ghost" data-dl="${cat.key}|${esc(id)}">${t('download')}</button>
-      </div>
-    </div>`;
-  }).join('');
+  const cards = items.slice(0, 120).map((o) => docCardHtml(cat.key, o, state)).join('');
   const shown = Math.min(items.length, 120);
   return `
-    <button class="btn tint-green back-btn" data-sub="summary">← ${t('backToSummary')}</button>
+    ${backBtn}
     <p class="lead">${t('filesLead')}</p>
-    <div class="filecats">${tabs}</div>
+    <div class="seg">${seg}</div>
     ${inputFilterBar(cat.key, allItems, state)}
     <div class="flt-result small">${t('fltShowing', { shown, total: allItems.length })}</div>
-    <div class="doclist">${cards || `<div class="small">${t('fltNoneMatch')}</div>`}</div>
+    <div class="doclist v2">${cards || `<div class="small">${t('fltNoneMatch')}</div>`}</div>
   `;
+}
+
+// one document card (reused by per-category grid + Latest received merged list)
+function docCardHtml(catKey, o, state) {
+  const cat = DOC_CATS.find((c) => c.key === catKey) || DOC_CATS[0];
+  const id = cat.id(o);
+  const a = docAttrs(catKey, o, state);
+  const flag = docFlag(catKey, o);   // { txt, amber } | null
+  const zero = catKey === 'events' && (a.ccogs || 0) === 0;
+  const colorCls = DOC_COLOR[catKey] || '';
+  return `<div class="doccard v2 ${colorCls}${flag ? (flag.amber ? ' flagged-amber' : ' flagged') : ''}">
+    <div class="dc-top">
+      <span class="dc-type">${docCatIcon(catKey)}${t(cat.label)}</span>
+      ${flag ? `<span class="dc-flag${flag.amber ? ' amber' : ''}">${flag.amber ? '' : '⚠ '}${esc(flag.txt)}</span>` : ''}
+    </div>
+    <div class="id">${esc(id)}</div>
+    <div class="meta">${esc(cat.meta(o))}</div>
+    <div class="dc-bottom">
+      <div class="dc-tags"><span class="dca">${esc(a.supplierName)}</span><span class="dca">${esc(a.warehouse)}</span></div>
+      <div class="dc-amt${zero ? ' zero' : ''}">${nf(a.ccogs)} <span>€${zero ? ' ' + t('fltSortCcogs').toLowerCase() : ''}</span></div>
+    </div>
+    <div class="row">
+      <button class="btn primary" data-doc="${catKey}|${esc(id)}">${t('view')}</button>
+      <button class="btn ghost" data-dl="${catKey}|${esc(id)}">${t('download')}</button>
+    </div>
+  </div>`;
+}
+
+// best-available "received" date for a document (per category), for sorting the
+// Latest-received list. Falls back to store order when no date is present.
+function docReceivedDate(catKey, o) {
+  const d = o.receiptDate || o.deliveryDate || o.invoiceDate || o.shipDate || o.date || o.orderDate || o.effectiveFrom || null;
+  const t = d ? Date.parse(d) : NaN;
+  return Number.isNaN(t) ? null : t;
+}
+// "Latest received" = a deliberate MIX of document types, not a strict global
+// date sort. A strict newest-first sort is dominated by whichever category has
+// the most/newest rows (goods receipts), so instead we sort each category
+// newest-first internally and round-robin across categories. The result always
+// alternates types (invoice → delivery → goods → engine → agreement → missing →
+// repeat) even when the dates don't line up neatly.
+function latestReceived(state, n) {
+  // per-category queues, each newest-first
+  const queues = DOC_CATS.map((cat) => {
+    const items = state.store.all(cat.coll).map((o, i) => ({ catKey: cat.key, o, ts: docReceivedDate(cat.key, o), ord: i }));
+    items.sort((a, b) => {
+      if (a.ts != null && b.ts != null) return b.ts - a.ts;
+      if (a.ts != null) return -1;
+      if (b.ts != null) return 1;
+      return b.ord - a.ord; // later store position = more recent
+    });
+    return items;
+  }).filter((q) => q.length);
+
+  // round-robin: take one from each non-empty queue per pass until we hit n
+  const out = [];
+  let idx = 0;
+  while (out.length < n && queues.length) {
+    const q = queues[idx % queues.length];
+    out.push(q.shift());
+    if (!q.length) queues.splice(idx % queues.length, 1); else idx++;
+  }
+  return out;
+}
+
+// per-category colour class (reuses existing palette tokens via CSS)
+const DOC_COLOR = { invoices: 'cat-invoices', deliveryNotes: 'cat-dn', receipts: 'cat-receipts', events: 'cat-events', ccogsEngine: 'cat-engine', agreements: 'cat-agreements' };
+// type icon on the card (reuses the SUM_SVG glyph set defined below)
+function docCatIcon(key) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SUM_SVG[key] || SUM_SVG.agreements}</svg>`;
+}
+// status flag surfaced on a card: missing-invoice events (red) / late delivery notes (amber)
+function docFlag(catKey, o) {
+  if (catKey === 'events') {
+    const ty = String(o.type || '').toUpperCase();
+    if (ty.includes('MISSING') || ty.includes('INVOICE')) return { txt: t('miBadge'), amber: false };
+  }
+  if (catKey === 'deliveryNotes') {
+    const st = String(o.deliveryStatus || '').toLowerCase();
+    if (st.includes('late')) return { txt: 'Late', amber: true };
+  }
+  return null;
 }
 
 // ---- Inputs SUMMARY sub-page (landing page after boot) ------------------
@@ -9375,26 +9615,39 @@ function activeSupplier(state, groups) {
   return groups.length ? groups[0].supplierId : null;
 }
 
-// selection set of chargeIds (default: all selected)
-function selSet(state) {
-  if (!state.consolSel) {
-    state.consolSel = new Set((state.charges || []).map((c) => c.chargeId));
-  }
-  return state.consolSel;
+// (The previous checkbox + "Generate Contra-COGS Invoice" version of this page
+// was replaced by the review-then-include implementation below, which is now
+// the canonical Consolidated Debit view.)
+
+// ===========================================================================
+// Consolidated Debit — review-then-include model.
+// Nothing is pre-selected (state.stageSel is empty by default). Each charge
+// row has a prominent "Add" button (data-stageadd) that adds it to the live
+// debit; once added the button flips to an "Added" toggle that removes it.
+// The live document preview on the right stays blank until something is added
+// and then updates live; each included line in the "Agreements included"
+// table also carries a "Remove" button (data-stageremove) so a charge can be
+// deselected straight from the document. View details, Generate consolidated
+// and Show agreement summary behave as before.
+// ===========================================================================
+
+// selection set (default: EMPTY — nothing pre-included)
+function stageSet(state) {
+  if (!state.stageSel) state.stageSel = new Set();
+  return state.stageSel;
 }
 
 function renderConsolidatedDebit(state) {
   const bar = consolFilterBar(state);
-  // group, then apply the global filter to each supplier's charges; drop empties.
   const groups = chargesBySupplier(state)
     .map((g) => ({ ...g, charges: g.charges.filter((c) => consolPass(state, c)) }))
     .filter((g) => g.charges.length);
-  if (!groups.length) return `<p class="lead">${t('consolLead')}</p>${bar}<div class="small">${t('consolNothing')}</div>`;
-  const sel = selSet(state);
+  if (!groups.length) return `<p class="lead">${t('stgLead')}</p>${bar}<div class="small">${t('consolNothing')}</div>`;
+  const sel = stageSet(state);
   const activeId = activeSupplier(state, groups);
   const active = groups.find((g) => g.supplierId === activeId) || groups[0];
 
-  // ---- LEFT: suppliers with per-charge checkboxes ----
+  // ---- LEFT: suppliers with per-charge checkbox + Add button ----
   const left = groups.map((g) => {
     const isActive = g.supplierId === active.supplierId;
     const supTotal = g.charges.filter((c) => sel.has(c.chargeId)).reduce((s, c) => s + (c.variance || 0), 0);
@@ -9403,14 +9656,20 @@ function renderConsolidatedDebit(state) {
       const on = sel.has(c.chargeId);
       const grp = state.consolidated?.byAgreement?.get(c.agreementId);
       const dur = grp?.agreement?.windowType ? t('dur' + grp.agreement.windowType.replace(/_/g, '')) : '';
+      // Add button (replaces the "Generate Contra-COGS Invoice" row button).
+      // When the charge is already in the debit it becomes a subtle "Added"
+      // state that removes it again — mirrors the preview's Remove control.
+      const addBtn = on
+        ? `<button class="btn tint-ghost stg-added" data-stageremove="${esc(c.chargeId)}">✓ ${t('stgAdded')}</button>`
+        : `<button class="btn tint-green stg-addbtn" data-stageadd="${esc(c.chargeId)}">＋ ${t('stgAdd')}</button>`;
       return `<tr class="${on ? '' : 'off'}">
-        <td><input type="checkbox" data-consoltoggle="${esc(c.chargeId)}" ${on ? 'checked' : ''}></td>
+        <td><input type="checkbox" data-stagetoggle="${esc(c.chargeId)}" ${on ? 'checked' : ''}></td>
         <td class="mono">${esc(c.agreementId)}</td>
         <td>${esc(c.scopeKey)}${dur ? ` · <span class="small">${esc(dur)}</span>` : ''}<div>${statusChip(c.status)}</div></td>
         <td class="num"><strong style="color:var(--gold)">${money(c.variance, c.currency)}</strong></td>
         <td><div class="consol-rowbtns">
           <button class="btn tint-ghost consol-view" data-consolview="${esc(c.chargeId)}">${t('viewDetails')}</button>
-          <button class="btn tint-green-soft consol-gen" data-genrow="${esc(c.chargeId)}">${t('genContraInvoice')}</button>
+          ${addBtn}
         </div></td>
       </tr>`;
     }).join('');
@@ -9421,14 +9680,13 @@ function renderConsolidatedDebit(state) {
     </div>`;
   }).join('');
 
-  // ---- RIGHT: live consolidated preview for the active supplier ----
+  // ---- RIGHT: live preview for the active supplier (blank until something added) ----
   const selCharges = active.charges.filter((c) => sel.has(c.chargeId));
   const cur = active.charges[0]?.currency || 'EUR';
   const totalClaimed = selCharges.reduce((s, c) => s + (c.claimedCcogs || 0), 0);
   const totalEntitled = selCharges.reduce((s, c) => s + (c.entitledCcogs || 0), 0);
   const totalVar = selCharges.reduce((s, c) => s + (c.variance || 0), 0);
 
-  // all itemized cause lines across the selected charges
   const lineRows = selCharges.flatMap((c) =>
     (c.lines && c.lines.length ? c.lines : [{ cause: 'Volume rebate adjustment', qty: 0, fromPct: c.tierFromPct, toPct: c.tierToPct, deltaValue: c.variance, note: '' }])
       .map((l) => `<tr>
@@ -9438,13 +9696,28 @@ function renderConsolidatedDebit(state) {
         <td class="num">${money(l.deltaValue, c.currency)}</td>
       </tr>`)).join('');
 
-  const scopeRows = selCharges.map((c) => `<tr><td class="mono">${esc(c.agreementId)}</td><td>${esc(c.scopeKey)}</td><td>${esc(c.period)}</td><td class="num">${money(c.variance, c.currency)}</td></tr>`).join('');
+  // "Agreements included" rows — each with a Remove button so a charge can be
+  // deselected straight from the live document.
+  const scopeRows = selCharges.map((c) => `<tr>
+    <td class="mono">${esc(c.agreementId)}</td><td>${esc(c.scopeKey)}</td><td>${esc(c.period)}</td>
+    <td class="num">${money(c.variance, c.currency)}</td>
+    <td class="num"><button class="btn tint-ghost stg-remove" data-stageremove="${esc(c.chargeId)}" title="${t('stgRemove')}">✕ ${t('stgRemove')}</button></td>
+  </tr>`).join('');
 
   const canGen = selCharges.length > 0;
-  const preview = `
+
+  // When nothing is selected for the active supplier, show a clear empty state
+  // instead of a zero-filled document.
+  const emptyPreview = `
+    <div class="consol-doc stg-doc-empty">
+      <div class="cd-head"><div><div class="cd-kick">${t('consolPreview')}</div><h3>${t('contraDebitTitle')}</h3></div></div>
+      <div class="stg-empty">${t('stgPreviewEmpty')}</div>
+    </div>`;
+
+  const filledPreview = `
     <div class="consol-doc">
       <div class="cd-head">
-        <div><div class="cd-kick">${t('consolPreview')}</div><h3>${t('contraInvoiceTitle')}</h3>
+        <div><div class="cd-kick">${t('consolPreview')}</div><h3>${t('contraDebitTitle')}</h3>
           <div class="small">${t('consolFor')}: <strong>${esc(active.supplierName)}</strong> · ${selCharges.length} ${t('consolLinesLabel')}</div></div>
         <div class="cd-tot"><div class="small">${t('totalRecoverable')}</div><div class="cd-eur euro">${money(totalVar, cur)}</div></div>
       </div>
@@ -9457,21 +9730,23 @@ function renderConsolidatedDebit(state) {
 
       <h5>${t('consolItemized')}</h5>
       <table class="cd-lines"><thead><tr><th>Cause</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
-        <tbody>${lineRows || `<tr><td colspan="4" class="small">${t('consolNothing')}</td></tr>`}
-        ${selCharges.length ? `<tr class="mf-total"><td colspan="3">${t('consolTotalLine')}</td><td class="num">${money(totalVar, cur)}</td></tr>` : ''}</tbody></table>
+        <tbody>${lineRows}
+        <tr class="mf-total"><td colspan="3">${t('consolTotalLine')}</td><td class="num">${money(totalVar, cur)}</td></tr></tbody></table>
 
       <h5>${t('consolScopes')}</h5>
-      <table class="cd-lines"><thead><tr><th>${t('agreement')}</th><th>${t('scope')}</th><th>${t('period')}</th><th class="num">True-Up</th></tr></thead>
-        <tbody>${scopeRows || `<tr><td colspan="4" class="small">—</td></tr>`}</tbody></table>
+      <table class="cd-lines"><thead><tr><th>${t('agreement')}</th><th>${t('scope')}</th><th>${t('period')}</th><th class="num">True-Up</th><th style="width:1%"></th></tr></thead>
+        <tbody>${scopeRows}</tbody></table>
 
       <div class="cd-actions">
-        <button class="btn tint-blue" data-consolgen="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('genConsolidatedContra')}</button>
-        <button class="btn tint-amber" data-consolagr="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('showAgreement')}</button>
+        <button class="btn tint-blue" data-stagegen="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('genConsolidatedContra')}</button>
+        <button class="btn tint-amber" data-stageagr="${esc(active.supplierId)}" ${canGen ? '' : 'disabled'}>${t('showAgreement')}</button>
       </div>
     </div>`;
 
+  const preview = canGen ? filledPreview : emptyPreview;
+
   return `
-    <p class="lead">${t('consolLead')}</p>
+    <p class="lead">${t('stgLead')}</p>
     ${bar}
     <div class="consol-grid">
       <div class="consol-left">${left}</div>
@@ -10095,7 +10370,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<'
 // The Inputs document categories are NOT left-nav sub-items — they render as an
 // in-page segmented control (the .filecat tabs), so `sub` is intentionally gone.
 const STAGES = [
-  { id: 'inputs', label: 'navInputs', n: 1, zone: 1, render: renderInputs },
+  { id: 'inputs', label: 'navInputs', n: 1, zone: 1, render: renderInputs, sub: [{ key: 'documents', label: 'navDocuments' }] },
   { id: 'consol', label: 'navConsolidated', n: 2, zone: 1, render: renderConsolidatedDebit },
   { id: 'overview', label: 'navOverview', zone: 2, icon: 'chart', render: renderOverview },
   { id: 'audit', label: 'navAudit', zone: 2, icon: 'audit', render: renderAudit },
@@ -10187,7 +10462,15 @@ function navItemHtml(st) {
   const visited = state.visited && state.visited.has(st.id) && !active;
   if (st.zone === 1) {
     const mark = visited ? '✓' : st.n;
-    return `<div class="nav-item ${active ? 'active' : ''}" data-stage="${st.id}"><span class="n ${visited ? 'done' : ''}">${mark}</span>${t(st.label)}</div>`;
+    // sub-items (e.g. Inputs → Documents) show only when the stage is active
+    const subs = (active && st.sub)
+      ? `<div class="nav-sub">${st.sub.map((s) => {
+          // "documents" is active for any non-summary sub (a document category or latest)
+          const on = s.key === 'documents' ? (state.sub && state.sub !== 'summary') : (state.sub === s.key);
+          return `<div class="nav-subitem ${on ? 'active' : ''}" data-subnav="${s.key}">${t(s.label)}</div>`;
+        }).join('')}</div>`
+      : '';
+    return `<div class="nav-item ${active ? 'active' : ''}" data-stage="${st.id}"><span class="n ${visited ? 'done' : ''}">${mark}</span>${t(st.label)}</div>${subs}`;
   }
   return `<div class="nav-item nav-item-icon ic-${st.icon} ${active ? 'active' : ''}" data-stage="${st.id}"><span class="nav-ico">${navIcon(st.icon)}</span>${t(st.label)}</div>`;
 }
@@ -10259,9 +10542,30 @@ function bind() {
   wireDelegates();   // install the one-time delegated click listener on `app`
   app.querySelectorAll('[data-stage]').forEach((el) => el.addEventListener('click', () => {
     state.stage = el.dataset.stage;
+    // clicking the Inputs stage always lands on its Summary page (same as the
+    // "back to summary" button), even when a Documents sub-view was open.
+    if (el.dataset.stage === 'inputs') state.sub = 'summary';
     render();
   }));
   app.querySelectorAll('[data-sub]').forEach((el) => el.addEventListener('click', (e) => { e.stopPropagation(); state.sub = el.dataset.sub; render(); }));
+  // left-nav sub-item: "Documents" opens the collection view (default: Latest received)
+  app.querySelectorAll('[data-subnav]').forEach((el) => el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const k = el.dataset.subnav;
+    state.stage = 'inputs';
+    state.sub = (k === 'documents') ? (state.sub && state.sub !== 'summary' ? state.sub : 'latest') : k;
+    render();
+  }));
+  // Latest received: Show 10 / Show 50 selector
+  app.querySelectorAll('[data-latestn]').forEach((el) => el.addEventListener('click', () => { state.latestN = Number(el.dataset.latestn) === 50 ? 50 : 10; render(); }));
+  // Live-data-ingestion tiles (invoice/EDI/goods receipt/...) open the Documents
+  // collection at "Latest received" — the user then picks a category up top.
+  app.querySelectorAll('[data-ingestnode]').forEach((el) => el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.stage = 'inputs';
+    state.sub = 'latest';
+    render();
+  }));
   // top progress stepper — jump to the phase's stage (Review = Inputs Summary tab)
   app.querySelectorAll('[data-step]').forEach((el) => el.addEventListener('click', () => {
     const j = JOURNEY.find((x) => x.key === el.dataset.step); if (!j) return;
@@ -10328,28 +10632,38 @@ function bind() {
   app.querySelectorAll('[data-archive]').forEach((b) => b.addEventListener('click', () => openArchiveDialog(b.dataset.archive)));
   app.querySelectorAll('[data-genfinding]').forEach((b) => b.addEventListener('click', () => generateContraFor(b.dataset.genfinding)));
 
-  // consolidated per-supplier debit: toggle a charge, switch active supplier, generate / show agreement
-  app.querySelectorAll('[data-consoltoggle]').forEach((el) => el.addEventListener('change', () => {
-    const id = el.dataset.consoltoggle;
-    if (!state.consolSel) state.consolSel = new Set(state.charges.map((c) => c.chargeId));
-    if (el.checked) state.consolSel.add(id); else state.consolSel.delete(id);
-    render();
-  }));
+  // Consolidated Debit: switch active supplier + open the read-only review.
   app.querySelectorAll('[data-consolsup]').forEach((el) => el.addEventListener('click', (e) => {
-    if (e.target.matches('input,[data-consoltoggle]')) return; // don't hijack checkbox clicks
+    if (e.target.matches('input,[data-stagetoggle],[data-stageadd],[data-stageremove],[data-consolview]')) return; // don't hijack checkbox/button clicks
     state.consolSup = el.dataset.consolsup; render();
   }));
-  app.querySelectorAll('[data-consolgen]').forEach((b) => b.addEventListener('click', () => openConsolidatedInvoice(b.dataset.consolgen)));
-  app.querySelectorAll('[data-consolagr]').forEach((b) => b.addEventListener('click', () => openConsolidatedAgreement(b.dataset.consolagr)));
   app.querySelectorAll('[data-consolview]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); openReviewReadOnly(b.dataset.consolview); }));
-  // Generate Contra-COGS invoice directly for this charge (same as View details -> Generate)
-  app.querySelectorAll('[data-genrow]').forEach((b) => b.addEventListener('click', (e) => {
+
+  // ---- Consolidated Debit — review-then-include (add/remove to the live debit) ----
+  app.querySelectorAll('[data-stageadd]').forEach((b) => b.addEventListener('click', (e) => {
     e.stopPropagation();
-    const charge = state.charges.find((c) => c.chargeId === b.dataset.genrow); if (!charge) return;
-    const group = state.consolidated.byAgreement.get(charge.agreementId);
-    const rec = state.reconstructions.find((r) => r.agreementId === charge.agreementId);
-    openContraInvoice(charge, group, rec);
+    if (!state.stageSel) state.stageSel = new Set();
+    state.stageSel.add(b.dataset.stageadd); render();
   }));
+  app.querySelectorAll('[data-stageremove]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (state.stageSel) state.stageSel.delete(b.dataset.stageremove); render();
+  }));
+  app.querySelectorAll('[data-stageclear]').forEach((b) => b.addEventListener('click', () => {
+    state.stageSel = new Set(); render();
+  }));
+  // checkbox in the staging left panel toggles the same staging selection
+  app.querySelectorAll('[data-stagetoggle]').forEach((el) => el.addEventListener('change', (e) => {
+    e.stopPropagation();
+    if (!state.stageSel) state.stageSel = new Set();
+    if (el.checked) state.stageSel.add(el.dataset.stagetoggle); else state.stageSel.delete(el.dataset.stagetoggle);
+    render();
+  }));
+  // NOTE: supplier-card switching (data-consolsup) is already wired above and is
+  // reused by the staging page; its guard skips <input> so the staging checkbox
+  // won't switch suppliers, and the Add/Remove handlers call stopPropagation().
+  app.querySelectorAll('[data-stagegen]').forEach((b) => b.addEventListener('click', () => openStagingInvoice(b.dataset.stagegen)));
+  app.querySelectorAll('[data-stageagr]').forEach((b) => b.addEventListener('click', () => openStagingAgreement(b.dataset.stageagr)));
 }
 
 // ---- document view/download ----
@@ -10476,6 +10790,45 @@ function openConsolidatedAgreement(supplierId) {
   const charges = selectedChargesForSupplier(supplierId);
   if (!charges.length) return;
   // show the agreement behind the largest selected charge for this supplier
+  const top = [...charges].sort((a, b) => (b.variance || 0) - (a.variance || 0))[0];
+  openDoc('agreements|' + top.agreementId);
+}
+
+// EXPERIMENTAL staging page: generate a consolidated invoice from the charges
+// the user ADDED to the batch (state.stageSel). Mirrors openConsolidatedInvoice
+// but reads the staging selection so it stays independent of the shipped page.
+function stagedChargesForSupplier(supplierId) {
+  const groups = chargesBySupplier(state);
+  const g = groups.find((x) => x.supplierId === supplierId) || null;
+  if (!g) return [];
+  const sel = state.stageSel || new Set();
+  return g.charges.filter((c) => sel.has(c.chargeId));
+}
+function openStagingInvoice(supplierId) {
+  const charges = stagedChargesForSupplier(supplierId);
+  if (!charges.length) return;
+  const cur = charges[0].currency || 'EUR';
+  const consolidated = {
+    ...charges[0],
+    chargeId: `CN-${supplierId}-STAGED`, // marker: staged consolidated charge
+    scopeKey: charges.length > 1 ? 'CONSOLIDATED' : charges[0].scopeKey,
+    period: 'Control period',
+    claimedCcogs: charges.reduce((s, c) => s + (c.claimedCcogs || 0), 0),
+    entitledCcogs: charges.reduce((s, c) => s + (c.entitledCcogs || 0), 0),
+    variance: charges.reduce((s, c) => s + (c.variance || 0), 0),
+    eurEquivalent: null,
+    currency: cur,
+    tierFromPct: null, tierToPct: null,
+    lines: charges.flatMap((c) => (c.lines && c.lines.length ? c.lines
+      : [{ cause: 'Volume rebate adjustment', driver: 'TIER_UPLIFT', qty: 0, fromPct: c.tierFromPct, toPct: c.tierToPct, deltaValue: c.variance, note: `Agreement ${c.agreementId}` }])),
+  };
+  const group = state.consolidated.byAgreement.get(charges[0].agreementId);
+  const rec = state.reconstructions.find((r) => r.agreementId === charges[0].agreementId);
+  openContraInvoice(consolidated, group, rec);
+}
+function openStagingAgreement(supplierId) {
+  const charges = stagedChargesForSupplier(supplierId);
+  if (!charges.length) return;
   const top = [...charges].sort((a, b) => (b.variance || 0) - (a.variance || 0))[0];
   openDoc('agreements|' + top.agreementId);
 }

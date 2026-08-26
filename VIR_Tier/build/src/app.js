@@ -38,7 +38,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<'
 // The Inputs document categories are NOT left-nav sub-items — they render as an
 // in-page segmented control (the .filecat tabs), so `sub` is intentionally gone.
 const STAGES = [
-  { id: 'inputs', label: 'navInputs', n: 1, zone: 1, render: renderInputs },
+  { id: 'inputs', label: 'navInputs', n: 1, zone: 1, render: renderInputs, sub: [{ key: 'documents', label: 'navDocuments' }] },
   { id: 'consol', label: 'navConsolidated', n: 2, zone: 1, render: renderConsolidatedDebit },
   { id: 'overview', label: 'navOverview', zone: 2, icon: 'chart', render: renderOverview },
   { id: 'audit', label: 'navAudit', zone: 2, icon: 'audit', render: renderAudit },
@@ -130,7 +130,15 @@ function navItemHtml(st) {
   const visited = state.visited && state.visited.has(st.id) && !active;
   if (st.zone === 1) {
     const mark = visited ? '✓' : st.n;
-    return `<div class="nav-item ${active ? 'active' : ''}" data-stage="${st.id}"><span class="n ${visited ? 'done' : ''}">${mark}</span>${t(st.label)}</div>`;
+    // sub-items (e.g. Inputs → Documents) show only when the stage is active
+    const subs = (active && st.sub)
+      ? `<div class="nav-sub">${st.sub.map((s) => {
+          // "documents" is active for any non-summary sub (a document category or latest)
+          const on = s.key === 'documents' ? (state.sub && state.sub !== 'summary') : (state.sub === s.key);
+          return `<div class="nav-subitem ${on ? 'active' : ''}" data-subnav="${s.key}">${t(s.label)}</div>`;
+        }).join('')}</div>`
+      : '';
+    return `<div class="nav-item ${active ? 'active' : ''}" data-stage="${st.id}"><span class="n ${visited ? 'done' : ''}">${mark}</span>${t(st.label)}</div>${subs}`;
   }
   return `<div class="nav-item nav-item-icon ic-${st.icon} ${active ? 'active' : ''}" data-stage="${st.id}"><span class="nav-ico">${navIcon(st.icon)}</span>${t(st.label)}</div>`;
 }
@@ -202,9 +210,30 @@ function bind() {
   wireDelegates();   // install the one-time delegated click listener on `app`
   app.querySelectorAll('[data-stage]').forEach((el) => el.addEventListener('click', () => {
     state.stage = el.dataset.stage;
+    // clicking the Inputs stage always lands on its Summary page (same as the
+    // "back to summary" button), even when a Documents sub-view was open.
+    if (el.dataset.stage === 'inputs') state.sub = 'summary';
     render();
   }));
   app.querySelectorAll('[data-sub]').forEach((el) => el.addEventListener('click', (e) => { e.stopPropagation(); state.sub = el.dataset.sub; render(); }));
+  // left-nav sub-item: "Documents" opens the collection view (default: Latest received)
+  app.querySelectorAll('[data-subnav]').forEach((el) => el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const k = el.dataset.subnav;
+    state.stage = 'inputs';
+    state.sub = (k === 'documents') ? (state.sub && state.sub !== 'summary' ? state.sub : 'latest') : k;
+    render();
+  }));
+  // Latest received: Show 10 / Show 50 selector
+  app.querySelectorAll('[data-latestn]').forEach((el) => el.addEventListener('click', () => { state.latestN = Number(el.dataset.latestn) === 50 ? 50 : 10; render(); }));
+  // Live-data-ingestion tiles (invoice/EDI/goods receipt/...) open the Documents
+  // collection at "Latest received" — the user then picks a category up top.
+  app.querySelectorAll('[data-ingestnode]').forEach((el) => el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.stage = 'inputs';
+    state.sub = 'latest';
+    render();
+  }));
   // top progress stepper — jump to the phase's stage (Review = Inputs Summary tab)
   app.querySelectorAll('[data-step]').forEach((el) => el.addEventListener('click', () => {
     const j = JOURNEY.find((x) => x.key === el.dataset.step); if (!j) return;
@@ -271,28 +300,38 @@ function bind() {
   app.querySelectorAll('[data-archive]').forEach((b) => b.addEventListener('click', () => openArchiveDialog(b.dataset.archive)));
   app.querySelectorAll('[data-genfinding]').forEach((b) => b.addEventListener('click', () => generateContraFor(b.dataset.genfinding)));
 
-  // consolidated per-supplier debit: toggle a charge, switch active supplier, generate / show agreement
-  app.querySelectorAll('[data-consoltoggle]').forEach((el) => el.addEventListener('change', () => {
-    const id = el.dataset.consoltoggle;
-    if (!state.consolSel) state.consolSel = new Set(state.charges.map((c) => c.chargeId));
-    if (el.checked) state.consolSel.add(id); else state.consolSel.delete(id);
-    render();
-  }));
+  // Consolidated Debit: switch active supplier + open the read-only review.
   app.querySelectorAll('[data-consolsup]').forEach((el) => el.addEventListener('click', (e) => {
-    if (e.target.matches('input,[data-consoltoggle]')) return; // don't hijack checkbox clicks
+    if (e.target.matches('input,[data-stagetoggle],[data-stageadd],[data-stageremove],[data-consolview]')) return; // don't hijack checkbox/button clicks
     state.consolSup = el.dataset.consolsup; render();
   }));
-  app.querySelectorAll('[data-consolgen]').forEach((b) => b.addEventListener('click', () => openConsolidatedInvoice(b.dataset.consolgen)));
-  app.querySelectorAll('[data-consolagr]').forEach((b) => b.addEventListener('click', () => openConsolidatedAgreement(b.dataset.consolagr)));
   app.querySelectorAll('[data-consolview]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); openReviewReadOnly(b.dataset.consolview); }));
-  // Generate Contra-COGS invoice directly for this charge (same as View details -> Generate)
-  app.querySelectorAll('[data-genrow]').forEach((b) => b.addEventListener('click', (e) => {
+
+  // ---- Consolidated Debit — review-then-include (add/remove to the live debit) ----
+  app.querySelectorAll('[data-stageadd]').forEach((b) => b.addEventListener('click', (e) => {
     e.stopPropagation();
-    const charge = state.charges.find((c) => c.chargeId === b.dataset.genrow); if (!charge) return;
-    const group = state.consolidated.byAgreement.get(charge.agreementId);
-    const rec = state.reconstructions.find((r) => r.agreementId === charge.agreementId);
-    openContraInvoice(charge, group, rec);
+    if (!state.stageSel) state.stageSel = new Set();
+    state.stageSel.add(b.dataset.stageadd); render();
   }));
+  app.querySelectorAll('[data-stageremove]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (state.stageSel) state.stageSel.delete(b.dataset.stageremove); render();
+  }));
+  app.querySelectorAll('[data-stageclear]').forEach((b) => b.addEventListener('click', () => {
+    state.stageSel = new Set(); render();
+  }));
+  // checkbox in the staging left panel toggles the same staging selection
+  app.querySelectorAll('[data-stagetoggle]').forEach((el) => el.addEventListener('change', (e) => {
+    e.stopPropagation();
+    if (!state.stageSel) state.stageSel = new Set();
+    if (el.checked) state.stageSel.add(el.dataset.stagetoggle); else state.stageSel.delete(el.dataset.stagetoggle);
+    render();
+  }));
+  // NOTE: supplier-card switching (data-consolsup) is already wired above and is
+  // reused by the staging page; its guard skips <input> so the staging checkbox
+  // won't switch suppliers, and the Add/Remove handlers call stopPropagation().
+  app.querySelectorAll('[data-stagegen]').forEach((b) => b.addEventListener('click', () => openStagingInvoice(b.dataset.stagegen)));
+  app.querySelectorAll('[data-stageagr]').forEach((b) => b.addEventListener('click', () => openStagingAgreement(b.dataset.stageagr)));
 }
 
 // ---- document view/download ----
@@ -419,6 +458,45 @@ function openConsolidatedAgreement(supplierId) {
   const charges = selectedChargesForSupplier(supplierId);
   if (!charges.length) return;
   // show the agreement behind the largest selected charge for this supplier
+  const top = [...charges].sort((a, b) => (b.variance || 0) - (a.variance || 0))[0];
+  openDoc('agreements|' + top.agreementId);
+}
+
+// EXPERIMENTAL staging page: generate a consolidated invoice from the charges
+// the user ADDED to the batch (state.stageSel). Mirrors openConsolidatedInvoice
+// but reads the staging selection so it stays independent of the shipped page.
+function stagedChargesForSupplier(supplierId) {
+  const groups = chargesBySupplier(state);
+  const g = groups.find((x) => x.supplierId === supplierId) || null;
+  if (!g) return [];
+  const sel = state.stageSel || new Set();
+  return g.charges.filter((c) => sel.has(c.chargeId));
+}
+function openStagingInvoice(supplierId) {
+  const charges = stagedChargesForSupplier(supplierId);
+  if (!charges.length) return;
+  const cur = charges[0].currency || 'EUR';
+  const consolidated = {
+    ...charges[0],
+    chargeId: `CN-${supplierId}-STAGED`, // marker: staged consolidated charge
+    scopeKey: charges.length > 1 ? 'CONSOLIDATED' : charges[0].scopeKey,
+    period: 'Control period',
+    claimedCcogs: charges.reduce((s, c) => s + (c.claimedCcogs || 0), 0),
+    entitledCcogs: charges.reduce((s, c) => s + (c.entitledCcogs || 0), 0),
+    variance: charges.reduce((s, c) => s + (c.variance || 0), 0),
+    eurEquivalent: null,
+    currency: cur,
+    tierFromPct: null, tierToPct: null,
+    lines: charges.flatMap((c) => (c.lines && c.lines.length ? c.lines
+      : [{ cause: 'Volume rebate adjustment', driver: 'TIER_UPLIFT', qty: 0, fromPct: c.tierFromPct, toPct: c.tierToPct, deltaValue: c.variance, note: `Agreement ${c.agreementId}` }])),
+  };
+  const group = state.consolidated.byAgreement.get(charges[0].agreementId);
+  const rec = state.reconstructions.find((r) => r.agreementId === charges[0].agreementId);
+  openContraInvoice(consolidated, group, rec);
+}
+function openStagingAgreement(supplierId) {
+  const charges = stagedChargesForSupplier(supplierId);
+  if (!charges.length) return;
   const top = [...charges].sort((a, b) => (b.variance || 0) - (a.variance || 0))[0];
   openDoc('agreements|' + top.agreementId);
 }
