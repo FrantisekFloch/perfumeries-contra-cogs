@@ -177,7 +177,7 @@ export function renderConsolidatedDebit(state) {
         <td class="mono">${esc(c.agreementId)}</td>
         <td>${esc(c.scopeKey)}${dur ? ` · <span class="small">${esc(dur)}</span>` : ''}<div>${statusChip(c.status)}</div></td>
         <td class="num"><strong style="color:var(--gold)">${money(c.variance, c.currency)}</strong></td>
-        <td><div class="consol-rowbtns">
+        <td class="act"><div class="consol-rowbtns">
           <button class="btn tint-ghost consol-view" data-consolview="${esc(c.chargeId)}">${t('viewDetails')}</button>
           ${addBtn}
         </div></td>

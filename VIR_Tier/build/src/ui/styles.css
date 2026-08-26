@@ -1072,6 +1072,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .consol-left th, .consol-left td { text-align: left; padding: 8px 14px; border-bottom: 1px solid var(--line); }
 .consol-left tr:last-child td { border-bottom: 0; }
 .consol-left tr.off td { opacity: .45; }
+/* keep the action cell (esp. the primary Add CTA) fully legible even when the
+   rest of the un-added row is dimmed for context. opacity on a <td> creates a
+   stacking context, so a child can't exceed it — the fix must apply to the
+   action <td> itself, not the button. */
+.consol-left tr.off td.act { opacity: 1; }
 .consol-right { position: sticky; top: 14px; }
 .consol-doc { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
 .cd-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--ink); padding-bottom: 12px; margin-bottom: 12px; gap: 12px; }
