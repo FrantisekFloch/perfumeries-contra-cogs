@@ -269,6 +269,34 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .nav-item.active { background: var(--accent-soft); color: #0a7a53; font-weight: 600; }
 .nav-item .n { width: 22px; height: 22px; border-radius: 6px; background: #eee; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--muted); flex-shrink: 0; }
 .nav-item.active .n { background: var(--accent); color: var(--accent-ink); }
+/* visited process step — silver ✓ */
+.nav-item .n.done { background: #c9d3cf; color: #fff; }
+/* zone 2 / zone 3 items use a palette icon instead of a number */
+.nav-ico { width: 22px; height: 22px; display: grid; place-items: center; flex-shrink: 0; color: var(--muted); }
+.nav-ico .nav-svg { width: 18px; height: 18px; }
+.nav-item-icon.ic-chart .nav-ico { color: var(--accent); }
+.nav-item-icon.ic-audit .nav-ico { color: var(--info); }
+.nav-item-icon.ic-model .nav-ico { color: var(--violet); }
+.nav-item-icon.ic-about .nav-ico { color: var(--muted); }
+.nav-item-icon.active .nav-ico { color: inherit; }
+/* zone separators */
+.nav-zone2 { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; }
+.nav-zone3 { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; }
+
+/* ===== Top progress stepper (CCOGS journey: Ingest → Review → Select & bill) ===== */
+.progress-nav { display: flex; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 18px; margin: 0 0 22px; }
+.pstep2 { display: flex; align-items: center; gap: 10px; flex: 1; position: relative; cursor: pointer; background: none; border: 0; font: inherit; text-align: left; padding: 0; }
+.pstep2:not(:last-child)::after { content: ''; position: absolute; left: 38px; right: -6px; top: 17px; height: 3px; border-radius: 2px; background: var(--line); z-index: 0; }
+.pstep2.done:not(:last-child)::after { background: #c9d3cf; }
+.pstep2 .pdot { width: 34px; height: 34px; border-radius: 50%; background: #eef0f2; color: var(--muted); display: grid; place-items: center; font-weight: 800; font-size: 14px; z-index: 1; flex-shrink: 0; transition: .2s; }
+.pstep2.done .pdot { background: #c9d3cf; color: #fff; }
+.pstep2.active .pdot { background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 5px rgba(0,182,122,.16); }
+.pstep2 .plabel { display: flex; flex-direction: column; z-index: 1; }
+.pstep2 .pl-t { font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.pstep2 .pl-s { font-size: 11px; color: #0a8a63; min-height: 13px; }
+.pstep2.done .pl-t, .pstep2.active .pl-t { color: var(--ink); }
+.pstep2:hover .pl-t { color: var(--ink); }
+@media (max-width: 760px) { .pstep2 .pl-s { display: none; } .pstep2 .pl-t { font-size: 12px; } }
 .nav-sub { margin: 2px 0 6px 30px; border-left: 1px solid var(--line); }
 .nav-subitem { padding: 7px 12px; font-size: 13px; color: var(--muted); cursor: pointer; border-radius: 7px; }
 .nav-subitem:hover { background: #f3f3f3; color: var(--ink); }

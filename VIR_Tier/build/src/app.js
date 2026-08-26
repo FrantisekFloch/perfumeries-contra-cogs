@@ -31,17 +31,40 @@ const app = document.getElementById('app');
 // ReferenceError and render a blank modal.)
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
+// Sidebar is organised in THREE zones:
+//   zone 1 = the CCOGS process (numbered; drives the top progress stepper)
+//   zone 2 = analytics & reporting (icons, not journey steps)
+//   zone 3 = "how it works" (icons, below the language selector)
+// The Inputs document categories are NOT left-nav sub-items — they render as an
+// in-page segmented control (the .filecat tabs), so `sub` is intentionally gone.
 const STAGES = [
-  { id: 'inputs', label: 'navInputs', n: 1, render: renderInputs, sub: INPUT_CATS.map((c) => ({ key: c.key, label: c.label })) },
-  // ML Discovery hidden from the sidebar (renderMl kept for reference/reuse) — its
-  // key content (plain-language story + volume build-up) now lives in the
-  // Consolidated Debit "View details". Re-add here to restore it to the nav.
-  { id: 'consol', label: 'navConsolidated', n: 2, render: renderConsolidatedDebit },
-  { id: 'overview', label: 'navOverview', n: 3, render: renderOverview },
-  { id: 'audit', label: 'navAudit', n: 4, render: renderAudit },
-  // Part #5 — Mapping Logic (animated model workflow). Enabled for review.
-  { id: 'mapping', label: 'navMapping', n: 5, render: renderMappingFlow },
+  { id: 'inputs', label: 'navInputs', n: 1, zone: 1, render: renderInputs },
+  { id: 'consol', label: 'navConsolidated', n: 2, zone: 1, render: renderConsolidatedDebit },
+  { id: 'overview', label: 'navOverview', zone: 2, icon: 'chart', render: renderOverview },
+  { id: 'audit', label: 'navAudit', zone: 2, icon: 'audit', render: renderAudit },
+  { id: 'mapping', label: 'navMapping', zone: 3, icon: 'model', render: renderMappingFlow },
+  { id: 'about', label: 'navAbout', zone: 3, icon: 'about', render: renderAbout },
 ];
+
+// The CCOGS journey phases shown in the TOP progress stepper (Zone 1 stages
+// only). Not 1:1 with nav items: "Review" is the Inputs Summary tiles, which
+// live inside the Inputs stage.
+const JOURNEY = [
+  { key: 'ingest', label: 'stepIngest', stage: 'inputs' },
+  { key: 'review', label: 'stepReview', stage: 'inputs' },
+  { key: 'bill', label: 'stepBill', stage: 'consol' },
+];
+
+// small, static, palette-coloured monoline icons for zone 2 / zone 3 items
+const NAV_ICON = {
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  audit: '<path d="M6 3h9l3 3v9H6z"/><path d="M9 8h6M9 11h4"/><circle cx="15" cy="17" r="3.2"/><path d="M17.4 19.4L21 23"/>',
+  model: '<circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="18" cy="12" r="2.4"/><path d="M7 6.6l9 4.4M7 17.4l9-4.4"/>',
+  about: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+};
+function navIcon(kind) {
+  return `<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICON[kind] || NAV_ICON.about}</svg>`;
+}
 
 const state = {
   store: new StateStore(),
@@ -100,39 +123,69 @@ function recompute() {
 }
 
 // ---- shell ----
+// Zone 1 = numbered process pill (green active / silver ✓ visited).
+// Zone 2 & 3 = small palette icon, no number.
+function navItemHtml(st) {
+  const active = state.stage === st.id;
+  const visited = state.visited && state.visited.has(st.id) && !active;
+  if (st.zone === 1) {
+    const mark = visited ? '✓' : st.n;
+    return `<div class="nav-item ${active ? 'active' : ''}" data-stage="${st.id}"><span class="n ${visited ? 'done' : ''}">${mark}</span>${t(st.label)}</div>`;
+  }
+  return `<div class="nav-item nav-item-icon ic-${st.icon} ${active ? 'active' : ''}" data-stage="${st.id}"><span class="nav-ico">${navIcon(st.icon)}</span>${t(st.label)}</div>`;
+}
 function sidebar() {
-  const items = STAGES.map((st) => {
-    const active = state.stage === st.id;
-    const subs = active && st.sub
-      ? `<div class="nav-sub">${st.sub.map((s) => {
-          const cat = INPUT_CATS.find((c) => c.key === s.key);
-          const cnt = cat && cat.coll ? ` <span class="nav-cnt">(${state.store.all(cat.coll).length})</span>` : '';
-          return `<div class="nav-subitem ${state.sub === s.key ? 'active' : ''}" data-sub="${s.key}">${t(s.label)}${cnt}</div>`;
-        }).join('')}</div>`
-      : '';
-    return `<div class="nav-item ${active ? 'active' : ''}" data-stage="${st.id}"><span class="n">${st.n}</span>${t(st.label)}</div>${subs}`;
-  }).join('');
+  const z1 = STAGES.filter((s) => s.zone === 1).map(navItemHtml).join('');
+  const z2 = STAGES.filter((s) => s.zone === 2).map(navItemHtml).join('');
+  const z3 = STAGES.filter((s) => s.zone === 3).map(navItemHtml).join('');
   return `<aside class="sidebar">
     <div class="logo">CCOGS<span class="tier"> Reclaim</span></div>
-    <div class="nav-group"><div class="g-label">${t('navPipeline')}</div>${items}</div>
+    <div class="nav-group"><div class="g-label">${t('navProcess')}</div>${z1}</div>
+    <div class="nav-group nav-zone2"><div class="g-label">${t('navAnalytics')}</div>${z2}</div>
     <div class="nav-group sidebar-foot">
       <div class="langs">${LANGS.map((l) => `<button data-lang="${l.code}" class="${getLang() === l.code ? 'active' : ''}">${l.flag} ${l.label}</button>`).join('')}</div>
-      <div class="nav-about ${state.stage === 'about' ? 'active' : ''}" data-stage="about">ⓘ ${t('navAbout')}</div>
     </div>
+    <div class="nav-group nav-zone3"><div class="g-label">${t('navHowItWorks')}</div>${z3}</div>
   </aside>`;
+}
+
+// Top progress stepper — the CCOGS journey (Ingest → Review → Select & bill).
+// Shown only on Zone 1 process stages. The active PHASE is derived from the
+// current stage (and the Inputs sub: summary => Review, else Ingest).
+function progressStepper() {
+  const st = STAGES.find((s) => s.id === state.stage);
+  if (!st || st.zone !== 1) return '';
+  // which phase are we in?
+  let activeIdx;
+  if (state.stage === 'consol') activeIdx = 2;
+  else activeIdx = (state.sub === 'summary') ? 1 : 0;   // inputs: summary tiles = Review
+  return `<div class="progress-nav" role="navigation" aria-label="${t('navProcess')}">
+    ${JOURNEY.map((j, i) => {
+      const cls = i < activeIdx ? 'done' : (i === activeIdx ? 'active' : '');
+      const dot = i < activeIdx ? '✓' : (i + 1);
+      const sub = i === activeIdx ? t('stepHere') : '';
+      return `<button class="pstep2 ${cls}" data-step="${j.key}">
+        <span class="pdot">${dot}</span>
+        <span class="plabel"><span class="pl-t">${i + 1}. ${t(j.label)}</span><span class="pl-s">${sub}</span></span>
+      </button>`;
+    }).join('')}
+  </div>`;
 }
 
 function render() {
   // guard: if the active stage is no longer in the sidebar (e.g. the retired
   // 'ml' stage), fall back to Inputs so render never dereferences undefined.
-  if (state.stage !== 'about' && !STAGES.find((s) => s.id === state.stage)) state.stage = STAGES[0].id;
-  // About is a standalone view (not a numbered pipeline stage)
-  const isAbout = state.stage === 'about';
-  const title = isAbout ? t('navAbout') : t(STAGES.find((s) => s.id === state.stage).label);
-  const viewHtml = isAbout ? renderAbout(state) : STAGES.find((s) => s.id === state.stage).render(state);
+  const st = STAGES.find((s) => s.id === state.stage);
+  if (!st) { state.stage = STAGES[0].id; return render(); }
+  // track visited stages so Zone-1 pills can show a silver ✓
+  if (!state.visited) state.visited = new Set();
+  state.visited.add(state.stage);
+  const title = t(st.label);
+  const viewHtml = st.render(state);
   app.innerHTML = `<div class="app-shell">
     ${sidebar()}
     <main class="work">
+      ${progressStepper()}
       <div class="page-head"><h2>${title}</h2></div>
       <div id="view">${viewHtml}</div>
     </main>
@@ -149,11 +202,17 @@ function bind() {
   wireDelegates();   // install the one-time delegated click listener on `app`
   app.querySelectorAll('[data-stage]').forEach((el) => el.addEventListener('click', () => {
     state.stage = el.dataset.stage;
-    const st = STAGES.find((s) => s.id === state.stage);
-    if (st && st.sub && !st.sub.find((s) => s.key === state.sub)) state.sub = st.sub[0].key;
     render();
   }));
   app.querySelectorAll('[data-sub]').forEach((el) => el.addEventListener('click', (e) => { e.stopPropagation(); state.sub = el.dataset.sub; render(); }));
+  // top progress stepper — jump to the phase's stage (Review = Inputs Summary tab)
+  app.querySelectorAll('[data-step]').forEach((el) => el.addEventListener('click', () => {
+    const j = JOURNEY.find((x) => x.key === el.dataset.step); if (!j) return;
+    state.stage = j.stage;
+    if (j.key === 'review') state.sub = 'summary';
+    else if (j.key === 'ingest' && state.sub === 'summary') state.sub = 'invoices';
+    render();
+  }));
   app.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => { setLang(b.dataset.lang); render(); }));
 
   // controls (analyst) -> recompute
