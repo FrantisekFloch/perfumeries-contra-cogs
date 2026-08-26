@@ -138,6 +138,56 @@ h3 { font-size: 16px; margin: 22px 0 12px; }
 .ba .panel .big { font-size: 22px; font-weight: 700; }
 .loss-banner { background: var(--warn-soft); border: 1px solid #EAD9B0; color: #7a5a12; border-radius: var(--radius); padding: 12px 16px; margin: 14px 0; }
 .loss-banner strong { color: var(--gold); }
+/* Finance Overview hero — the single "money on the table" figure a CFO glances at */
+.ov-hero { text-align: center; padding: 26px 20px 22px; margin: 4px 0 18px; border-radius: var(--radius); background: linear-gradient(180deg, #F2FAF6, #ffffff); border: 1px solid #cdeadd; box-shadow: var(--shadow); }
+.ov-hero-fig { font-size: clamp(38px, 6vw, 60px); font-weight: 800; letter-spacing: -.02em; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.ov-hero-sub { margin-top: 8px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.ov-hero-meta { margin-top: 6px; font-size: 13.5px; color: var(--ink); }
+
+/* ---- Finance Overview: forward-looking "on track" cards (facts only) ---- */
+.fc-asof { color: var(--muted); }
+.fc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 4px 0 8px; }
+.fc-card { border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: 10px; background: var(--card); box-shadow: var(--shadow); padding: 12px 14px; }
+.fc-card.fc-on_track { border-left-color: var(--accent); }
+.fc-card.fc-at_risk { border-left-color: var(--warn); }
+.fc-card.fc-complete { border-left-color: var(--info); }
+.fc-card-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+.fc-sup { font-weight: 700; font-size: 13.5px; }
+.fc-flag { font-size: .66rem; font-weight: 700; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.fc-flag-on_track { color: #0a7a53; background: var(--accent-soft); }
+.fc-flag-at_risk { color: #8a5a12; background: var(--warn-soft); }
+.fc-flag-complete { color: #2f6fed; background: #e8f0fe; }
+.fc-meta { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+.fc-line { font-size: 12.5px; margin-bottom: 4px; }
+.fc-window { margin-top: 8px; }
+.fc-bar { height: 6px; border-radius: 999px; background: #eef0f2; overflow: hidden; }
+.fc-bar i { display: block; height: 100%; background: var(--accent); }
+.fc-card.fc-at_risk .fc-bar i { background: var(--warn); }
+.fc-window-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+/* projection line (Phase B) — dashed border marks it as a prediction, not a fact */
+.fc-proj { margin-top: 8px; padding-top: 7px; border-top: 1px dashed var(--line); font-size: 12px; }
+.fc-proj-tag { display: inline-block; font-size: .62rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: #f0f1f3; border-radius: 999px; padding: 1px 7px; margin-right: 6px; }
+.fc-proj.reach .fc-proj-verdict { color: #0a7a53; font-weight: 700; }
+.fc-proj.miss .fc-proj-verdict { color: #8a5a12; font-weight: 700; }
+.fc-proj-verdict { margin-left: 4px; }
+
+/* ---- Charge-status chip: one consistent colour language everywhere ---- */
+.status-chip { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .02em; border-radius: 999px; padding: 2px 9px; white-space: nowrap; border: 1px solid transparent; }
+.status-chip.status-pending   { color: #6B6B6B; background: #f0f1f3; border-color: #e0e2e6; }
+.status-chip.status-approved  { color: #2f6fed; background: #e8f0fe; border-color: #bcd3fb; }
+.status-chip.status-issued    { color: #2f6fed; background: #e8f0fe; border-color: #bcd3fb; }
+.status-chip.status-disputed  { color: #8a5a12; background: var(--warn-soft); border-color: #EAD9B0; }
+.status-chip.status-partially { color: #9a6400; background: #fdf3e0; border-color: #f0d9a8; }
+.status-chip.status-closed    { color: #0a7a53; background: var(--accent-soft); border-color: #b7e6d3; }
+.status-chip.status-rejected  { color: var(--danger); background: var(--danger-soft); border-color: #F3C6C1; }
+
+/* recovery-workflow strip in the read-only review */
+.rw-block .rw-status { font-size: 13px; margin: 4px 0 8px; }
+.rw-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.rw-reply { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; border-top: 1px dashed var(--line); padding-top: 10px; }
+.rw-reply-l { font-size: 12px; font-weight: 700; color: var(--muted); }
+.rw-reply-in { width: 100%; font: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
+.rw-reply-in:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
 table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--card); }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
@@ -764,6 +814,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .as-src.as-primary { border-color: var(--accent); background: var(--accent-soft); }
 .as-src .as-arrow { margin-left: auto; color: var(--muted); font-weight: 700; }
 .as-src:hover { border-color: var(--accent); }
+.as-tmpl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 10px; padding-top: 10px; border-top: 1px solid var(--line); }
 .erp-logo-edi { background: #2f6fed; } .erp-logo-api { background: #6b3fd0; } .erp-logo-folder { background: #b7791f; font-size: 1rem; } .erp-logo-mailbox { background: #0a7a53; font-size: 1rem; }
 
 /* ---- Connect-source dialog (EDI / API / Folder) ---- */

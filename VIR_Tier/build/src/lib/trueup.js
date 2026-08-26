@@ -49,7 +49,7 @@ function tierIndexAt(agreement, volume) {
  */
 export function buildTrueUp(args) {
   const {
-    agreement, scopeKey, period, currency, eurEquivalent = null,
+    agreement, scopeKey, period, currency, eurEquivalent = null, fxSnapshot = null,
     baseVolume, engineClaimed, reconstructedVolume, basisValue = null,
     corrections = [], contributingEvents = [], clauseRef = null, actor = 'system', now,
   } = args;
@@ -144,7 +144,7 @@ export function buildTrueUp(args) {
     agreementId: agreement.agreementId, supplierId: agreement.supplierId,
     scopeKey, period,
     entitledCcogs: entitled, claimedCcogs: claimed, variance,
-    currency, eurEquivalent,
+    currency, eurEquivalent, fxSnapshot,
     tierFromPct: round2(rateBefore * 100), tierToPct: round2(rateAfter * 100),
     tierApplied: JSON.stringify({ from: rateBefore, to: rateAfter, tierBefore: idxBefore, tierAfter: idxAfter }),
     structure: agreement.rebateStructure, basis: agreement.basis,

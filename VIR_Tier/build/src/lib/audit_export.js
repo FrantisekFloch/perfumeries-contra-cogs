@@ -126,6 +126,9 @@ export function buildAuditDataset(state, opts = {}) {
       AdditionalCcogs: round2(c.variance || 0),
       Currency: c.currency || 'EUR',
       EurEquivalent: c.eurEquivalent != null ? round2(c.eurEquivalent) : '',
+      // FX audit trail: the exact rate + as-of date used to derive EurEquivalent
+      FxRate: c.fxSnapshot && c.fxSnapshot.rate != null ? c.fxSnapshot.rate : '',
+      FxAsOf: c.fxSnapshot && c.fxSnapshot.asOf ? c.fxSnapshot.asOf : '',
       Type: isMissing ? 'Missing invoice / no CCOGS' : 'Tier / volume reconstruction',
       Status: realized ? 'Posted to ERP' : 'Pending',
       LineRefs: refs.join(', '),

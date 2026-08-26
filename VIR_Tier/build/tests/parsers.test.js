@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   parseAgreementXml, serializeAgreementXml,
+  parseAgreementCsv, serializeAgreementCsv,
   parsePurchaseCsv, serializePurchaseCsv,
   parseReceiptCsv, serializeReceiptCsv,
   parseEventCsv, serializeEventCsv,
@@ -41,6 +42,29 @@ test('agreement XML round-trips', () => {
 
 test('agreement XML wrong root throws', () => {
   assert.throws(() => parseAgreementXml('<nope></nope>'), /root must be <agreement>/);
+});
+
+test('agreement CSV round-trips (bulk import) incl. tiers/currencies/countries/clauses', () => {
+  const a = sampleAgreement();
+  const csv = serializeAgreementCsv([a]);
+  const [back] = parseAgreementCsv(csv, 'agreements/bulk.csv');
+  assert.equal(back.agreementId, 'AGR-9');
+  assert.equal(back.rebateStructure, RebateStructure.RETROSPECTIVE_TIERED);
+  assert.deepEqual(back.currencies, ['EUR', 'PLN']);
+  assert.deepEqual(back.countries, ['SK', 'PL', 'CZ']);
+  assert.equal(back.tiers.length, 2);
+  assert.equal(back.tiers[1].threshold, 10000);
+  assert.equal(back.tiers[1].rate, 0.02);
+  assert.equal(back.clauseRefs.tier, 'Clause 4.2');
+  assert.equal(back.provenance, 'agreements/bulk.csv');
+});
+
+test('ingest routes a .csv agreement file to the CSV parser', () => {
+  const csv = serializeAgreementCsv([sampleAgreement()]);
+  const out = ingestFiles([{ category: 'agreements', name: 'agreements/bulk.csv', text: csv }]);
+  assert.equal(out.errors.length, 0);
+  assert.equal(out.agreements.length, 1);
+  assert.equal(out.agreements[0].agreementId, 'AGR-9');
 });
 
 test('purchase CSV round-trips', () => {

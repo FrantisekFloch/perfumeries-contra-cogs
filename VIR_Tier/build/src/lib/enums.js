@@ -78,6 +78,12 @@ export const ChargeStatus = Object.freeze({
   REJECTED: 'REJECTED',
   EXPORTED: 'EXPORTED',
   INJECTED: 'INJECTED',
+  // recovery workflow (supplier-facing negotiation) — a debit note is rarely
+  // accepted first time; suppliers dispute lines, settle partially, then close.
+  ISSUED: 'ISSUED',                     // debit note sent to the supplier
+  DISPUTED: 'DISPUTED',                 // supplier pushed back on one or more lines
+  PARTIALLY_SETTLED: 'PARTIALLY_SETTLED', // supplier accepted part of the claim
+  CLOSED: 'CLOSED',                     // terminal — settled or written off
 });
 
 // Warehouse node kind in the hierarchy.

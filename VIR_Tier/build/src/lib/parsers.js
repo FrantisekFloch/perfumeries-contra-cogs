@@ -110,6 +110,75 @@ ${clauses}
 `;
 }
 
+// ---- Agreement (CSV) — bulk import alternative to XML --------------------
+// One row per agreement. Multi-value fields are pipe-joined; tiers are encoded
+// as "threshold:rate;threshold:rate"; clauses as "key=value;key=value".
+// This lets a spreadsheet-driven team load hundreds of agreements at once.
+const AGREEMENT_CSV_HEADERS = [
+  'agreementId', 'supplierId', 'supplierName', 'contractRef', 'rebateStructure', 'basis', 'period', 'scope',
+  'retrospectiveReach', 'tierMeasure', 'windowType', 'effectiveFrom', 'effectiveTo',
+  'signatory', 'signatoryTitle', 'signedDate', 'governingLaw',
+  'tiers', 'currencies', 'countries', 'skuSet', 'engineConfiguredSkus', 'clauses',
+];
+const splitList = (v) => (v ? String(v).split('|').map((s) => s.trim()).filter(Boolean) : []);
+const parseTiersCell = (v) => (v ? String(v).split(';').map((s) => s.trim()).filter(Boolean).map((pair) => {
+  const [th, rate] = pair.split(':');
+  return { threshold: Number(th), rate: Number(rate) };
+}) : []);
+const parseClausesCell = (v) => {
+  const out = {};
+  if (v) for (const pair of String(v).split(';')) { const [k, val] = pair.split('='); if (k) out[k.trim()] = (val ?? '').trim(); }
+  return out;
+};
+export function parseAgreementCsv(text, provenance = null) {
+  const { rows } = parseCsv(text);
+  return rows.map((r) => {
+    const skuSet = splitList(r.skuSet);
+    return createAgreement({
+      agreementId: r.agreementId,
+      supplierId: r.supplierId,
+      supplierName: r.supplierName || null,
+      contractRef: r.contractRef || null,
+      rebateStructure: r.rebateStructure || null,
+      basis: r.basis || null,
+      period: r.period || null,
+      scope: r.scope || null,
+      retrospectiveReach: r.retrospectiveReach || null,
+      tierMeasure: r.tierMeasure || null,
+      windowType: r.windowType || null,
+      effectiveFrom: r.effectiveFrom || null,
+      effectiveTo: r.effectiveTo || null,
+      signatory: r.signatory || null,
+      signatoryTitle: r.signatoryTitle || null,
+      signedDate: r.signedDate || null,
+      governingLaw: r.governingLaw || null,
+      tiers: parseTiersCell(r.tiers),
+      currencies: splitList(r.currencies),
+      countries: splitList(r.countries),
+      skuSet,
+      engineConfiguredSkus: r.engineConfiguredSkus ? splitList(r.engineConfiguredSkus) : skuSet.slice(),
+      clauseRefs: parseClausesCell(r.clauses),
+      provenance,
+    });
+  });
+}
+export function serializeAgreementCsv(agreements) {
+  return serializeCsv(AGREEMENT_CSV_HEADERS, agreements.map((a) => ({
+    agreementId: a.agreementId, supplierId: a.supplierId, supplierName: a.supplierName ?? '',
+    contractRef: a.contractRef ?? '', rebateStructure: a.rebateStructure ?? '', basis: a.basis ?? '',
+    period: a.period ?? '', scope: a.scope ?? '', retrospectiveReach: a.retrospectiveReach ?? '',
+    tierMeasure: a.tierMeasure ?? '', windowType: a.windowType ?? '',
+    effectiveFrom: a.effectiveFrom ?? '', effectiveTo: a.effectiveTo ?? '',
+    signatory: a.signatory ?? '', signatoryTitle: a.signatoryTitle ?? '', signedDate: a.signedDate ?? '', governingLaw: a.governingLaw ?? '',
+    tiers: (a.tiers || []).map((t) => `${t.threshold}:${t.rate}`).join(';'),
+    currencies: (a.currencies || []).join('|'),
+    countries: (a.countries || []).join('|'),
+    skuSet: (a.skuSet || []).join('|'),
+    engineConfiguredSkus: (a.engineConfiguredSkus || []).join('|'),
+    clauses: Object.entries(a.clauseRefs || {}).map(([k, v]) => `${k}=${v}`).join(';'),
+  })));
+}
+
 // ---- Purchase (CSV) ------------------------------------------------------
 const PURCHASE_HEADERS = ['purchaseId', 'agreementId', 'supplierId', 'country', 'stockId', 'orderDate', 'qty', 'unitValue', 'weightPerUnit', 'currency'];
 export function parsePurchaseCsv(text, provenance = null) {
@@ -288,7 +357,8 @@ export function serializeCcogsEngineCsv(rows) {
 
 // ---- category dispatch (used by ingest) ----------------------------------
 export const PARSERS = Object.freeze({
-  agreements: { kind: 'xml', parse: parseAgreementXml },
+  // agreements accept BOTH XML (rich) and CSV (bulk spreadsheet); ingest picks by extension.
+  agreements: { kind: 'xml', parse: parseAgreementXml, parseCsv: parseAgreementCsv },
   invoices: { kind: 'xml', parse: parseInvoiceXml },
   delivery_notes: { kind: 'xml', parse: parseDeliveryNoteXml },
   purchases: { kind: 'csv', parse: parsePurchaseCsv },

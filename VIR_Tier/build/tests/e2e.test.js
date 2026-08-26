@@ -8,8 +8,9 @@ import { demoSources, runScan } from '../src/lib/source.js';
 import { ingestFiles } from '../src/lib/ingest.js';
 import { consolidate } from '../src/lib/consolidation.js';
 import { runPipeline } from '../src/lib/pipeline.js';
-import { approveCharge, rejectCharge, isExportable, buildReviewDocument } from '../src/lib/approval.js';
+import { approveCharge, rejectCharge, isExportable, buildReviewDocument, issueCharge, disputeCharge, settleCharge, closeCharge, canTransition, transitionCharge } from '../src/lib/approval.js';
 import { exportCharge, injectCharge } from '../src/lib/injection.js';
+import { createSupplementingCharge } from '../src/lib/models.js';
 import { ChargeStatus } from '../src/lib/enums.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -124,6 +125,34 @@ test('approval workflow gates export/injection', async () => {
   const { charge: injected, handoff } = injectCharge(approved, { actor: 'cfo@perfumeries', now: () => '2026-01-16T02:00:00Z' });
   assert.equal(injected.status, ChargeStatus.INJECTED);
   assert.equal(handoff.simulated, true);
+});
+
+test('recovery state machine: legal transitions with audit; illegal blocked', () => {
+  const now = () => '2026-02-01T00:00:00Z';
+  const base = createSupplementingCharge({
+    chargeId: 'TU-X-1', agreementId: 'AGR-X', supplierId: 'S1', scopeKey: 'SK', period: '2026',
+    entitledCcogs: 1200, claimedCcogs: 1000, variance: 200, currency: 'EUR',
+  });
+  assert.equal(base.status, ChargeStatus.PENDING_APPROVAL);
+  // legal path: PENDING -> APPROVED -> ISSUED -> DISPUTED -> PARTIALLY_SETTLED -> CLOSED
+  const approved = approveCharge(base, { approver: 'cfo', now });
+  const issued = issueCharge(approved, { actor: 'ar', now });
+  assert.equal(issued.status, ChargeStatus.ISSUED);
+  assert.ok(isExportable(issued));
+  const disputed = disputeCharge(issued, { actor: 'ar', now, reason: 'Supplier contests late-delivery line' });
+  assert.equal(disputed.status, ChargeStatus.DISPUTED);
+  assert.equal(disputed.disputeReason, 'Supplier contests late-delivery line');
+  const settled = settleCharge(disputed, { actor: 'ar', now, settledAmount: 150 });
+  assert.equal(settled.status, ChargeStatus.PARTIALLY_SETTLED);
+  assert.equal(settled.settledAmount, 150);
+  const closed = closeCharge(settled, { actor: 'ar', now });
+  assert.equal(closed.status, ChargeStatus.CLOSED);
+  // every transition wrote an audit entry
+  assert.ok(closed.auditTrace.length >= 5);
+  // illegal transitions are rejected
+  assert.equal(canTransition(ChargeStatus.CLOSED, ChargeStatus.ISSUED), false);
+  assert.throws(() => issueCharge(base, { actor: 'x', now }), /illegal transition/); // PENDING can't jump to ISSUED
+  assert.throws(() => transitionCharge(closed, ChargeStatus.DISPUTED, { now }), /illegal transition/);
 });
 
 test('rejection records a reason and blocks export', async () => {

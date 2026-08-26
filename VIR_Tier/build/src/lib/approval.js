@@ -59,5 +59,61 @@ export function rejectCharge(charge, { approver, reason, now } = {}) {
 
 /** Guard used by export/injection (Req 7.5 / 8.4). */
 export function isExportable(charge) {
-  return charge.status === ChargeStatus.APPROVED;
+  return charge.status === ChargeStatus.APPROVED || charge.status === ChargeStatus.ISSUED;
+}
+
+// ---- Recovery-workflow state machine ---------------------------------------
+// A debit note is a negotiation, not a one-shot. Legal transitions:
+//   PENDING_APPROVAL -> APPROVED | REJECTED
+//   APPROVED         -> ISSUED
+//   ISSUED           -> DISPUTED | PARTIALLY_SETTLED | CLOSED
+//   DISPUTED         -> PARTIALLY_SETTLED | CLOSED
+//   PARTIALLY_SETTLED-> CLOSED
+// REJECTED and CLOSED are terminal.
+export const ALLOWED_TRANSITIONS = Object.freeze({
+  [ChargeStatus.PENDING_APPROVAL]: [ChargeStatus.APPROVED, ChargeStatus.REJECTED],
+  [ChargeStatus.APPROVED]: [ChargeStatus.ISSUED],
+  [ChargeStatus.ISSUED]: [ChargeStatus.DISPUTED, ChargeStatus.PARTIALLY_SETTLED, ChargeStatus.CLOSED],
+  [ChargeStatus.DISPUTED]: [ChargeStatus.PARTIALLY_SETTLED, ChargeStatus.CLOSED],
+  [ChargeStatus.PARTIALLY_SETTLED]: [ChargeStatus.CLOSED],
+  [ChargeStatus.REJECTED]: [],
+  [ChargeStatus.CLOSED]: [],
+});
+
+export function canTransition(from, to) {
+  return (ALLOWED_TRANSITIONS[from] || []).includes(to);
+}
+
+/**
+ * Generic audited transition. Validates the move against ALLOWED_TRANSITIONS,
+ * appends an immutable audit entry, and returns a NEW charge object.
+ * extra: optional fields merged onto the charge (e.g. settledAmount, disputeReason).
+ */
+export function transitionCharge(charge, to, { actor = 'system', now, note = '', extra = {} } = {}) {
+  if (!canTransition(charge.status, to)) {
+    throw new Error(`approval: illegal transition ${charge.status} -> ${to}`);
+  }
+  const entry = auditEntry({ actor, action: to, details: { chargeId: charge.chargeId, from: charge.status, to, note } }, now);
+  return { ...charge, ...extra, status: to, auditTrace: [...charge.auditTrace, entry] };
+}
+
+/** Mark an approved charge as issued (debit note sent to supplier). */
+export function issueCharge(charge, { actor, now, note = '' } = {}) {
+  return transitionCharge(charge, ChargeStatus.ISSUED, { actor, now, note });
+}
+
+/** Supplier disputed the charge (records the reason on the charge). */
+export function disputeCharge(charge, { actor, now, reason = '' } = {}) {
+  return transitionCharge(charge, ChargeStatus.DISPUTED, { actor, now, note: reason, extra: { disputeReason: reason } });
+}
+
+/** Supplier accepted part of the claim (records the settled amount). */
+export function settleCharge(charge, { actor, now, settledAmount = null, note = '' } = {}) {
+  return transitionCharge(charge, ChargeStatus.PARTIALLY_SETTLED, { actor, now, note, extra: { settledAmount: settledAmount != null ? Number(settledAmount) : null } });
+}
+
+/** Close a charge (terminal — fully settled or written off). */
+export function closeCharge(charge, { actor, now, settledAmount = null, note = '' } = {}) {
+  const extra = settledAmount != null ? { settledAmount: Number(settledAmount) } : {};
+  return transitionCharge(charge, ChargeStatus.CLOSED, { actor, now, note, extra });
 }

@@ -18,8 +18,9 @@ import { renderAudit, auditDataset } from './ui/audit.js';
 import { renderMappingFlow, playMappingFlow } from './ui/mappingflow.js';
 import { renderConsolidatedDebit, chargesBySupplier } from './ui/consolidated.js';
 import { invoiceDocHtml, deliveryNoteDocHtml, receiptDocHtml, eventDocHtml, engineDocHtml, agreementDocHtml, contraCogsInvoiceHtml } from './ui/doc.js';
-import { serializeInvoiceXml, serializeDeliveryNoteXml, serializeReceiptCsv, serializeEventCsv, serializeCcogsEngineCsv, serializeAgreementXml } from './lib/parsers.js';
+import { serializeInvoiceXml, serializeDeliveryNoteXml, serializeReceiptCsv, serializeEventCsv, serializeCcogsEngineCsv, serializeAgreementXml, serializeAgreementCsv } from './lib/parsers.js';
 import { chargesToCsv } from './lib/injection.js';
+import { transitionCharge } from './lib/approval.js';
 import { initTooltips } from './ui/tooltip.js';
 
 const app = document.getElementById('app');
@@ -384,6 +385,40 @@ function openReviewReadOnly(chargeId) {
   // multi-agreement one). Closes the read-only review, then opens the invoice.
   const genOne = holder.querySelector('[data-genreadonly]');
   if (genOne) genOne.addEventListener('click', () => { close(); openContraInvoice(charge, group, rec); });
+
+  // recovery-workflow transition buttons (issue / dispute / settle / close / approve / reject)
+  holder.querySelectorAll('[data-cxn]').forEach((b) => b.addEventListener('click', () => {
+    const to = b.dataset.cxn;
+    const idx = state.charges.findIndex((c) => c.chargeId === b.dataset.cxid);
+    if (idx < 0) return;
+    const cur = state.charges[idx];
+    const extra = {};
+    let note = '';
+    if (to === 'DISPUTED') { note = window.prompt(t('csDisputePrompt')) || ''; extra.disputeReason = note; }
+    if (to === 'PARTIALLY_SETTLED' || to === 'CLOSED') {
+      const amt = window.prompt(t('csSettlePrompt'), String(cur.variance ?? ''));
+      if (amt != null && amt !== '') extra.settledAmount = Number(amt);
+    }
+    if (to === 'REJECTED') { note = window.prompt(t('csDisputePrompt')) || ''; }
+    try {
+      state.charges[idx] = transitionCharge(cur, to, { actor: 'analyst', now: () => new Date().toISOString(), note, extra });
+    } catch (e) { window.alert(String(e.message || e)); return; }
+    close(); render(); openReviewReadOnly(b.dataset.cxid);
+  }));
+
+  // supplier-reply capture — save the note onto the charge + audit entry
+  const supSave = holder.querySelector('[data-supsave]');
+  if (supSave) supSave.addEventListener('click', () => {
+    const ta = holder.querySelector('[data-supresp]');
+    const noteVal = ta ? ta.value.trim() : '';
+    const idx = state.charges.findIndex((c) => c.chargeId === supSave.dataset.supsave);
+    if (idx < 0) return;
+    const cur = state.charges[idx];
+    const at = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    const entry = { seq: (cur.auditTrace?.length || 0) + 1, timestamp: at, actor: 'analyst', action: 'SUPPLIER_REPLY', details: { chargeId: cur.chargeId, note: noteVal } };
+    state.charges[idx] = { ...cur, supplierResponse: { at, channel: 'manual', note: noteVal }, auditTrace: [...(cur.auditTrace || []), entry] };
+    close(); render(); openReviewReadOnly(supSave.dataset.supsave);
+  });
 }
 
 // ---- Summary result-tile details (what/how found, proposal, pre/post impact) ----
@@ -433,6 +468,8 @@ function openAddSource() {
         <span class="as-arrow">→</span>
       </button>`).join('')}
     </div>
+    <div class="as-tmpl"><button class="btn tint-ghost" id="asTmpl">⤓ ${t('agrCsvTemplate')}</button>
+      <span class="small muted">${t('agrCsvTemplateHint')}</span></div>
     <div class="actions"><button class="btn ghost" id="asClose">${t('cancel')}</button></div>
   </div></div>`;
   document.body.appendChild(holder);
@@ -444,6 +481,26 @@ function openAddSource() {
     close();
     openConnectSource(id);
   }));
+  // downloadable bulk-import template so teams can load agreements from a spreadsheet
+  const tmpl = holder.querySelector('#asTmpl');
+  if (tmpl) tmpl.addEventListener('click', () => download('agreement_import_template.csv', agreementCsvTemplate(), 'text/csv'));
+}
+
+// A ready-to-fill CSV template for bulk agreement import (header row + one
+// worked example showing the tiers/currencies/countries/clauses encoding).
+function agreementCsvTemplate() {
+  const example = {
+    agreementId: 'AGR-EXAMPLE', supplierId: 'SUP-001', supplierName: 'Example Supplier Ltd',
+    contractRef: 'CTR-2026-001', rebateStructure: 'RETROSPECTIVE_TIERED', basis: 'UNITS', period: 'YEAR', scope: 'PAN_EU',
+    retrospectiveReach: 'WITHIN_PERIOD', tierMeasure: 'COMBINED', windowType: 'YEAR',
+    effectiveFrom: '2026-01-01', effectiveTo: '2026-12-31',
+    signatory: 'Jane Doe', signatoryTitle: 'Head of Procurement', signedDate: '2025-12-15', governingLaw: 'SK',
+    tiers: [{ threshold: 0, rate: 0.01 }, { threshold: 10000, rate: 0.02 }, { threshold: 25000, rate: 0.03 }],
+    currencies: ['EUR', 'PLN', 'CZK'], countries: ['SK', 'PL', 'CZ'],
+    skuSet: ['ASIN-100', 'ASIN-200'], engineConfiguredSkus: ['ASIN-100'],
+    clauseRefs: { tier: 'Clause 4.2', panEu: 'Clause 7.1' },
+  };
+  return serializeAgreementCsv([example]);
 }
 
 // Realistic per-source connection dialog (EDI / API / Folder). Each has its own

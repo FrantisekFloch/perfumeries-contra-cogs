@@ -99,10 +99,15 @@ export function runPipeline(consolidated, { selections = {}, fx = null, now } = 
       const currencies = agreement.currencies || [currency];
       const mixedPanEu = scope === Scope.PAN_EU && new Set(currencies).size > 1;
       let eurEquivalent = null;
+      let fxSnapshot = null;   // { rate, asOf, base, source } stored on the charge for audit defensibility
       const needFx = fxRequired({ basis, scope, currencies }) || mixedPanEu;
       if (needFx) {
         if (!fx) warnings.push({ agreementId: agreement.agreementId, reason: 'FX required but no FX table provided' });
-        else eurEquivalent = toEur(money(entitled, currency === 'EUR' ? 'EUR' : currency), fx).value;
+        else {
+          const conv = toEur(money(entitled, currency === 'EUR' ? 'EUR' : currency), fx);
+          eurEquivalent = conv.value;
+          fxSnapshot = { rate: conv.fxRate, asOf: conv.fxAsOf, base: fx.base || 'EUR', source: fx.source || 'fx_rates', fromCurrency: currency };
+        }
       }
 
       const claimedAmt = claim ? claim.amountClaimed : 0;
@@ -130,7 +135,7 @@ export function runPipeline(consolidated, { selections = {}, fx = null, now } = 
       const basisValue = rateAfter > 0 ? entitled / rateAfter : s.total;
 
       const tu = buildTrueUp({
-        agreement, scopeKey: s.scopeKey, period: currentPeriod, currency, eurEquivalent,
+        agreement, scopeKey: s.scopeKey, period: currentPeriod, currency, eurEquivalent, fxSnapshot,
         baseVolume, engineClaimed: claimedAmt, reconstructedVolume: s.total, basisValue,
         corrections: scopeCorrections, contributingEvents: contributing, clauseRef, actor: 'system', now,
       });

@@ -142,6 +142,56 @@ h3 { font-size: 16px; margin: 22px 0 12px; }
 .ba .panel .big { font-size: 22px; font-weight: 700; }
 .loss-banner { background: var(--warn-soft); border: 1px solid #EAD9B0; color: #7a5a12; border-radius: var(--radius); padding: 12px 16px; margin: 14px 0; }
 .loss-banner strong { color: var(--gold); }
+/* Finance Overview hero — the single "money on the table" figure a CFO glances at */
+.ov-hero { text-align: center; padding: 26px 20px 22px; margin: 4px 0 18px; border-radius: var(--radius); background: linear-gradient(180deg, #F2FAF6, #ffffff); border: 1px solid #cdeadd; box-shadow: var(--shadow); }
+.ov-hero-fig { font-size: clamp(38px, 6vw, 60px); font-weight: 800; letter-spacing: -.02em; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.ov-hero-sub { margin-top: 8px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.ov-hero-meta { margin-top: 6px; font-size: 13.5px; color: var(--ink); }
+
+/* ---- Finance Overview: forward-looking "on track" cards (facts only) ---- */
+.fc-asof { color: var(--muted); }
+.fc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 4px 0 8px; }
+.fc-card { border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: 10px; background: var(--card); box-shadow: var(--shadow); padding: 12px 14px; }
+.fc-card.fc-on_track { border-left-color: var(--accent); }
+.fc-card.fc-at_risk { border-left-color: var(--warn); }
+.fc-card.fc-complete { border-left-color: var(--info); }
+.fc-card-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+.fc-sup { font-weight: 700; font-size: 13.5px; }
+.fc-flag { font-size: .66rem; font-weight: 700; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.fc-flag-on_track { color: #0a7a53; background: var(--accent-soft); }
+.fc-flag-at_risk { color: #8a5a12; background: var(--warn-soft); }
+.fc-flag-complete { color: #2f6fed; background: #e8f0fe; }
+.fc-meta { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+.fc-line { font-size: 12.5px; margin-bottom: 4px; }
+.fc-window { margin-top: 8px; }
+.fc-bar { height: 6px; border-radius: 999px; background: #eef0f2; overflow: hidden; }
+.fc-bar i { display: block; height: 100%; background: var(--accent); }
+.fc-card.fc-at_risk .fc-bar i { background: var(--warn); }
+.fc-window-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+/* projection line (Phase B) — dashed border marks it as a prediction, not a fact */
+.fc-proj { margin-top: 8px; padding-top: 7px; border-top: 1px dashed var(--line); font-size: 12px; }
+.fc-proj-tag { display: inline-block; font-size: .62rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: #f0f1f3; border-radius: 999px; padding: 1px 7px; margin-right: 6px; }
+.fc-proj.reach .fc-proj-verdict { color: #0a7a53; font-weight: 700; }
+.fc-proj.miss .fc-proj-verdict { color: #8a5a12; font-weight: 700; }
+.fc-proj-verdict { margin-left: 4px; }
+
+/* ---- Charge-status chip: one consistent colour language everywhere ---- */
+.status-chip { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .02em; border-radius: 999px; padding: 2px 9px; white-space: nowrap; border: 1px solid transparent; }
+.status-chip.status-pending   { color: #6B6B6B; background: #f0f1f3; border-color: #e0e2e6; }
+.status-chip.status-approved  { color: #2f6fed; background: #e8f0fe; border-color: #bcd3fb; }
+.status-chip.status-issued    { color: #2f6fed; background: #e8f0fe; border-color: #bcd3fb; }
+.status-chip.status-disputed  { color: #8a5a12; background: var(--warn-soft); border-color: #EAD9B0; }
+.status-chip.status-partially { color: #9a6400; background: #fdf3e0; border-color: #f0d9a8; }
+.status-chip.status-closed    { color: #0a7a53; background: var(--accent-soft); border-color: #b7e6d3; }
+.status-chip.status-rejected  { color: var(--danger); background: var(--danger-soft); border-color: #F3C6C1; }
+
+/* recovery-workflow strip in the read-only review */
+.rw-block .rw-status { font-size: 13px; margin: 4px 0 8px; }
+.rw-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.rw-reply { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; border-top: 1px dashed var(--line); padding-top: 10px; }
+.rw-reply-l { font-size: 12px; font-weight: 700; color: var(--muted); }
+.rw-reply-in { width: 100%; font: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
+.rw-reply-in:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
 table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--card); }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
@@ -768,6 +818,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .as-src.as-primary { border-color: var(--accent); background: var(--accent-soft); }
 .as-src .as-arrow { margin-left: auto; color: var(--muted); font-weight: 700; }
 .as-src:hover { border-color: var(--accent); }
+.as-tmpl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 10px; padding-top: 10px; border-top: 1px solid var(--line); }
 .erp-logo-edi { background: #2f6fed; } .erp-logo-api { background: #6b3fd0; } .erp-logo-folder { background: #b7791f; font-size: 1rem; } .erp-logo-mailbox { background: #0a7a53; font-size: 1rem; }
 
 /* ---- Connect-source dialog (EDI / API / Folder) ---- */
@@ -1356,6 +1407,12 @@ const ChargeStatus = Object.freeze({
   REJECTED: 'REJECTED',
   EXPORTED: 'EXPORTED',
   INJECTED: 'INJECTED',
+  // recovery workflow (supplier-facing negotiation) — a debit note is rarely
+  // accepted first time; suppliers dispute lines, settle partially, then close.
+  ISSUED: 'ISSUED',                     // debit note sent to the supplier
+  DISPUTED: 'DISPUTED',                 // supplier pushed back on one or more lines
+  PARTIALLY_SETTLED: 'PARTIALLY_SETTLED', // supplier accepted part of the claim
+  CLOSED: 'CLOSED',                     // terminal — settled or written off
 });
 
 // Warehouse node kind in the hierarchy.
@@ -1446,6 +1503,18 @@ const STRINGS = {
     exportCsv: 'Export CSV', exportedCsvMsg: 'Charge exported as CSV (+ audit CSV).', downloadAudit: 'Download audit CSV',
     inputsLead: 'What the CCOGS Engine produced on incomplete data, and what the tool reconstructs as the true entitlement.',
     overviewLead: 'Portfolio savings & earnings — what the CCOGS Engine claimed (before) vs what CCOGS Reclaim Tool reconstructs you are entitled to (after), and the recoverable True-Up across all suppliers, countries and periods.',
+    ovHeroLead: 'Total recoverable — money on the table',
+    fxRateUsed: 'FX rate used', fxAsOf: 'as of',
+    fcTitle: 'On track this period', fcLead: 'Period-to-date progress toward each rebate tier — facts as recorded so far, not a projection.', fcAsOf: 'as of',
+    fcPtdVolume: 'Volume so far', fcGapToNext: 'To next tier', fcAtTopTier: 'Top tier reached', fcDaysLeft: 'days left', fcElapsed: 'elapsed',
+    fcOnTrack: 'On track', fcAtRisk: 'At risk', fcComplete: 'Top tier',
+    fcProjected: 'Projected (run-rate)', fcProjReach: 'reaches next tier', fcProjMiss: 'falls short at current pace',
+    status: 'Status',
+    cs_PENDING_APPROVAL: 'Pending approval', cs_APPROVED: 'Approved', cs_ISSUED: 'Issued', cs_DISPUTED: 'Disputed', cs_PARTIALLY_SETTLED: 'Partially settled', cs_CLOSED: 'Closed', cs_REJECTED: 'Rejected', cs_EXPORTED: 'Exported', cs_INJECTED: 'Posted to ERP',
+    csWorkflow: 'Recovery workflow', csActApprove: 'Approve', csActIssue: 'Issue debit note', csActDispute: 'Mark disputed', csActSettle: 'Partial settle', csActClose: 'Close', csActReject: 'Reject',
+    csSettled: 'Settled', csTerminal: 'No further actions — this charge is closed.',
+    csSupplierReply: 'Supplier response', csSupplierReplyPh: "Record the supplier's reply (email, call, portal)…", csSaveReply: 'Save reply', csRepliedAt: 'Recorded',
+    csDisputePrompt: 'Reason the supplier gave (optional):', csSettlePrompt: 'Amount the supplier agreed to settle:',
     navPipeline: 'Pipeline', navInputs: 'Inputs & Collection', navConsolidation: 'Consolidation', navMl: 'ML Discovery',
     navAnalyst: 'Analyst Review', navApprover: 'Finance Approver', navOverview: 'Finance Overview', navConsolidated: 'Consolidated Debit',
     consolLead: 'Build one consolidated Contra-COGS debit per supplier. Tick the agreements to include on the left; the document preview on the right updates live. Then generate the invoice or open the agreement summary.',
@@ -1621,6 +1690,7 @@ const STRINGS = {
     // ---- Add source + mailbox scan ----
     addSource: 'Add source', addSourceHint: 'Add a new data source (EDI, API, folder or shared mailbox)',
     addSourceTitle: 'Add a data source', addSourceLead: 'Connect a new source, or scan a shared mailbox for updates that relate to your agreements, invoices or deliveries.',
+    agrCsvTemplate: 'Download agreement CSV template', agrCsvTemplateHint: 'Bulk-import agreements from a spreadsheet — fill the template and drop it in the folder source.',
     srcEdiName: 'EDI connection', srcEdiSub: 'Dispatch / ASN feeds via EDI',
     srcApiName: 'API feed', srcApiSub: 'Pull documents from a partner / ERP API',
     srcFolderName: 'Folder / SFTP watch', srcFolderSub: 'Monitor a shared drop folder for new files',
@@ -1738,6 +1808,14 @@ const STRINGS = {
     'ab.audit.sheet1': '<strong>Line detail</strong> — every line/SKU with warehouse split, delivery-note and goods-receipt dates, rate and value.',
     'ab.audit.sheet2': '<strong>CCOGS requested</strong> — the additional-CCOGS debits, each pointing back to its line references.',
     'ab.p.finance2': 'It now also leads with what the analysis found: a findings summary, the CCOGS delta (engine-claimed vs reconstructed), and a realized/pending tracker for the additional CCOGS that has been posted to ERP this session.',
+    'ab.fin.hero': 'A large "money on the table" figure now leads the page — the single total-recoverable number a CFO glances at first.',
+    'ab.fin.forecast': 'An "On track this period" block shows, per agreement, the volume achieved so far, the gap to the next rebate tier and how much of the contract window has elapsed — plus a clearly-labelled run-rate projection (kept visually separate from the audited figures; it is a prediction, not a fact).',
+    'ab.h.recovery': 'Recovery workflow', 'ab.p.recovery': 'A debit note is a negotiation, not a one-shot. Each charge now moves through an audited status lifecycle, so you can track it past "sent":',
+    'ab.rec.states': '<strong>Statuses</strong> — pending approval → approved → issued → disputed → partially settled → closed (rejection is terminal). Every transition writes an immutable audit entry.',
+    'ab.rec.reply': '<strong>Supplier response</strong> — record the supplier\'s reply (email, call, portal) directly on the charge; it is timestamped into the audit trail.',
+    'ab.rec.colors': '<strong>Status colours</strong> — one consistent colour language across the Consolidated Debit and review screens (amber = disputed, green = closed, red = rejected, blue = approved/issued).',
+    'ab.rec.fx': '<strong>FX snapshot</strong> — when a charge is converted to EUR, the exact rate and its as-of date are stored on the charge and shown in the review and the Excel export, so "which rate, from when" is always defensible.',
+    'ab.h.bulk': 'Bulk agreement ab.p.bulk': 'Agreements load from XML (rich) or CSV (spreadsheet-friendly, one row per agreement). Use "Add source → Download agreement CSV template" to get a ready-to-fill file; tiers are encoded as "threshold:rate;…", multi-value fields are pipe-joined.',
     'ab.h.finance': 'Finance Overview', 'ab.p.finance': 'The Finance Overview frames the whole portfolio as savings & earnings: engine-claimed (before) → tool-entitled (after), the total recoverable True-Up and uplift, a process journey showing where goods get stuck and the issue types at each stage, recovery broken down by supplier, scope, period and contract duration (with a fail rate per duration), and a top-opportunities table grouped by supplier and contract validity.',
     'ab.h.roles': 'Roles', 'ab.p.roles': 'The tool is a single open-access workspace — everyone can browse every stage and use every action; there are no separate roles to select.',
     'ab.h.nav': 'Getting around', 'ab.p.nav': 'Use the sidebar to move between stages; in Inputs, click a source in the ingestion flow (or use the sub-tabs, each showing a live document count) to browse its documents, and the green “Back to summary” button to return. Switch language any time with the flags — the whole interface follows. Open this manual from the ⓘ About button below the language switch.',
@@ -1951,6 +2029,18 @@ const STRINGS = {
     archiveNote: 'Tento návrh bude archivovaný a už sa nezobrazí v zozname návrhov.', archive: 'Archivovať', cancel: 'Zrušiť',
     archivedMsg: 'Návrh archivovaný a odstránený zo zoznamu.', contraInvoiceTitle: 'Contra-COGS dobropis',
     overviewLead: 'Úspory a výnosy portfólia — čo nárokoval CCOGS Engine (pred) vs. na čo máte podľa CCOGS Reclaim Tool nárok (po), a získateľný True-Up naprieč dodávateľmi, krajinami a obdobiami.',
+    ovHeroLead: 'Celkovo získateľné — peniaze na stole',
+    fxRateUsed: 'Použitý FX kurz', fxAsOf: 'k dátumu',
+    fcTitle: 'Na dobrej ceste v tomto období', fcLead: 'Priebeh k jednotlivým úrovniam rabatu k dnešnému dňu — fakty tak, ako boli doteraz zaznamenané, nie predpoveď.', fcAsOf: 'k dátumu',
+    fcPtdVolume: 'Objem doteraz', fcGapToNext: 'Do ďalšej úrovne', fcAtTopTier: 'Dosiahnutá najvyššia úroveň', fcDaysLeft: 'dní zostáva', fcElapsed: 'uplynulo',
+    fcOnTrack: 'Na dobrej ceste', fcAtRisk: 'V riziku', fcComplete: 'Najvyššia úroveň',
+    fcProjected: 'Odhad (podľa tempa)', fcProjReach: 'dosiahne ďalšiu úroveň', fcProjMiss: 'pri súčasnom tempe nedosiahne',
+    status: 'Stav',
+    cs_PENDING_APPROVAL: 'Čaká na schválenie', cs_APPROVED: 'Schválené', cs_ISSUED: 'Vystavené', cs_DISPUTED: 'Sporné', cs_PARTIALLY_SETTLED: 'Čiastočne vyrovnané', cs_CLOSED: 'Uzavreté', cs_REJECTED: 'Zamietnuté', cs_EXPORTED: 'Exportované', cs_INJECTED: 'Zaúčtované do ERP',
+    csWorkflow: 'Proces obnovy', csActApprove: 'Schváliť', csActIssue: 'Vystaviť dobropis', csActDispute: 'Označiť ako sporné', csActSettle: 'Čiastočné vyrovnanie', csActClose: 'Uzavrieť', csActReject: 'Zamietnuť',
+    csSettled: 'Vyrovnané', csTerminal: 'Žiadne ďalšie akcie — táto položka je uzavretá.',
+    csSupplierReply: 'Odpoveď dodávateľa', csSupplierReplyPh: 'Zaznamenajte odpoveď dodávateľa (e-mail, hovor, portál)…', csSaveReply: 'Uložiť odpoveď', csRepliedAt: 'Zaznamenané',
+    csDisputePrompt: 'Dôvod dodávateľa (voliteľné):', csSettlePrompt: 'Suma, na ktorej sa dodávateľ dohodol:',
     filesTitle: 'Zozbierané dokumenty', filesLead: 'Každý vstup, ktorý nástroj načítal, podľa zdroja. Kliknutím na dokument ho zobrazíte, vytlačíte alebo stiahnete.',
     rawFile: 'Zdrojový súbor', document: 'Dokument', lines: 'Riadky', invoice: 'Faktúra', deliveryNote: 'Dodací list', goodsReceipt: 'Príjemka', missingData: 'Udalosť chýbajúcich dát', engineFile: 'Súhrn CCOGS Engine',
     header: 'Hlavička', calcTrail: 'Výpočtová stopa', linkedDocs: 'Prepojené dokumenty', qty: 'Množstvo', unitPrice: 'Jedn. cena', targetStorage: 'Cieľový sklad', total: 'Spolu', tiers: 'Zľavové úrovne',
@@ -2079,6 +2169,7 @@ const STRINGS = {
     // ---- Add source + mailbox scan ----
     addSource: 'Pridať zdroj', addSourceHint: 'Pridať nový zdroj údajov (EDI, API, priečinok alebo zdieľaná schránka)',
     addSourceTitle: 'Pridať zdroj údajov', addSourceLead: 'Pripojte nový zdroj alebo prehľadajte zdieľanú schránku pre aktualizácie súvisiace s vašimi zmluvami, faktúrami alebo dodávkami.',
+    agrCsvTemplate: 'Stiahnuť CSV šablónu zmlúv', agrCsvTemplateHint: 'Hromadný import zmlúv z tabuľky — vyplňte šablónu a vložte ju do priečinkového zdroja.',
     srcEdiName: 'EDI pripojenie', srcEdiSub: 'Dispatch / ASN cez EDI',
     srcApiName: 'API kanál', srcApiSub: 'Načítať dokumenty z partnerského / ERP API',
     srcFolderName: 'Priečinok / SFTP', srcFolderSub: 'Sledovať zdieľaný priečinok pre nové súbory',
@@ -2196,6 +2287,14 @@ const STRINGS = {
     'ab.audit.sheet1': '<strong>Detail riadkov</strong> — každý riadok/SKU s rozdelením skladu, dátumami dodacieho listu a príjemky, sadzbou a hodnotou.',
     'ab.audit.sheet2': '<strong>Požadovaný CCOGS</strong> — dodatočné CCOGS ťarchopisy, každý odkazuje späť na svoje referencie riadkov.',
     'ab.p.finance2': 'Teraz tiež začína tým, čo analýza zistila: súhrn zistení, rozdiel CCOGS (nárokované enginom vs. rekonštruované) a sledovač realizované/čakajúce pre dodatočný CCOGS zaúčtovaný do ERP v tejto relácii.',
+    'ab.fin.hero': 'Stránku teraz vedie veľké číslo „peniaze na stole“ — jediná celková získateľná suma, na ktorú sa CFO pozrie ako prvé.',
+    'ab.fin.forecast': 'Blok „Na dobrej ceste v tomto období“ ukazuje pre každú zmluvu doteraz dosiahnutý objem, medzeru do ďalšej úrovne rabatu a koľko zo zmluvného okna uplynulo — plus jasne označený odhad podľa tempa (vizuálne oddelený od auditovaných čísel; ide o predpoveď, nie fakt).',
+    'ab.h.recovery': 'Proces obnovy', 'ab.p.recovery': 'Ťarchopis je vyjednávanie, nie jednorazový úkon. Každá položka teraz prechádza auditovaným cyklom stavov, takže ju viete sledovať aj po „odoslaní“:',
+    'ab.rec.states': '<strong>Stavy</strong> — čaká na schválenie → schválené → vystavené → sporné → čiastočne vyrovnané → uzavreté (zamietnutie je konečné). Každý prechod zapíše nemennú auditnú položku.',
+    'ab.rec.reply': '<strong>Odpoveď dodávateľa</strong> — zaznamenajte odpoveď dodávateľa (e-mail, hovor, portál) priamo na položke; s časovou pečiatkou v auditnej stope.',
+    'ab.rec.colors': '<strong>Farby stavov</strong> — jednotný farebný jazyk naprieč Konsolidovaným debetom a obrazovkami kontroly (jantárová = sporné, zelená = uzavreté, červená = zamietnuté, modrá = schválené/vystavené).',
+    'ab.rec.fx': '<strong>FX snímka</strong> — pri konverzii položky na EUR sa presný kurz a jeho dátum uložia na položku a zobrazia v kontrole aj v exporte do Excelu, takže „ktorý kurz a odkedy“ je vždy obhájiteľné.',
+    'ab.h.bulk': 'Hromadný import zmlúv', 'ab.p.bulk': 'Zmluvy sa načítajú z XML (bohaté) alebo CSV (vhodné pre tabuľky, jeden riadok na zmluvu). Použite „Pridať zdroj → Stiahnuť CSV šablónu zmlúv“ pre pripravený súbor; úrovne sú zakódované ako „prah:sadzba;…“, viachodnotové polia sú spojené zvislou čiarou.',
     'ab.h.finance': 'Finančný prehľad', 'ab.p.finance': 'Finančný prehľad rámcuje celé portfólio ako úspory a výnosy: nárokované enginom (pred) → nárok podľa nástroja (po), celkový získateľný True-Up a navýšenie, procesná cesta ukazujúca, kde sa tovar zasekne, a typy problémov v každej fáze, obnova rozdelená podľa dodávateľa, rozsahu, obdobia a dĺžky zmluvy (s mierou zlyhania na dĺžku) a tabuľka najväčších príležitostí zoskupená podľa dodávateľa a platnosti zmluvy.',
     'ab.h.roles': 'Roly', 'ab.p.roles': 'Nástroj je jeden otvorený pracovný priestor — každý môže prehliadať všetky fázy a používať všetky akcie; nie sú žiadne samostatné roly na výber.',
     'ab.h.nav': 'Orientácia', 'ab.p.nav': 'Pomocou bočného panela sa presúvajte medzi fázami; vo Vstupoch kliknite na zdroj v toku ingescie (alebo použite podzáložky, každá zobrazuje živý počet dokumentov) a prehliadajte jeho dokumenty, a zeleným tlačidlom „Späť na súhrn“ sa vráťte. Jazyk kedykoľvek prepnite vlajkami — celé rozhranie ho nasleduje. Túto príručku otvorte tlačidlom ⓘ About pod prepínačom jazyka.',
@@ -2409,6 +2508,18 @@ const STRINGS = {
     archiveNote: 'Ta sugestia zostanie zarchiwizowana i nie będzie już widoczna na liście sugestii.', archive: 'Archiwizuj', cancel: 'Anuluj',
     archivedMsg: 'Sugestia zarchiwizowana i usunięta z listy.', contraInvoiceTitle: 'Nota debetowa Contra-COGS',
     overviewLead: 'Oszczędności i przychody portfela — co zgłosił CCOGS Engine (przed) vs. do czego uprawnia Cię CCOGS Reclaim Tool (po) oraz możliwy do odzyskania True-Up u wszystkich dostawców, krajów i okresów.',
+    ovHeroLead: 'Łącznie do odzyskania — pieniądze na stole',
+    fxRateUsed: 'Użyty kurs FX', fxAsOf: 'na dzień',
+    fcTitle: 'Na dobrej drodze w tym okresie', fcLead: 'Postęp do poszczególnych progów rabatu do dziś — fakty zapisane do tej pory, nie prognoza.', fcAsOf: 'na dzień',
+    fcPtdVolume: 'Wolumen dotychczas', fcGapToNext: 'Do następnego progu', fcAtTopTier: 'Osiągnięto najwyższy próg', fcDaysLeft: 'dni pozostało', fcElapsed: 'upłynęło',
+    fcOnTrack: 'Na dobrej drodze', fcAtRisk: 'Zagrożone', fcComplete: 'Najwyższy próg',
+    fcProjected: 'Prognoza (wg tempa)', fcProjReach: 'osiągnie następny próg', fcProjMiss: 'przy obecnym tempie nie osiągnie',
+    status: 'Status',
+    cs_PENDING_APPROVAL: 'Oczekuje na zatwierdzenie', cs_APPROVED: 'Zatwierdzone', cs_ISSUED: 'Wystawione', cs_DISPUTED: 'Sporne', cs_PARTIALLY_SETTLED: 'Częściowo rozliczone', cs_CLOSED: 'Zamknięte', cs_REJECTED: 'Odrzucone', cs_EXPORTED: 'Wyeksportowane', cs_INJECTED: 'Zaksięgowane w ERP',
+    csWorkflow: 'Proces odzysku', csActApprove: 'Zatwierdź', csActIssue: 'Wystaw notę', csActDispute: 'Oznacz jako sporne', csActSettle: 'Częściowe rozliczenie', csActClose: 'Zamknij', csActReject: 'Odrzuć',
+    csSettled: 'Rozliczono', csTerminal: 'Brak dalszych działań — ta pozycja jest zamknięta.',
+    csSupplierReply: 'Odpowiedź dostawcy', csSupplierReplyPh: 'Zapisz odpowiedź dostawcy (e-mail, telefon, portal)…', csSaveReply: 'Zapisz odpowiedź', csRepliedAt: 'Zapisano',
+    csDisputePrompt: 'Powód podany przez dostawcę (opcjonalnie):', csSettlePrompt: 'Kwota, na jaką zgodził się dostawca:',
     filesTitle: 'Zebrane dokumenty', filesLead: 'Każde wejście wczytane przez narzędzie, wg źródła. Kliknij dokument, aby go wyświetlić, wydrukować lub pobrać.',
     rawFile: 'Plik źródłowy', document: 'Dokument', lines: 'Wiersze', invoice: 'Faktura', deliveryNote: 'Dowód dostawy', goodsReceipt: 'Przyjęcie towaru', missingData: 'Zdarzenie braku danych', engineFile: 'Podsumowanie CCOGS Engine',
     header: 'Nagłówek', calcTrail: 'Ślad obliczeń', linkedDocs: 'Powiązane dokumenty', qty: 'Ilość', unitPrice: 'Cena jedn.', targetStorage: 'Magazyn docelowy', total: 'Razem', tiers: 'Progi rabatowe',
@@ -2536,6 +2647,7 @@ const STRINGS = {
     // ---- Add source + mailbox scan ----
     addSource: 'Dodaj źródło', addSourceHint: 'Dodaj nowe źródło danych (EDI, API, folder lub współdzielona skrzynka)',
     addSourceTitle: 'Dodaj źródło danych', addSourceLead: 'Podłącz nowe źródło lub przeskanuj współdzieloną skrzynkę w poszukiwaniu aktualizacji dotyczących umów, faktur lub dostaw.',
+    agrCsvTemplate: 'Pobierz szablon CSV umów', agrCsvTemplateHint: 'Zbiorczy import umów z arkusza — wypełnij szablon i umieść go w źródle folderowym.',
     srcEdiName: 'Połączenie EDI', srcEdiSub: 'Dispatch / ASN przez EDI',
     srcApiName: 'Kanał API', srcApiSub: 'Pobieraj dokumenty z API partnera / ERP',
     srcFolderName: 'Folder / SFTP', srcFolderSub: 'Monitoruj współdzielony folder pod kątem nowych plików',
@@ -2653,6 +2765,14 @@ const STRINGS = {
     'ab.audit.sheet1': '<strong>Szczegół linii</strong> — każda linia/SKU z podziałem magazynowym, datami dokumentu dostawy i przyjęcia, stawką i wartością.',
     'ab.audit.sheet2': '<strong>Żądany CCOGS</strong> — dodatkowe noty CCOGS, każda wskazująca z powrotem na swoje referencje linii.',
     'ab.p.finance2': 'Teraz zaczyna się także od tego, co wykryła analiza: podsumowanie ustaleń, różnica CCOGS (zgłoszone przez silnik vs zrekonstruowane) oraz śledzenie zrealizowane/oczekujące dla dodatkowego CCOGS zaksięgowanego w ERP w tej sesji.',
+    'ab.fin.hero': 'Stronę prowadzi teraz duża liczba „pieniądze na stole” — jedna łączna kwota do odzyskania, na którą CFO patrzy najpierw.',
+    'ab.fin.forecast': 'Blok „Na dobrej drodze w tym okresie” pokazuje dla każdej umowy dotychczas osiągnięty wolumen, lukę do następnego progu rabatu i ile z okna umowy upłynęło — plus wyraźnie oznaczoną prognozę wg tempa (wizualnie oddzieloną od zaudytowanych liczb; to prognoza, nie fakt).',
+    'ab.h.recovery': 'Proces odzysku', 'ab.p.recovery': 'Nota debetowa to negocjacja, nie jednorazowa czynność. Każda pozycja przechodzi teraz przez audytowany cykl statusów, więc można ją śledzić po „wysłaniu”:',
+    'ab.rec.states': '<strong>Statusy</strong> — oczekuje na zatwierdzenie → zatwierdzone → wystawione → sporne → częściowo rozliczone → zamknięte (odrzucenie jest końcowe). Każde przejście zapisuje niezmienny wpis audytu.',
+    'ab.rec.reply': '<strong>Odpowiedź dostawcy</strong> — zapisz odpowiedź dostawcy (e-mail, telefon, portal) bezpośrednio na pozycji; ze znacznikiem czasu w ścieżce audytu.',
+    'ab.rec.colors': '<strong>Kolory statusów</strong> — jeden spójny język kolorów w Skonsolidowanym debecie i ekranach przeglądu (bursztynowy = sporne, zielony = zamknięte, czerwony = odrzucone, niebieski = zatwierdzone/wystawione).',
+    'ab.rec.fx': '<strong>Migawka FX</strong> — przy przeliczeniu pozycji na EUR dokładny kurs i jego data są zapisywane na pozycji i pokazywane w przeglądzie oraz eksporcie do Excela, więc „jaki kurs i z kiedy” jest zawsze do obrony.',
+    'ab.h.bulk': 'Zbiorczy import umów', 'ab.p.bulk': 'Umowy ładują się z XML (bogate) lub CSV (przyjazne arkuszom, jeden wiersz na umowę). Użyj „Dodaj źródło → Pobierz szablon CSV umów”, aby uzyskać gotowy plik; progi są kodowane jako „próg:stawka;…”, pola wielowartościowe łączone pionową kreską.',
     'ab.h.finance': 'Przegląd finansowy', 'ab.p.finance': 'Przegląd finansowy ujmuje cały portfel jako oszczędności i przychody: zgłoszone przez silnik (przed) → należne według narzędzia (po), łączny możliwy do odzyskania True-Up i podwyżka, ścieżka procesu pokazująca, gdzie towar utyka, oraz typy problemów na każdym etapie, odzysk rozbity według dostawcy, zakresu, okresu i czasu trwania umowy (ze wskaźnikiem niepowodzeń na czas trwania) oraz tabela najlepszych okazji pogrupowana według dostawcy i ważności umowy.',
     'ab.h.roles': 'Role', 'ab.p.roles': 'Narzędzie to jeden otwarty obszar roboczy — każdy może przeglądać wszystkie etapy i korzystać z każdej akcji; nie ma osobnych ról do wyboru.',
     'ab.h.nav': 'Poruszanie się', 'ab.p.nav': 'Użyj paska bocznego, aby przechodzić między etapami; w Wejściach kliknij źródło w przepływie wczytywania (lub użyj podzakładek, każda pokazuje aktualną liczbę dokumentów), aby przeglądać jego dokumenty, a zielonym przyciskiem „Powrót do podsumowania”, aby wrócić. Przełącz język w dowolnej chwili flagami — cały interfejs za nim podąża. Otwórz ten podręcznik przyciskiem ⓘ About pod przełącznikiem języka.',
@@ -2866,6 +2986,18 @@ const STRINGS = {
     archiveNote: 'Tento návrh bude archivován a již se nezobrazí v seznamu návrhů.', archive: 'Archivovat', cancel: 'Zrušit',
     archivedMsg: 'Návrh archivován a odstraněn ze seznamu.', contraInvoiceTitle: 'Contra-COGS dobropis',
     overviewLead: 'Úspory a výnosy portfolia — co nárokoval CCOGS Engine (před) vs. na co máte podle CCOGS Reclaim Tool nárok (po) a získatelný True-Up napříč dodavateli, zeměmi a obdobími.',
+    ovHeroLead: 'Celkem získatelné — peníze na stole',
+    fxRateUsed: 'Použitý FX kurz', fxAsOf: 'k datu',
+    fcTitle: 'Na dobré cestě v tomto období', fcLead: 'Průběh k jednotlivým úrovním rabatu k dnešnímu dni — fakta tak, jak byla dosud zaznamenána, nikoli předpověď.', fcAsOf: 'k datu',
+    fcPtdVolume: 'Objem dosud', fcGapToNext: 'Do další úrovně', fcAtTopTier: 'Dosažena nejvyšší úroveň', fcDaysLeft: 'dní zbývá', fcElapsed: 'uplynulo',
+    fcOnTrack: 'Na dobré cestě', fcAtRisk: 'V riziku', fcComplete: 'Nejvyšší úroveň',
+    fcProjected: 'Odhad (podle tempa)', fcProjReach: 'dosáhne další úrovně', fcProjMiss: 'při současném tempu nedosáhne',
+    status: 'Stav',
+    cs_PENDING_APPROVAL: 'Čeká na schválení', cs_APPROVED: 'Schváleno', cs_ISSUED: 'Vystaveno', cs_DISPUTED: 'Sporné', cs_PARTIALLY_SETTLED: 'Částečně vyrovnáno', cs_CLOSED: 'Uzavřeno', cs_REJECTED: 'Zamítnuto', cs_EXPORTED: 'Exportováno', cs_INJECTED: 'Zaúčtováno do ERP',
+    csWorkflow: 'Proces obnovy', csActApprove: 'Schválit', csActIssue: 'Vystavit dobropis', csActDispute: 'Označit jako sporné', csActSettle: 'Částečné vyrovnání', csActClose: 'Uzavřít', csActReject: 'Zamítnout',
+    csSettled: 'Vyrovnáno', csTerminal: 'Žádné další akce — tato položka je uzavřena.',
+    csSupplierReply: 'Odpověď dodavatele', csSupplierReplyPh: 'Zaznamenejte odpověď dodavatele (e-mail, hovor, portál)…', csSaveReply: 'Uložit odpověď', csRepliedAt: 'Zaznamenáno',
+    csDisputePrompt: 'Důvod dodavatele (volitelné):', csSettlePrompt: 'Částka, na které se dodavatel dohodl:',
     filesTitle: 'Sesbírané dokumenty', filesLead: 'Každý vstup, který nástroj načetl, podle zdroje. Kliknutím na dokument jej zobrazíte, vytisknete nebo stáhnete.',
     rawFile: 'Zdrojový soubor', document: 'Dokument', lines: 'Řádky', invoice: 'Faktura', deliveryNote: 'Dodací list', goodsReceipt: 'Příjemka', missingData: 'Událost chybějících dat', engineFile: 'Souhrn CCOGS Engine',
     header: 'Hlavička', calcTrail: 'Výpočetní stopa', linkedDocs: 'Propojené dokumenty', qty: 'Množství', unitPrice: 'Jedn. cena', targetStorage: 'Cílový sklad', total: 'Celkem', tiers: 'Slevové úrovně',
@@ -2993,6 +3125,7 @@ const STRINGS = {
     // ---- Add source + mailbox scan ----
     addSource: 'Přidat zdroj', addSourceHint: 'Přidat nový zdroj dat (EDI, API, složka nebo sdílená schránka)',
     addSourceTitle: 'Přidat zdroj dat', addSourceLead: 'Připojte nový zdroj nebo prohledejte sdílenou schránku pro aktualizace týkající se vašich smluv, faktur nebo dodávek.',
+    agrCsvTemplate: 'Stáhnout CSV šablonu smluv', agrCsvTemplateHint: 'Hromadný import smluv z tabulky — vyplňte šablonu a vložte ji do složkového zdroje.',
     srcEdiName: 'EDI připojení', srcEdiSub: 'Dispatch / ASN přes EDI',
     srcApiName: 'API kanál', srcApiSub: 'Načíst dokumenty z partnerského / ERP API',
     srcFolderName: 'Složka / SFTP', srcFolderSub: 'Sledovat sdílenou složku pro nové soubory',
@@ -3110,6 +3243,14 @@ const STRINGS = {
     'ab.audit.sheet1': '<strong>Detail řádků</strong> — každý řádek/SKU s rozdělením skladu, daty dodacího listu a příjemky, sazbou a hodnotou.',
     'ab.audit.sheet2': '<strong>Požadovaný CCOGS</strong> — dodatečné CCOGS vrubopisy, každý odkazuje zpět na své reference řádků.',
     'ab.p.finance2': 'Nyní také začíná tím, co analýza zjistila: souhrn zjištění, rozdíl CCOGS (nárokované enginem vs. rekonstruované) a sledování realizované/čekající pro dodatečný CCOGS zaúčtovaný do ERP v této relaci.',
+    'ab.fin.hero': 'Stránku nyní vede velké číslo „peníze na stole“ — jediná celková získatelná částka, na kterou se CFO podívá jako první.',
+    'ab.fin.forecast': 'Blok „Na dobré cestě v tomto období“ ukazuje pro každou smlouvu dosud dosažený objem, mezeru do další úrovně rabatu a kolik ze smluvního okna uplynulo — plus jasně označený odhad podle tempa (vizuálně oddělený od auditovaných čísel; jde o předpověď, nikoli fakt).',
+    'ab.h.recovery': 'Proces obnovy', 'ab.p.recovery': 'Vrubopis je vyjednávání, ne jednorázový úkon. Každá položka nyní prochází auditovaným cyklem stavů, takže ji lze sledovat i po „odeslání“:',
+    'ab.rec.states': '<strong>Stavy</strong> — čeká na schválení → schváleno → vystaveno → sporné → částečně vyrovnáno → uzavřeno (zamítnutí je konečné). Každý přechod zapíše neměnnou auditní položku.',
+    'ab.rec.reply': '<strong>Odpověď dodavatele</strong> — zaznamenejte odpověď dodavatele (e-mail, hovor, portál) přímo na položce; s časovým razítkem v auditní stopě.',
+    'ab.rec.colors': '<strong>Barvy stavů</strong> — jednotný barevný jazyk napříč Konsolidovaným debetem a obrazovkami kontroly (jantarová = sporné, zelená = uzavřeno, červená = zamítnuto, modrá = schváleno/vystaveno).',
+    'ab.rec.fx': '<strong>FX snímek</strong> — při převodu položky na EUR se přesný kurz a jeho datum uloží na položku a zobrazí v kontrole i v exportu do Excelu, takže „který kurz a odkdy“ je vždy obhájitelné.',
+    'ab.h.bulk': 'Hromadný import smluv', 'ab.p.bulk': 'Smlouvy se načítají z XML (bohaté) nebo CSV (vhodné pro tabulky, jeden řádek na smlouvu). Použijte „Přidat zdroj → Stáhnout CSV šablonu smluv“ pro připravený soubor; úrovně jsou zakódovány jako „práh:sazba;…“, vícehodnotová pole spojená svislou čarou.',
     'ab.h.finance': 'Finanční přehled', 'ab.p.finance': 'Finanční přehled rámuje celé portfolio jako úspory a výnosy: nárokované enginem (před) → nárok podle nástroje (po), celkový získatelný True-Up a navýšení, procesní cesta ukazující, kde se zboží zasekne, a typy problémů v každé fázi, obnova rozdělená podle dodavatele, rozsahu, období a délky smlouvy (s mírou selhání na délku) a tabulka největších příležitostí seskupená podle dodavatele a platnosti smlouvy.',
     'ab.h.roles': 'Role', 'ab.p.roles': 'Nástroj je jeden otevřený pracovní prostor — každý může procházet všechny fáze a používat všechny akce; nejsou žádné samostatné role k výběru.',
     'ab.h.nav': 'Orientace', 'ab.p.nav': 'Pomocí bočního panelu se přesouvejte mezi fázemi; ve Vstupech klikněte na zdroj v toku ingesce (nebo použijte podzáložky, každá zobrazuje živý počet dokumentů) a procházejte jeho dokumenty, a zeleným tlačítkem „Zpět na souhrn“ se vraťte. Jazyk kdykoli přepněte vlajkami — celé rozhraní jej následuje. Tuto příručku otevřete tlačítkem ⓘ About pod přepínačem jazyka.',
@@ -4073,6 +4214,11 @@ function createSupplementingCharge(raw) {
     variance: num(raw, 'variance', ctx),
     currency: oneOf(Currency, req(raw, 'currency', ctx), 'currency', ctx),
     eurEquivalent: raw.eurEquivalent != null ? Number(raw.eurEquivalent) : null,
+    // FX snapshot: the exact rate + as-of date + source used to derive eurEquivalent,
+    // stored ON the charge so an auditor can defend "rate X from date Y" months later.
+    // null when no conversion was needed (charge currency is already EUR).
+    // shape: { rate, asOf, base, source } or { converted:true, ratesUsed:{CUR:rate}, asOf, base, source } for pan-EU multi-currency.
+    fxSnapshot: raw.fxSnapshot ?? null,
     // headline tier movement, e.g. from 1.0% to 2.0%
     tierFromPct: raw.tierFromPct != null ? Number(raw.tierFromPct) : null,
     tierToPct: raw.tierToPct != null ? Number(raw.tierToPct) : null,
@@ -4083,6 +4229,11 @@ function createSupplementingCharge(raw) {
     lines: Array.isArray(raw.lines) ? raw.lines : [],
     clauseRef: raw.clauseRef ?? null,
     status: raw.status ?? ChargeStatus.PENDING_APPROVAL,
+    // recovery-workflow fields (populated as the debit note moves through the
+    // supplier negotiation): amount the supplier agreed to, and any dispute reason.
+    settledAmount: raw.settledAmount != null ? Number(raw.settledAmount) : null,
+    disputeReason: raw.disputeReason ?? null,
+    supplierResponse: raw.supplierResponse ?? null,   // { at, channel, note } — captured supplier reply (task #3)
     auditTrace: Array.isArray(raw.auditTrace) ? raw.auditTrace : [],
   };
 }
@@ -4211,6 +4362,75 @@ ${clauses}
   </clauses>
 </agreement>
 `;
+}
+
+// ---- Agreement (CSV) — bulk import alternative to XML --------------------
+// One row per agreement. Multi-value fields are pipe-joined; tiers are encoded
+// as "threshold:rate;threshold:rate"; clauses as "key=value;key=value".
+// This lets a spreadsheet-driven team load hundreds of agreements at once.
+const AGREEMENT_CSV_HEADERS = [
+  'agreementId', 'supplierId', 'supplierName', 'contractRef', 'rebateStructure', 'basis', 'period', 'scope',
+  'retrospectiveReach', 'tierMeasure', 'windowType', 'effectiveFrom', 'effectiveTo',
+  'signatory', 'signatoryTitle', 'signedDate', 'governingLaw',
+  'tiers', 'currencies', 'countries', 'skuSet', 'engineConfiguredSkus', 'clauses',
+];
+const splitList = (v) => (v ? String(v).split('|').map((s) => s.trim()).filter(Boolean) : []);
+const parseTiersCell = (v) => (v ? String(v).split(';').map((s) => s.trim()).filter(Boolean).map((pair) => {
+  const [th, rate] = pair.split(':');
+  return { threshold: Number(th), rate: Number(rate) };
+}) : []);
+const parseClausesCell = (v) => {
+  const out = {};
+  if (v) for (const pair of String(v).split(';')) { const [k, val] = pair.split('='); if (k) out[k.trim()] = (val ?? '').trim(); }
+  return out;
+};
+function parseAgreementCsv(text, provenance = null) {
+  const { rows } = parseCsv(text);
+  return rows.map((r) => {
+    const skuSet = splitList(r.skuSet);
+    return createAgreement({
+      agreementId: r.agreementId,
+      supplierId: r.supplierId,
+      supplierName: r.supplierName || null,
+      contractRef: r.contractRef || null,
+      rebateStructure: r.rebateStructure || null,
+      basis: r.basis || null,
+      period: r.period || null,
+      scope: r.scope || null,
+      retrospectiveReach: r.retrospectiveReach || null,
+      tierMeasure: r.tierMeasure || null,
+      windowType: r.windowType || null,
+      effectiveFrom: r.effectiveFrom || null,
+      effectiveTo: r.effectiveTo || null,
+      signatory: r.signatory || null,
+      signatoryTitle: r.signatoryTitle || null,
+      signedDate: r.signedDate || null,
+      governingLaw: r.governingLaw || null,
+      tiers: parseTiersCell(r.tiers),
+      currencies: splitList(r.currencies),
+      countries: splitList(r.countries),
+      skuSet,
+      engineConfiguredSkus: r.engineConfiguredSkus ? splitList(r.engineConfiguredSkus) : skuSet.slice(),
+      clauseRefs: parseClausesCell(r.clauses),
+      provenance,
+    });
+  });
+}
+function serializeAgreementCsv(agreements) {
+  return serializeCsv(AGREEMENT_CSV_HEADERS, agreements.map((a) => ({
+    agreementId: a.agreementId, supplierId: a.supplierId, supplierName: a.supplierName ?? '',
+    contractRef: a.contractRef ?? '', rebateStructure: a.rebateStructure ?? '', basis: a.basis ?? '',
+    period: a.period ?? '', scope: a.scope ?? '', retrospectiveReach: a.retrospectiveReach ?? '',
+    tierMeasure: a.tierMeasure ?? '', windowType: a.windowType ?? '',
+    effectiveFrom: a.effectiveFrom ?? '', effectiveTo: a.effectiveTo ?? '',
+    signatory: a.signatory ?? '', signatoryTitle: a.signatoryTitle ?? '', signedDate: a.signedDate ?? '', governingLaw: a.governingLaw ?? '',
+    tiers: (a.tiers || []).map((t) => `${t.threshold}:${t.rate}`).join(';'),
+    currencies: (a.currencies || []).join('|'),
+    countries: (a.countries || []).join('|'),
+    skuSet: (a.skuSet || []).join('|'),
+    engineConfiguredSkus: (a.engineConfiguredSkus || []).join('|'),
+    clauses: Object.entries(a.clauseRefs || {}).map(([k, v]) => `${k}=${v}`).join(';'),
+  })));
 }
 
 // ---- Purchase (CSV) ------------------------------------------------------
@@ -4391,7 +4611,8 @@ function serializeCcogsEngineCsv(rows) {
 
 // ---- category dispatch (used by ingest) ----------------------------------
 const PARSERS = Object.freeze({
-  agreements: { kind: 'xml', parse: parseAgreementXml },
+  // agreements accept BOTH XML (rich) and CSV (bulk spreadsheet); ingest picks by extension.
+  agreements: { kind: 'xml', parse: parseAgreementXml, parseCsv: parseAgreementCsv },
   invoices: { kind: 'xml', parse: parseInvoiceXml },
   delivery_notes: { kind: 'xml', parse: parseDeliveryNoteXml },
   purchases: { kind: 'csv', parse: parsePurchaseCsv },
@@ -4403,6 +4624,8 @@ const PARSERS = Object.freeze({
 
   __M["lib/parsers"].parseAgreementXml = parseAgreementXml;
   __M["lib/parsers"].serializeAgreementXml = serializeAgreementXml;
+  __M["lib/parsers"].parseAgreementCsv = parseAgreementCsv;
+  __M["lib/parsers"].serializeAgreementCsv = serializeAgreementCsv;
   __M["lib/parsers"].parsePurchaseCsv = parsePurchaseCsv;
   __M["lib/parsers"].serializePurchaseCsv = serializePurchaseCsv;
   __M["lib/parsers"].parseReceiptCsv = parseReceiptCsv;
@@ -4438,7 +4661,10 @@ function ingestFiles(files) {
     const spec = PARSERS[f.category];
     if (!spec) { out.errors.push({ file: f.name, reason: `unknown category "${f.category}"` }); continue; }
     try {
-      const parsed = spec.parse(f.text, f.name);
+      // agreements support both formats: pick the CSV parser for .csv files.
+      const isCsv = /\.csv$/i.test(f.name || '');
+      const parseFn = (isCsv && spec.parseCsv) ? spec.parseCsv : spec.parse;
+      const parsed = parseFn(f.text, f.name);
       if (Array.isArray(parsed)) out[f.category].push(...parsed);
       else out[f.category].push(parsed); // agreements: one per file
     } catch (e) {
@@ -5129,7 +5355,7 @@ function tierIndexAt(agreement, volume) {
  */
 function buildTrueUp(args) {
   const {
-    agreement, scopeKey, period, currency, eurEquivalent = null,
+    agreement, scopeKey, period, currency, eurEquivalent = null, fxSnapshot = null,
     baseVolume, engineClaimed, reconstructedVolume, basisValue = null,
     corrections = [], contributingEvents = [], clauseRef = null, actor = 'system', now,
   } = args;
@@ -5224,7 +5450,7 @@ function buildTrueUp(args) {
     agreementId: agreement.agreementId, supplierId: agreement.supplierId,
     scopeKey, period,
     entitledCcogs: entitled, claimedCcogs: claimed, variance,
-    currency, eurEquivalent,
+    currency, eurEquivalent, fxSnapshot,
     tierFromPct: round2(rateBefore * 100), tierToPct: round2(rateAfter * 100),
     tierApplied: JSON.stringify({ from: rateBefore, to: rateAfter, tierBefore: idxBefore, tierAfter: idxAfter }),
     structure: agreement.rebateStructure, basis: agreement.basis,
@@ -5359,10 +5585,15 @@ function runPipeline(consolidated, { selections = {}, fx = null, now } = {}) {
       const currencies = agreement.currencies || [currency];
       const mixedPanEu = scope === Scope.PAN_EU && new Set(currencies).size > 1;
       let eurEquivalent = null;
+      let fxSnapshot = null;   // { rate, asOf, base, source } stored on the charge for audit defensibility
       const needFx = fxRequired({ basis, scope, currencies }) || mixedPanEu;
       if (needFx) {
         if (!fx) warnings.push({ agreementId: agreement.agreementId, reason: 'FX required but no FX table provided' });
-        else eurEquivalent = toEur(money(entitled, currency === 'EUR' ? 'EUR' : currency), fx).value;
+        else {
+          const conv = toEur(money(entitled, currency === 'EUR' ? 'EUR' : currency), fx);
+          eurEquivalent = conv.value;
+          fxSnapshot = { rate: conv.fxRate, asOf: conv.fxAsOf, base: fx.base || 'EUR', source: fx.source || 'fx_rates', fromCurrency: currency };
+        }
       }
 
       const claimedAmt = claim ? claim.amountClaimed : 0;
@@ -5390,7 +5621,7 @@ function runPipeline(consolidated, { selections = {}, fx = null, now } = {}) {
       const basisValue = rateAfter > 0 ? entitled / rateAfter : s.total;
 
       const tu = buildTrueUp({
-        agreement, scopeKey: s.scopeKey, period: currentPeriod, currency, eurEquivalent,
+        agreement, scopeKey: s.scopeKey, period: currentPeriod, currency, eurEquivalent, fxSnapshot,
         baseVolume, engineClaimed: claimedAmt, reconstructedVolume: s.total, basisValue,
         corrections: scopeCorrections, contributingEvents: contributing, clauseRef, actor: 'system', now,
       });
@@ -5936,13 +6167,76 @@ function rejectCharge(charge, { approver, reason, now } = {}) {
 
 /** Guard used by export/injection (Req 7.5 / 8.4). */
 function isExportable(charge) {
-  return charge.status === ChargeStatus.APPROVED;
+  return charge.status === ChargeStatus.APPROVED || charge.status === ChargeStatus.ISSUED;
+}
+
+// ---- Recovery-workflow state machine ---------------------------------------
+// A debit note is a negotiation, not a one-shot. Legal transitions:
+//   PENDING_APPROVAL -> APPROVED | REJECTED
+//   APPROVED         -> ISSUED
+//   ISSUED           -> DISPUTED | PARTIALLY_SETTLED | CLOSED
+//   DISPUTED         -> PARTIALLY_SETTLED | CLOSED
+//   PARTIALLY_SETTLED-> CLOSED
+// REJECTED and CLOSED are terminal.
+const ALLOWED_TRANSITIONS = Object.freeze({
+  [ChargeStatus.PENDING_APPROVAL]: [ChargeStatus.APPROVED, ChargeStatus.REJECTED],
+  [ChargeStatus.APPROVED]: [ChargeStatus.ISSUED],
+  [ChargeStatus.ISSUED]: [ChargeStatus.DISPUTED, ChargeStatus.PARTIALLY_SETTLED, ChargeStatus.CLOSED],
+  [ChargeStatus.DISPUTED]: [ChargeStatus.PARTIALLY_SETTLED, ChargeStatus.CLOSED],
+  [ChargeStatus.PARTIALLY_SETTLED]: [ChargeStatus.CLOSED],
+  [ChargeStatus.REJECTED]: [],
+  [ChargeStatus.CLOSED]: [],
+});
+
+function canTransition(from, to) {
+  return (ALLOWED_TRANSITIONS[from] || []).includes(to);
+}
+
+/**
+ * Generic audited transition. Validates the move against ALLOWED_TRANSITIONS,
+ * appends an immutable audit entry, and returns a NEW charge object.
+ * extra: optional fields merged onto the charge (e.g. settledAmount, disputeReason).
+ */
+function transitionCharge(charge, to, { actor = 'system', now, note = '', extra = {} } = {}) {
+  if (!canTransition(charge.status, to)) {
+    throw new Error(`approval: illegal transition ${charge.status} -> ${to}`);
+  }
+  const entry = auditEntry({ actor, action: to, details: { chargeId: charge.chargeId, from: charge.status, to, note } }, now);
+  return { ...charge, ...extra, status: to, auditTrace: [...charge.auditTrace, entry] };
+}
+
+/** Mark an approved charge as issued (debit note sent to supplier). */
+function issueCharge(charge, { actor, now, note = '' } = {}) {
+  return transitionCharge(charge, ChargeStatus.ISSUED, { actor, now, note });
+}
+
+/** Supplier disputed the charge (records the reason on the charge). */
+function disputeCharge(charge, { actor, now, reason = '' } = {}) {
+  return transitionCharge(charge, ChargeStatus.DISPUTED, { actor, now, note: reason, extra: { disputeReason: reason } });
+}
+
+/** Supplier accepted part of the claim (records the settled amount). */
+function settleCharge(charge, { actor, now, settledAmount = null, note = '' } = {}) {
+  return transitionCharge(charge, ChargeStatus.PARTIALLY_SETTLED, { actor, now, note, extra: { settledAmount: settledAmount != null ? Number(settledAmount) : null } });
+}
+
+/** Close a charge (terminal — fully settled or written off). */
+function closeCharge(charge, { actor, now, settledAmount = null, note = '' } = {}) {
+  const extra = settledAmount != null ? { settledAmount: Number(settledAmount) } : {};
+  return transitionCharge(charge, ChargeStatus.CLOSED, { actor, now, note, extra });
 }
 
   __M["lib/approval"].buildReviewDocument = buildReviewDocument;
   __M["lib/approval"].approveCharge = approveCharge;
   __M["lib/approval"].rejectCharge = rejectCharge;
   __M["lib/approval"].isExportable = isExportable;
+  __M["lib/approval"].ALLOWED_TRANSITIONS = ALLOWED_TRANSITIONS;
+  __M["lib/approval"].canTransition = canTransition;
+  __M["lib/approval"].transitionCharge = transitionCharge;
+  __M["lib/approval"].issueCharge = issueCharge;
+  __M["lib/approval"].disputeCharge = disputeCharge;
+  __M["lib/approval"].settleCharge = settleCharge;
+  __M["lib/approval"].closeCharge = closeCharge;
 });
 
 // ==== lib/injection.js ====
@@ -6288,6 +6582,9 @@ function buildAuditDataset(state, opts = {}) {
       AdditionalCcogs: round2(c.variance || 0),
       Currency: c.currency || 'EUR',
       EurEquivalent: c.eurEquivalent != null ? round2(c.eurEquivalent) : '',
+      // FX audit trail: the exact rate + as-of date used to derive EurEquivalent
+      FxRate: c.fxSnapshot && c.fxSnapshot.rate != null ? c.fxSnapshot.rate : '',
+      FxAsOf: c.fxSnapshot && c.fxSnapshot.asOf ? c.fxSnapshot.asOf : '',
       Type: isMissing ? 'Missing invoice / no CCOGS' : 'Tier / volume reconstruction',
       Status: realized ? 'Posted to ERP' : 'Pending',
       LineRefs: refs.join(', '),
@@ -6340,6 +6637,131 @@ function buildAuditDataset(state, opts = {}) {
 }
 
   __M["lib/audit_export"].buildAuditDataset = buildAuditDataset;
+});
+
+// ==== lib/forecast.js ====
+__define("lib/forecast", function(){
+// Forecast / accrual — Phase A (FACTS ONLY, no prediction). (Competitive gap #6)
+//
+// Commercial rebate tools (Enable, IMA360) lead with "what am I on track to earn
+// this period" BEFORE period-close. The rest of this tool is strictly
+// retrospective (leakage already happened -> reclaim it). This module adds a
+// forward-looking, period-to-date READ WITHOUT touching the cent-exact
+// retrospective numbers: it reports the qualifying volume achieved so far, the
+// gap to the next rebate tier, and how much of the contract window has elapsed.
+//
+// Deliberately NOT a projection: no run-rate extrapolation, no predicted EUR.
+// Everything here is a stated fact ("achieved X of Y to next tier; Z days left"),
+// so it can never be confused with the audited recovery figures.
+//
+// Kept as its OWN module so the isolation is structural.
+
+const { resolveTier } = __require("lib/rebate");
+
+// days between two ISO dates (a - b), or null if either missing/invalid
+function daysBetween(aIso, bIso) {
+  if (!aIso || !bIso) return null;
+  const a = Date.parse(aIso), b = Date.parse(bIso);
+  if (Number.isNaN(a) || Number.isNaN(b)) return null;
+  return Math.round((a - b) / 86400000);
+}
+
+/**
+ * Build the period-to-date forecast read across all agreements.
+ * @param {object} args
+ *   - consolidated: state.consolidated (byAgreement map)
+ *   - reconstructions: state.reconstructions (already computed; PTD volume source)
+ *   - asOfDate: ISO date string to measure the window against (default: today)
+ * @returns {object} { rows[], totals } where each row is one agreement:
+ *   { agreementId, supplierName, windowType, ptdVolume, basis,
+ *     currentTierPct, nextThreshold, gapToNext, atTopTier,
+ *     windowFrom, windowTo, daysElapsed, daysTotal, daysRemaining, pctElapsed,
+ *     flag: 'on_track' | 'at_risk' | 'complete' }
+ */
+function buildForecast({ consolidated, reconstructions = [], asOfDate = null } = {}) {
+  const asOf = asOfDate || new Date().toISOString().slice(0, 10);
+  const recByAgr = new Map(reconstructions.map((r) => [r.agreementId, r]));
+  const rows = [];
+
+  if (consolidated && consolidated.byAgreement) {
+    for (const [agreementId, g] of consolidated.byAgreement) {
+      const agreement = g.agreement;
+      if (!agreement) continue;
+      const tiers = [...(agreement.tiers || [])].sort((x, y) => x.threshold - y.threshold);
+
+      // period-to-date qualifying volume = sum of this agreement's reconstructed
+      // volumes we already have (the "as of now" achieved volume).
+      const rec = recByAgr.get(agreementId);
+      const ptdVolume = rec ? (rec.volumes || []).reduce((s, v) => s + (v.volume || v.qualifyingVolume || 0), 0) : 0;
+
+      // current tier + gap to the next threshold
+      const { index, tier } = resolveTier(tiers, ptdVolume);
+      const currentTierPct = tier ? tier.rate * 100 : 0;
+      const nextTier = index + 1 < tiers.length ? tiers[index + 1] : null;
+      const atTopTier = !nextTier;
+      const nextThreshold = nextTier ? nextTier.threshold : null;
+      const gapToNext = nextTier ? Math.max(0, nextThreshold - ptdVolume) : 0;
+
+      // window elapsed / remaining
+      const windowFrom = agreement.effectiveFrom || null;
+      const windowTo = agreement.effectiveTo || null;
+      const daysTotal = daysBetween(windowTo, windowFrom);
+      const daysElapsed = daysBetween(asOf, windowFrom);
+      const daysRemaining = (daysTotal != null && daysElapsed != null) ? Math.max(0, daysTotal - daysElapsed) : null;
+      const pctElapsed = (daysTotal && daysElapsed != null && daysTotal > 0) ? Math.min(100, Math.max(0, Math.round((daysElapsed / daysTotal) * 100))) : null;
+
+      // fact-based flag (NOT a prediction): at top tier => complete; a gap remains
+      // with more than half the window gone => at_risk; otherwise on_track.
+      let flag = 'on_track';
+      if (atTopTier) flag = 'complete';
+      else if (pctElapsed != null && pctElapsed >= 50 && gapToNext > 0) flag = 'at_risk';
+
+      // ---- Phase B: run-rate PROJECTION (clearly separated from the facts) ----
+      // Straight-line extrapolation of the current pace to the end of the window.
+      // This IS a prediction — labelled as such in the UI and never mixed with
+      // the audited recovery figures.
+      let projectedVolume = null, projectedReachesNext = null, projectedTierPct = null;
+      if (!atTopTier && daysElapsed != null && daysTotal && daysElapsed > 0 && daysTotal > 0) {
+        const frac = Math.min(1, daysElapsed / daysTotal);
+        if (frac > 0) {
+          projectedVolume = Math.round(ptdVolume / frac);
+          projectedReachesNext = nextThreshold != null ? projectedVolume >= nextThreshold : null;
+          const pt = resolveTier(tiers, projectedVolume).tier;
+          projectedTierPct = pt ? pt.rate * 100 : 0;
+        }
+      }
+
+      rows.push({
+        agreementId,
+        supplierName: agreement.supplierName || agreement.supplierId || agreementId,
+        windowType: agreement.windowType || null,
+        basis: agreement.basis || null,
+        ptdVolume,
+        currentTierPct,
+        nextThreshold,
+        gapToNext,
+        atTopTier,
+        windowFrom, windowTo,
+        daysElapsed, daysTotal, daysRemaining, pctElapsed,
+        flag,
+        // projection (Phase B)
+        projectedVolume, projectedReachesNext, projectedTierPct,
+      });
+    }
+  }
+
+  rows.sort((a, b) => (b.gapToNext - a.gapToNext) || (a.pctElapsed || 0) - (b.pctElapsed || 0));
+  const totals = {
+    count: rows.length,
+    atRisk: rows.filter((r) => r.flag === 'at_risk').length,
+    onTrack: rows.filter((r) => r.flag === 'on_track').length,
+    complete: rows.filter((r) => r.flag === 'complete').length,
+    asOf,
+  };
+  return { rows, totals };
+}
+
+  __M["lib/forecast"].buildForecast = buildForecast;
 });
 
 // ==== ui/tooltip.js ====
@@ -8156,15 +8578,83 @@ __define("ui/dashboards", function(){
 const { t } = __require("lib/i18n");
 const { hintSpan } = __require("ui/tooltip");
 const { barChart } = __require("ui/charts");
-const { buildReviewDocument } = __require("lib/approval");
+const { buildReviewDocument, ALLOWED_TRANSITIONS } = __require("lib/approval");
+const { ChargeStatus } = __require("lib/enums");
+const { buildForecast } = __require("lib/forecast");
 const { financeJourney } = __require("ui/doc");
 const { miDiscrepancyBlock } = __require("ui/stages");
 
 const money = (v, cur) => `${Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${cur}`;
 
+// ---- Charge-status chip (consistent colour across overview / consol / audit) ----
+// class hooks: status-{pending|approved|issued|disputed|partially|closed|rejected}
+const STATUS_CLASS = {
+  PENDING_APPROVAL: 'pending', APPROVED: 'approved', ISSUED: 'issued',
+  DISPUTED: 'disputed', PARTIALLY_SETTLED: 'partially', CLOSED: 'closed',
+  REJECTED: 'rejected', EXPORTED: 'issued', INJECTED: 'closed',
+};
+function statusChip(status) {
+  const cls = STATUS_CLASS[status] || 'pending';
+  return `<span class="status-chip status-${cls}">${t('cs_' + status)}</span>`;
+}
+
+// Recovery-workflow strip in the read-only review: current status + the valid
+// next actions + a captured supplier-reply field. Buttons carry data-cxn (target
+// status) and data-cxid (chargeId); the reply field carries data-supresp.
+function recoveryWorkflowBlock(charge) {
+  const next = ALLOWED_TRANSITIONS[charge.status] || [];
+  const ACTION_KEY = { APPROVED: 'csActApprove', ISSUED: 'csActIssue', DISPUTED: 'csActDispute', PARTIALLY_SETTLED: 'csActSettle', CLOSED: 'csActClose', REJECTED: 'csActReject' };
+  const btns = next.map((to) => `<button class="btn ${to === 'CLOSED' || to === 'APPROVED' || to === 'ISSUED' ? 'tint-green-soft' : to === 'REJECTED' ? 'tint-orange' : 'tint-blue'}" data-cxn="${to}" data-cxid="${charge.chargeId}">${t(ACTION_KEY[to] || 'cs_' + to)}</button>`).join('');
+  const resp = charge.supplierResponse;
+  return `<div class="section rw-block">
+    <h4>${t('csWorkflow')}</h4>
+    <div class="rw-status">${t('status')}: ${statusChip(charge.status)}${charge.settledAmount != null ? ` · ${t('csSettled')}: <strong>${money(charge.settledAmount, charge.currency)}</strong>` : ''}${charge.disputeReason ? ` · <span class="muted">${escf(charge.disputeReason)}</span>` : ''}</div>
+    ${btns ? `<div class="rw-actions">${btns}</div>` : `<div class="small muted">${t('csTerminal')}</div>`}
+    <div class="rw-reply">
+      <label class="rw-reply-l">${t('csSupplierReply')}</label>
+      <textarea class="rw-reply-in" data-supresp="${charge.chargeId}" rows="2" placeholder="${escf(t('csSupplierReplyPh'))}">${resp && resp.note ? escf(resp.note) : ''}</textarea>
+      <button class="btn tint-ghost" data-supsave="${charge.chargeId}">${t('csSaveReply')}</button>
+      ${resp && resp.at ? `<div class="small muted">${t('csRepliedAt')} ${escf(resp.at)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
 function fmtN(n) { return Math.round(n).toLocaleString(); }
 
 const escf = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---- Finance Overview: forward-looking "on-track" block (facts only) -------
+// Period-to-date read from lib/forecast.js. Shows, per agreement, how far along
+// the contract window is and the gap to the next rebate tier — WITHOUT any
+// prediction (kept visually separate from the audited recovery figures).
+function forecastBlock(state) {
+  const { rows, totals } = buildForecast({ consolidated: state.consolidated, reconstructions: state.reconstructions || [] });
+  if (!rows.length) return '';
+  const FLAG_LBL = { on_track: t('fcOnTrack'), at_risk: t('fcAtRisk'), complete: t('fcComplete') };
+  const top = rows.slice(0, 6);
+  const cards = top.map((r) => {
+    const pct = r.pctElapsed != null ? r.pctElapsed : 0;
+    const winLbl = r.windowType ? t('dur' + r.windowType.replace(/_/g, '')) : '';
+    return `<div class="fc-card fc-${r.flag}">
+      <div class="fc-card-h"><span class="fc-sup">${escf(r.supplierName)}</span><span class="fc-flag fc-flag-${r.flag}">${FLAG_LBL[r.flag]}</span></div>
+      <div class="fc-meta"><span class="mono">${escf(r.agreementId)}</span>${winLbl ? ` · ${winLbl}` : ''}</div>
+      <div class="fc-line">${t('fcPtdVolume')}: <strong>${fmtN(r.ptdVolume)}</strong>${r.currentTierPct ? ` · ${r.currentTierPct.toFixed(1)}%` : ''}</div>
+      <div class="fc-line">${r.atTopTier ? t('fcAtTopTier') : `${t('fcGapToNext')}: <strong>${fmtN(r.gapToNext)}</strong>`}</div>
+      <div class="fc-window">
+        <div class="fc-bar"><i style="width:${pct}%"></i></div>
+        <div class="fc-window-lbl">${r.daysRemaining != null ? `${r.daysRemaining} ${t('fcDaysLeft')}` : '—'}${pct != null ? ` · ${pct}% ${t('fcElapsed')}` : ''}</div>
+      </div>
+      ${r.projectedVolume != null ? `<div class="fc-proj ${r.projectedReachesNext ? 'reach' : 'miss'}">
+        <span class="fc-proj-tag">${t('fcProjected')}</span>
+        ${fmtN(r.projectedVolume)}${r.projectedTierPct ? ` · ${r.projectedTierPct.toFixed(1)}%` : ''}
+        <span class="fc-proj-verdict">${r.projectedReachesNext ? '✓ ' + t('fcProjReach') : '✗ ' + t('fcProjMiss')}</span>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+  return `<h3 class="ov-h">${t('fcTitle')}</h3>
+    <p class="muted small">${t('fcLead')} <span class="fc-asof">${t('fcAsOf')} ${escf(totals.asOf)}</span></p>
+    <div class="fc-grid">${cards}</div>`;
+}
 
 // ---- Finance Overview GLOBAL filter bar (supplier / issue / contract / validity) ----
 // Reuses the shared .fltbar look. Emits data-ovmenu / data-ovopt / data-ovall /
@@ -8401,6 +8891,12 @@ function renderOverview(state) {
 
     ${ovBar}
 
+    <div class="ov-hero">
+      <div class="ov-hero-fig">${eur(totalTrueUp)}</div>
+      <div class="ov-hero-sub">${t('ovHeroLead')}</div>
+      <div class="ov-hero-meta">${recoverableCount} ${t('recoverableAgreements')} &nbsp;·&nbsp; ${upliftPct.toFixed(1)}% ${t('upliftOnClaimed')}</div>
+    </div>
+
     <div class="ba ba-ml">
       <div class="panel total"><div class="h">${t('mlTotalAmount')}</div><div class="big">${eur(totalAll)}</div><div class="small">${t('allAgreements')}</div></div>
       <div class="arrow">›</div>
@@ -8415,6 +8911,8 @@ function renderOverview(state) {
     ${findingsSummaryBlock}
 
     ${worklistBlock}
+
+    ${forecastBlock(state)}
 
     ${financeJourney(allReceipts, allCorrections)}
 
@@ -8523,6 +9021,7 @@ function reviewModalHtml(charge, group, reconstruction, opts = {}) {
           <div class="k">Original CCOGS (claimed)</div><div>${money(calc.claimedCcogs, calc.currency)}</div>
           <div class="k">Recomputed CCOGS (entitled)</div><div>${money(calc.entitledCcogs, calc.currency)}</div>
           <div class="k">Recoverable True-Up</div><div><strong style="color:var(--gold)">${money(calc.variance, calc.currency)}</strong>${(charge.eurEquivalent ?? calc.eurEquivalent) != null ? ` (${money(charge.eurEquivalent ?? calc.eurEquivalent, 'EUR')})` : ''}</div>
+          ${charge.fxSnapshot && charge.fxSnapshot.rate != null ? `<div class="k">${t('fxRateUsed')}</div><div>1 ${esc(charge.fxSnapshot.fromCurrency || calc.currency)} = ${charge.fxSnapshot.rate} EUR · ${t('fxAsOf')} ${esc(charge.fxSnapshot.asOf || '—')}</div>` : ''}
         </div>
       </div>
 
@@ -8545,6 +9044,8 @@ function reviewModalHtml(charge, group, reconstruction, opts = {}) {
       <div class="section"><h4>${t('clause')}</h4><div class="small">${doc.clause ?? ''}</div>
         <div class="k small" style="margin-top:6px">${t('provenance')}: <span class="mono">${doc.provenance ?? ''}</span></div>
       </div>
+
+      ${opts.readOnly ? recoveryWorkflowBlock(charge) : ''}
 
       <div class="section"><h4>${t('auditTrace')}</h4>
         <table><thead><tr><th>#</th><th>Time</th><th>Actor</th><th>Action</th></tr></thead><tbody>${audit}</tbody></table>
@@ -8660,7 +9161,19 @@ function renderAbout() {
           <li>${t('ab.audit.sheet1')}</li>
           <li>${t('ab.audit.sheet2')}</li>
         </ul>` },
-    { id: 'finance', h: t('ab.h.finance'), body: `<p>${t('ab.p.finance')}</p><p>${t('ab.p.finance2')}</p>` },
+    { id: 'finance', h: t('ab.h.finance'), body: `<p>${t('ab.p.finance')}</p><p>${t('ab.p.finance2')}</p>
+        <ul class="manual">
+          <li>${t('ab.fin.hero')}</li>
+          <li>${t('ab.fin.forecast')}</li>
+        </ul>` },
+    { id: 'recovery', h: t('ab.h.recovery'), body: `<p>${t('ab.p.recovery')}</p>
+        <ul class="manual">
+          <li>${t('ab.rec.states')}</li>
+          <li>${t('ab.rec.reply')}</li>
+          <li>${t('ab.rec.colors')}</li>
+          <li>${t('ab.rec.fx')}</li>
+        </ul>` },
+    { id: 'bulk', h: t('ab.h.bulk'), body: `<p>${t('ab.p.bulk')}</p>` },
     { id: 'nav', h: t('ab.h.nav'), body: `<p>${t('ab.p.nav')}</p>` },
     { id: 'glossary', h: t('ab.h.glossary'), body: `<dl class="glossary">
         <dt>CCOGS</dt><dd>${t('ab.g.ccogs')}</dd>
@@ -8691,6 +9204,7 @@ function renderAbout() {
     </div>`;
 }
 
+  __M["ui/dashboards"].statusChip = statusChip;
   __M["ui/dashboards"].renderOverview = renderOverview;
   __M["ui/dashboards"].reviewModalHtml = reviewModalHtml;
   __M["ui/dashboards"].renderAbout = renderAbout;
@@ -8711,6 +9225,10 @@ const { t } = __require("lib/i18n");
 const nf = (v) => (v == null ? '' : Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 }));
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const money = (v, c) => `${nf(v)} ${c || 'EUR'}`;
+
+// charge-status chip (same colour language as the overview/audit chips)
+const CS_CLASS = { PENDING_APPROVAL: 'pending', APPROVED: 'approved', ISSUED: 'issued', DISPUTED: 'disputed', PARTIALLY_SETTLED: 'partially', CLOSED: 'closed', REJECTED: 'rejected', EXPORTED: 'issued', INJECTED: 'closed' };
+const statusChip = (status) => `<span class="status-chip status-${CS_CLASS[status] || 'pending'}">${t('cs_' + status)}</span>`;
 
 // group charges by supplier -> [{ supplierId, supplierName, charges[] }]
 function chargesBySupplier(state) {
@@ -8852,7 +9370,7 @@ function renderConsolidatedDebit(state) {
       return `<tr class="${on ? '' : 'off'}">
         <td><input type="checkbox" data-consoltoggle="${esc(c.chargeId)}" ${on ? 'checked' : ''}></td>
         <td class="mono">${esc(c.agreementId)}</td>
-        <td>${esc(c.scopeKey)}${dur ? ` · <span class="small">${esc(dur)}</span>` : ''}</td>
+        <td>${esc(c.scopeKey)}${dur ? ` · <span class="small">${esc(dur)}</span>` : ''}<div>${statusChip(c.status)}</div></td>
         <td class="num"><strong style="color:var(--gold)">${money(c.variance, c.currency)}</strong></td>
         <td><div class="consol-rowbtns">
           <button class="btn tint-ghost consol-view" data-consolview="${esc(c.chargeId)}">${t('viewDetails')}</button>
@@ -9521,8 +10039,9 @@ const { renderAudit, auditDataset } = __require("ui/audit");
 const { renderMappingFlow, playMappingFlow } = __require("ui/mappingflow");
 const { renderConsolidatedDebit, chargesBySupplier } = __require("ui/consolidated");
 const { invoiceDocHtml, deliveryNoteDocHtml, receiptDocHtml, eventDocHtml, engineDocHtml, agreementDocHtml, contraCogsInvoiceHtml } = __require("ui/doc");
-const { serializeInvoiceXml, serializeDeliveryNoteXml, serializeReceiptCsv, serializeEventCsv, serializeCcogsEngineCsv, serializeAgreementXml } = __require("lib/parsers");
+const { serializeInvoiceXml, serializeDeliveryNoteXml, serializeReceiptCsv, serializeEventCsv, serializeCcogsEngineCsv, serializeAgreementXml, serializeAgreementCsv } = __require("lib/parsers");
 const { chargesToCsv } = __require("lib/injection");
+const { transitionCharge } = __require("lib/approval");
 const { initTooltips } = __require("ui/tooltip");
 
 const app = document.getElementById('app');
@@ -9887,6 +10406,40 @@ function openReviewReadOnly(chargeId) {
   // multi-agreement one). Closes the read-only review, then opens the invoice.
   const genOne = holder.querySelector('[data-genreadonly]');
   if (genOne) genOne.addEventListener('click', () => { close(); openContraInvoice(charge, group, rec); });
+
+  // recovery-workflow transition buttons (issue / dispute / settle / close / approve / reject)
+  holder.querySelectorAll('[data-cxn]').forEach((b) => b.addEventListener('click', () => {
+    const to = b.dataset.cxn;
+    const idx = state.charges.findIndex((c) => c.chargeId === b.dataset.cxid);
+    if (idx < 0) return;
+    const cur = state.charges[idx];
+    const extra = {};
+    let note = '';
+    if (to === 'DISPUTED') { note = window.prompt(t('csDisputePrompt')) || ''; extra.disputeReason = note; }
+    if (to === 'PARTIALLY_SETTLED' || to === 'CLOSED') {
+      const amt = window.prompt(t('csSettlePrompt'), String(cur.variance ?? ''));
+      if (amt != null && amt !== '') extra.settledAmount = Number(amt);
+    }
+    if (to === 'REJECTED') { note = window.prompt(t('csDisputePrompt')) || ''; }
+    try {
+      state.charges[idx] = transitionCharge(cur, to, { actor: 'analyst', now: () => new Date().toISOString(), note, extra });
+    } catch (e) { window.alert(String(e.message || e)); return; }
+    close(); render(); openReviewReadOnly(b.dataset.cxid);
+  }));
+
+  // supplier-reply capture — save the note onto the charge + audit entry
+  const supSave = holder.querySelector('[data-supsave]');
+  if (supSave) supSave.addEventListener('click', () => {
+    const ta = holder.querySelector('[data-supresp]');
+    const noteVal = ta ? ta.value.trim() : '';
+    const idx = state.charges.findIndex((c) => c.chargeId === supSave.dataset.supsave);
+    if (idx < 0) return;
+    const cur = state.charges[idx];
+    const at = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    const entry = { seq: (cur.auditTrace?.length || 0) + 1, timestamp: at, actor: 'analyst', action: 'SUPPLIER_REPLY', details: { chargeId: cur.chargeId, note: noteVal } };
+    state.charges[idx] = { ...cur, supplierResponse: { at, channel: 'manual', note: noteVal }, auditTrace: [...(cur.auditTrace || []), entry] };
+    close(); render(); openReviewReadOnly(supSave.dataset.supsave);
+  });
 }
 
 // ---- Summary result-tile details (what/how found, proposal, pre/post impact) ----
@@ -9936,6 +10489,8 @@ function openAddSource() {
         <span class="as-arrow">→</span>
       </button>`).join('')}
     </div>
+    <div class="as-tmpl"><button class="btn tint-ghost" id="asTmpl">⤓ ${t('agrCsvTemplate')}</button>
+      <span class="small muted">${t('agrCsvTemplateHint')}</span></div>
     <div class="actions"><button class="btn ghost" id="asClose">${t('cancel')}</button></div>
   </div></div>`;
   document.body.appendChild(holder);
@@ -9947,6 +10502,26 @@ function openAddSource() {
     close();
     openConnectSource(id);
   }));
+  // downloadable bulk-import template so teams can load agreements from a spreadsheet
+  const tmpl = holder.querySelector('#asTmpl');
+  if (tmpl) tmpl.addEventListener('click', () => download('agreement_import_template.csv', agreementCsvTemplate(), 'text/csv'));
+}
+
+// A ready-to-fill CSV template for bulk agreement import (header row + one
+// worked example showing the tiers/currencies/countries/clauses encoding).
+function agreementCsvTemplate() {
+  const example = {
+    agreementId: 'AGR-EXAMPLE', supplierId: 'SUP-001', supplierName: 'Example Supplier Ltd',
+    contractRef: 'CTR-2026-001', rebateStructure: 'RETROSPECTIVE_TIERED', basis: 'UNITS', period: 'YEAR', scope: 'PAN_EU',
+    retrospectiveReach: 'WITHIN_PERIOD', tierMeasure: 'COMBINED', windowType: 'YEAR',
+    effectiveFrom: '2026-01-01', effectiveTo: '2026-12-31',
+    signatory: 'Jane Doe', signatoryTitle: 'Head of Procurement', signedDate: '2025-12-15', governingLaw: 'SK',
+    tiers: [{ threshold: 0, rate: 0.01 }, { threshold: 10000, rate: 0.02 }, { threshold: 25000, rate: 0.03 }],
+    currencies: ['EUR', 'PLN', 'CZK'], countries: ['SK', 'PL', 'CZ'],
+    skuSet: ['ASIN-100', 'ASIN-200'], engineConfiguredSkus: ['ASIN-100'],
+    clauseRefs: { tier: 'Clause 4.2', panEu: 'Clause 7.1' },
+  };
+  return serializeAgreementCsv([example]);
 }
 
 // Realistic per-source connection dialog (EDI / API / Folder). Each has its own

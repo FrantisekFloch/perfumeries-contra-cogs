@@ -305,6 +305,11 @@ export function createSupplementingCharge(raw) {
     variance: num(raw, 'variance', ctx),
     currency: oneOf(Currency, req(raw, 'currency', ctx), 'currency', ctx),
     eurEquivalent: raw.eurEquivalent != null ? Number(raw.eurEquivalent) : null,
+    // FX snapshot: the exact rate + as-of date + source used to derive eurEquivalent,
+    // stored ON the charge so an auditor can defend "rate X from date Y" months later.
+    // null when no conversion was needed (charge currency is already EUR).
+    // shape: { rate, asOf, base, source } or { converted:true, ratesUsed:{CUR:rate}, asOf, base, source } for pan-EU multi-currency.
+    fxSnapshot: raw.fxSnapshot ?? null,
     // headline tier movement, e.g. from 1.0% to 2.0%
     tierFromPct: raw.tierFromPct != null ? Number(raw.tierFromPct) : null,
     tierToPct: raw.tierToPct != null ? Number(raw.tierToPct) : null,
@@ -315,6 +320,11 @@ export function createSupplementingCharge(raw) {
     lines: Array.isArray(raw.lines) ? raw.lines : [],
     clauseRef: raw.clauseRef ?? null,
     status: raw.status ?? ChargeStatus.PENDING_APPROVAL,
+    // recovery-workflow fields (populated as the debit note moves through the
+    // supplier negotiation): amount the supplier agreed to, and any dispute reason.
+    settledAmount: raw.settledAmount != null ? Number(raw.settledAmount) : null,
+    disputeReason: raw.disputeReason ?? null,
+    supplierResponse: raw.supplierResponse ?? null,   // { at, channel, note } — captured supplier reply (task #3)
     auditTrace: Array.isArray(raw.auditTrace) ? raw.auditTrace : [],
   };
 }

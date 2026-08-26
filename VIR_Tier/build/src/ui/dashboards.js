@@ -5,15 +5,83 @@
 import { t } from '../lib/i18n.js';
 import { hintSpan } from './tooltip.js';
 import { barChart } from './charts.js';
-import { buildReviewDocument } from '../lib/approval.js';
+import { buildReviewDocument, ALLOWED_TRANSITIONS } from '../lib/approval.js';
+import { ChargeStatus } from '../lib/enums.js';
+import { buildForecast } from '../lib/forecast.js';
 import { financeJourney } from './doc.js';
 import { miDiscrepancyBlock } from './stages.js';
 
 const money = (v, cur) => `${Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${cur}`;
 
+// ---- Charge-status chip (consistent colour across overview / consol / audit) ----
+// class hooks: status-{pending|approved|issued|disputed|partially|closed|rejected}
+const STATUS_CLASS = {
+  PENDING_APPROVAL: 'pending', APPROVED: 'approved', ISSUED: 'issued',
+  DISPUTED: 'disputed', PARTIALLY_SETTLED: 'partially', CLOSED: 'closed',
+  REJECTED: 'rejected', EXPORTED: 'issued', INJECTED: 'closed',
+};
+export function statusChip(status) {
+  const cls = STATUS_CLASS[status] || 'pending';
+  return `<span class="status-chip status-${cls}">${t('cs_' + status)}</span>`;
+}
+
+// Recovery-workflow strip in the read-only review: current status + the valid
+// next actions + a captured supplier-reply field. Buttons carry data-cxn (target
+// status) and data-cxid (chargeId); the reply field carries data-supresp.
+function recoveryWorkflowBlock(charge) {
+  const next = ALLOWED_TRANSITIONS[charge.status] || [];
+  const ACTION_KEY = { APPROVED: 'csActApprove', ISSUED: 'csActIssue', DISPUTED: 'csActDispute', PARTIALLY_SETTLED: 'csActSettle', CLOSED: 'csActClose', REJECTED: 'csActReject' };
+  const btns = next.map((to) => `<button class="btn ${to === 'CLOSED' || to === 'APPROVED' || to === 'ISSUED' ? 'tint-green-soft' : to === 'REJECTED' ? 'tint-orange' : 'tint-blue'}" data-cxn="${to}" data-cxid="${charge.chargeId}">${t(ACTION_KEY[to] || 'cs_' + to)}</button>`).join('');
+  const resp = charge.supplierResponse;
+  return `<div class="section rw-block">
+    <h4>${t('csWorkflow')}</h4>
+    <div class="rw-status">${t('status')}: ${statusChip(charge.status)}${charge.settledAmount != null ? ` · ${t('csSettled')}: <strong>${money(charge.settledAmount, charge.currency)}</strong>` : ''}${charge.disputeReason ? ` · <span class="muted">${escf(charge.disputeReason)}</span>` : ''}</div>
+    ${btns ? `<div class="rw-actions">${btns}</div>` : `<div class="small muted">${t('csTerminal')}</div>`}
+    <div class="rw-reply">
+      <label class="rw-reply-l">${t('csSupplierReply')}</label>
+      <textarea class="rw-reply-in" data-supresp="${charge.chargeId}" rows="2" placeholder="${escf(t('csSupplierReplyPh'))}">${resp && resp.note ? escf(resp.note) : ''}</textarea>
+      <button class="btn tint-ghost" data-supsave="${charge.chargeId}">${t('csSaveReply')}</button>
+      ${resp && resp.at ? `<div class="small muted">${t('csRepliedAt')} ${escf(resp.at)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
 function fmtN(n) { return Math.round(n).toLocaleString(); }
 
 const escf = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---- Finance Overview: forward-looking "on-track" block (facts only) -------
+// Period-to-date read from lib/forecast.js. Shows, per agreement, how far along
+// the contract window is and the gap to the next rebate tier — WITHOUT any
+// prediction (kept visually separate from the audited recovery figures).
+function forecastBlock(state) {
+  const { rows, totals } = buildForecast({ consolidated: state.consolidated, reconstructions: state.reconstructions || [] });
+  if (!rows.length) return '';
+  const FLAG_LBL = { on_track: t('fcOnTrack'), at_risk: t('fcAtRisk'), complete: t('fcComplete') };
+  const top = rows.slice(0, 6);
+  const cards = top.map((r) => {
+    const pct = r.pctElapsed != null ? r.pctElapsed : 0;
+    const winLbl = r.windowType ? t('dur' + r.windowType.replace(/_/g, '')) : '';
+    return `<div class="fc-card fc-${r.flag}">
+      <div class="fc-card-h"><span class="fc-sup">${escf(r.supplierName)}</span><span class="fc-flag fc-flag-${r.flag}">${FLAG_LBL[r.flag]}</span></div>
+      <div class="fc-meta"><span class="mono">${escf(r.agreementId)}</span>${winLbl ? ` · ${winLbl}` : ''}</div>
+      <div class="fc-line">${t('fcPtdVolume')}: <strong>${fmtN(r.ptdVolume)}</strong>${r.currentTierPct ? ` · ${r.currentTierPct.toFixed(1)}%` : ''}</div>
+      <div class="fc-line">${r.atTopTier ? t('fcAtTopTier') : `${t('fcGapToNext')}: <strong>${fmtN(r.gapToNext)}</strong>`}</div>
+      <div class="fc-window">
+        <div class="fc-bar"><i style="width:${pct}%"></i></div>
+        <div class="fc-window-lbl">${r.daysRemaining != null ? `${r.daysRemaining} ${t('fcDaysLeft')}` : '—'}${pct != null ? ` · ${pct}% ${t('fcElapsed')}` : ''}</div>
+      </div>
+      ${r.projectedVolume != null ? `<div class="fc-proj ${r.projectedReachesNext ? 'reach' : 'miss'}">
+        <span class="fc-proj-tag">${t('fcProjected')}</span>
+        ${fmtN(r.projectedVolume)}${r.projectedTierPct ? ` · ${r.projectedTierPct.toFixed(1)}%` : ''}
+        <span class="fc-proj-verdict">${r.projectedReachesNext ? '✓ ' + t('fcProjReach') : '✗ ' + t('fcProjMiss')}</span>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+  return `<h3 class="ov-h">${t('fcTitle')}</h3>
+    <p class="muted small">${t('fcLead')} <span class="fc-asof">${t('fcAsOf')} ${escf(totals.asOf)}</span></p>
+    <div class="fc-grid">${cards}</div>`;
+}
 
 // ---- Finance Overview GLOBAL filter bar (supplier / issue / contract / validity) ----
 // Reuses the shared .fltbar look. Emits data-ovmenu / data-ovopt / data-ovall /
@@ -250,6 +318,12 @@ export function renderOverview(state) {
 
     ${ovBar}
 
+    <div class="ov-hero">
+      <div class="ov-hero-fig">${eur(totalTrueUp)}</div>
+      <div class="ov-hero-sub">${t('ovHeroLead')}</div>
+      <div class="ov-hero-meta">${recoverableCount} ${t('recoverableAgreements')} &nbsp;·&nbsp; ${upliftPct.toFixed(1)}% ${t('upliftOnClaimed')}</div>
+    </div>
+
     <div class="ba ba-ml">
       <div class="panel total"><div class="h">${t('mlTotalAmount')}</div><div class="big">${eur(totalAll)}</div><div class="small">${t('allAgreements')}</div></div>
       <div class="arrow">›</div>
@@ -264,6 +338,8 @@ export function renderOverview(state) {
     ${findingsSummaryBlock}
 
     ${worklistBlock}
+
+    ${forecastBlock(state)}
 
     ${financeJourney(allReceipts, allCorrections)}
 
@@ -372,6 +448,7 @@ export function reviewModalHtml(charge, group, reconstruction, opts = {}) {
           <div class="k">Original CCOGS (claimed)</div><div>${money(calc.claimedCcogs, calc.currency)}</div>
           <div class="k">Recomputed CCOGS (entitled)</div><div>${money(calc.entitledCcogs, calc.currency)}</div>
           <div class="k">Recoverable True-Up</div><div><strong style="color:var(--gold)">${money(calc.variance, calc.currency)}</strong>${(charge.eurEquivalent ?? calc.eurEquivalent) != null ? ` (${money(charge.eurEquivalent ?? calc.eurEquivalent, 'EUR')})` : ''}</div>
+          ${charge.fxSnapshot && charge.fxSnapshot.rate != null ? `<div class="k">${t('fxRateUsed')}</div><div>1 ${esc(charge.fxSnapshot.fromCurrency || calc.currency)} = ${charge.fxSnapshot.rate} EUR · ${t('fxAsOf')} ${esc(charge.fxSnapshot.asOf || '—')}</div>` : ''}
         </div>
       </div>
 
@@ -394,6 +471,8 @@ export function reviewModalHtml(charge, group, reconstruction, opts = {}) {
       <div class="section"><h4>${t('clause')}</h4><div class="small">${doc.clause ?? ''}</div>
         <div class="k small" style="margin-top:6px">${t('provenance')}: <span class="mono">${doc.provenance ?? ''}</span></div>
       </div>
+
+      ${opts.readOnly ? recoveryWorkflowBlock(charge) : ''}
 
       <div class="section"><h4>${t('auditTrace')}</h4>
         <table><thead><tr><th>#</th><th>Time</th><th>Actor</th><th>Action</th></tr></thead><tbody>${audit}</tbody></table>
@@ -509,7 +588,19 @@ export function renderAbout() {
           <li>${t('ab.audit.sheet1')}</li>
           <li>${t('ab.audit.sheet2')}</li>
         </ul>` },
-    { id: 'finance', h: t('ab.h.finance'), body: `<p>${t('ab.p.finance')}</p><p>${t('ab.p.finance2')}</p>` },
+    { id: 'finance', h: t('ab.h.finance'), body: `<p>${t('ab.p.finance')}</p><p>${t('ab.p.finance2')}</p>
+        <ul class="manual">
+          <li>${t('ab.fin.hero')}</li>
+          <li>${t('ab.fin.forecast')}</li>
+        </ul>` },
+    { id: 'recovery', h: t('ab.h.recovery'), body: `<p>${t('ab.p.recovery')}</p>
+        <ul class="manual">
+          <li>${t('ab.rec.states')}</li>
+          <li>${t('ab.rec.reply')}</li>
+          <li>${t('ab.rec.colors')}</li>
+          <li>${t('ab.rec.fx')}</li>
+        </ul>` },
+    { id: 'bulk', h: t('ab.h.bulk'), body: `<p>${t('ab.p.bulk')}</p>` },
     { id: 'nav', h: t('ab.h.nav'), body: `<p>${t('ab.p.nav')}</p>` },
     { id: 'glossary', h: t('ab.h.glossary'), body: `<dl class="glossary">
         <dt>CCOGS</dt><dd>${t('ab.g.ccogs')}</dd>

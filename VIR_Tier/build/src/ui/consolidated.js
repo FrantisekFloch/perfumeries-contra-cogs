@@ -12,6 +12,10 @@ const nf = (v) => (v == null ? '' : Number(v).toLocaleString(undefined, { maximu
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const money = (v, c) => `${nf(v)} ${c || 'EUR'}`;
 
+// charge-status chip (same colour language as the overview/audit chips)
+const CS_CLASS = { PENDING_APPROVAL: 'pending', APPROVED: 'approved', ISSUED: 'issued', DISPUTED: 'disputed', PARTIALLY_SETTLED: 'partially', CLOSED: 'closed', REJECTED: 'rejected', EXPORTED: 'issued', INJECTED: 'closed' };
+const statusChip = (status) => `<span class="status-chip status-${CS_CLASS[status] || 'pending'}">${t('cs_' + status)}</span>`;
+
 // group charges by supplier -> [{ supplierId, supplierName, charges[] }]
 export function chargesBySupplier(state) {
   const groups = new Map();
@@ -152,7 +156,7 @@ export function renderConsolidatedDebit(state) {
       return `<tr class="${on ? '' : 'off'}">
         <td><input type="checkbox" data-consoltoggle="${esc(c.chargeId)}" ${on ? 'checked' : ''}></td>
         <td class="mono">${esc(c.agreementId)}</td>
-        <td>${esc(c.scopeKey)}${dur ? ` · <span class="small">${esc(dur)}</span>` : ''}</td>
+        <td>${esc(c.scopeKey)}${dur ? ` · <span class="small">${esc(dur)}</span>` : ''}<div>${statusChip(c.status)}</div></td>
         <td class="num"><strong style="color:var(--gold)">${money(c.variance, c.currency)}</strong></td>
         <td><div class="consol-rowbtns">
           <button class="btn tint-ghost consol-view" data-consolview="${esc(c.chargeId)}">${t('viewDetails')}</button>

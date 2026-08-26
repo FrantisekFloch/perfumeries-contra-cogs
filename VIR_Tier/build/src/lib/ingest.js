@@ -14,7 +14,10 @@ export function ingestFiles(files) {
     const spec = PARSERS[f.category];
     if (!spec) { out.errors.push({ file: f.name, reason: `unknown category "${f.category}"` }); continue; }
     try {
-      const parsed = spec.parse(f.text, f.name);
+      // agreements support both formats: pick the CSV parser for .csv files.
+      const isCsv = /\.csv$/i.test(f.name || '');
+      const parseFn = (isCsv && spec.parseCsv) ? spec.parseCsv : spec.parse;
+      const parsed = parseFn(f.text, f.name);
       if (Array.isArray(parsed)) out[f.category].push(...parsed);
       else out[f.category].push(parsed); // agreements: one per file
     } catch (e) {
