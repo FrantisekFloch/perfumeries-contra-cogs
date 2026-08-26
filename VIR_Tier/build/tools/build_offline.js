@@ -51,19 +51,22 @@ function wrapModule(key, srcPath) {
   let code = read(srcPath);
   const exportsSet = new Set();
 
-  // named imports
-  code = code.replace(/import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"];?/g, (_, names, spec) => {
+  // named imports (anchored to statement start so 'import {' inside a string
+  // literal is never rewritten)
+  code = code.replace(/^[ \t]*import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"];?/gm, (_, names, spec) => {
     const k = resolveKey(key, spec);
     const clean = names.split(',').map((s) => s.trim()).filter(Boolean).map((s) => s.replace(/\s+as\s+/, ': ')).join(', ');
     return `const { ${clean} } = __require(${JSON.stringify(k)});`;
   });
-  // namespace imports
-  code = code.replace(/import\s*\*\s*as\s*([A-Za-z_$][\w$]*)\s*from\s*['"]([^'"]+)['"];?/g, (_, ns, spec) => {
+  // namespace imports (anchored to statement start)
+  code = code.replace(/^[ \t]*import\s*\*\s*as\s*([A-Za-z_$][\w$]*)\s*from\s*['"]([^'"]+)['"];?/gm, (_, ns, spec) => {
     const k = resolveKey(key, spec);
     return `const ${ns} = __require(${JSON.stringify(k)});`;
   });
-  // side-effect imports (none expected) -> drop
-  code = code.replace(/import\s*['"][^'"]+['"];?/g, '');
+  // side-effect imports (none expected) -> drop. Anchor to statement start (line
+  // begin, after optional whitespace) so the word "import" INSIDE a string
+  // literal (e.g. an i18n value like "Bulk agreement import") is never matched.
+  code = code.replace(/^[ \t]*import\s*['"][^'"]+['"];?[ \t]*$/gm, '');
 
   // export [async] function/const/let/class NAME  (also generator function*)
   code = code.replace(/export\s+(async\s+)?(function\*?|const|let|class)\s+([A-Za-z_$][\w$]*)/g, (_, asyncKw, kind, name) => {
