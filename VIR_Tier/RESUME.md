@@ -1,9 +1,45 @@
 # VIR_Tier — Resume Point
 
-_Last saved: 2026-08-19 — FULL SAVE before a restart._
+_Last saved: 2026-09-01 — Analytics pages session (AI Daily Summary + Recovery Forecast)._
 
 ## 🧭 RESTART POINTER — read this first
-The whole **VIR_Tier** tool is **built, tested (59 pass), deployed, and live**. Everything below the "Where we are" heading is history (newest section first). This top block is the single source of truth for restarting.
+The whole **VIR_Tier** tool is **built, tested (66 pass), deployed, and live**. Everything below the "Where we are" heading is history (newest section first). This top block is the single source of truth for restarting.
+
+## 🆕 SESSION 2026-09-01 — two new Analytics & reporting pages
+
+Two new subpages were added under the **Analytics & reporting** nav group (zone 2). Final nav order in that group:
+**Finance Overview → Audit/Reporting → Recovery Forecast → AI Daily Summary.**
+
+### 1. AI Daily Summary — DONE, ported to source, deployed
+A simulated "AI analyst" briefing page. On open it plays a "compiling" animation, then reveals the briefing.
+- **Split hero banner** (dark → fading to white) with a **Subscribe to daily updates** panel (white card) on the right.
+- **Shared mailbox — needs attention** (left) + **What to focus on today** — top 3 (right), side-by-side.
+- Central **"Ask the CCOGS assistant" chatbot** (14 predefined questions + free-text keyword matching, typing animation, answers grounded in live portfolio numbers).
+- **Connected sources** at the bottom: simulated MCP servers / APIs / data feeds with live-dot status.
+- Focus button → "Review in Consolidated Debit"; mail button → "Open email & review debit".
+- **Status: fully ported into `src/` (app.js + ui/styles.css + lib/i18n.js), offline rebuilt, root `index.html` refreshed, committed + pushed (commit `57b79c9`).** All EN/SK/PL/CZ. Nav id `aisummary`, icon `ai`.
+- Dead code left parked: `aiEmailHtml` / `openAiEmailPreview` (the removed "Generate HTML email" panel) — unused but harmless.
+
+### 2. Recovery Forecast — DONE in OFFLINE ONLY, ⚠ NOT YET PORTED TO src/
+The "budgeting app" idea, reframed to fit: recoverable Contra-COGS as a **planned pipeline** (target/forecast/cash-timing), NOT consumer budgeting. Five sections:
+- **Recovery pipeline funnel**: Identified → Approved → Issued/injected → Realized (from `charge.status` + `state.erpSent`).
+- **Target vs. tracked**: editable target input + progress track (realized solid + pipeline hatched) with a target marker + gap.
+- **Confidence-weighted forecast**: Expected = Σ(recoverable × finding.confidence), band Conservative / Expected / Best case.
+- **Cash-timing forecast**: 6-month bars driven by an interactive **settlement-lag slider** (`fcPlan.lagDays`, default 45).
+- **Allocation**: expected recovery by supplier + by period.
+- Session state `fcPlan = { target, lagDays }`; `renderRecoveryForecast`, `fcModel`, `fcCashSchedule`, `fcDefaultTarget`, `wireRecoveryForecast`, `FC_SVG`/`fcIco`. Nav id `forecast`, icon `forecast` (ic-forecast color = --info).
+- **Status: implemented + verified in `VIR_Tier/build/offline/vir_tier_offline.html` ONLY. Awaiting user sign-off before porting to `src/`.** node --check clean, all 39 fc*/navForecast i18n keys present in 4 langs, 0 mojibake.
+
+### ⚠ NEXT SESSION — the pending port
+When the user signs off on Recovery Forecast, port it into the source tree (same 3 files: `src/app.js`, `src/ui/styles.css`, `src/lib/i18n.js`), then `node tools/build_offline.js` and refresh root `index.html`.
+**Encoding lesson (critical):** do NOT extract offline→source with PowerShell `Get-Content` — it corrupts SK/PL/CZ accented chars + em-dashes into mojibake. Use a Node script (`readFileSync/writeFileSync` UTF-8) for any offline→source lifting, exactly like the AI Daily Summary port. The ASCII-only edits (STAGES entry, NAV_ICON, render hook, bind call, nav CSS color) are safe via normal str_replace.
+
+### Data used by both pages (on `state`, app-module scope)
+- `state.discovery.findings[]`: `confidence` (0.5–1.0), `leakage`, `costOfInaction`, `claimed`, `entitled`, `period`, `supplierName`, `scopeKey`, `currency`, `agreementId`, `missingInvoice`, `needsManualCheck`, `priority`.
+- `state.charges[]`: `chargeId`, `agreementId`, `status` (PENDING_APPROVAL|APPROVED|ISSUED|DISPUTED|PARTIALLY_SETTLED|CLOSED|REJECTED|EXPORTED|INJECTED), `variance`, `eurEquivalent`, `currency`.
+- `state.erpSent[chargeId]` truthy = realized (posted to ERP).
+- Helpers in scope: `t`, `esc`, `state`, `app`, `initTooltips`, `flash`, `download`, `printHtml`; `aiEur` money formatter (defined in the AI block, reused by Recovery Forecast).
+- Tests now: **66 pass** (was 59).
 
 **State of the code**
 - Repo root: `Perfumeries/` · remote `perfumeries-contra-cogs` · branch `main`. All source committed & pushed (run `git log --oneline -5`).
