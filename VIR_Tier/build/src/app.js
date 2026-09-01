@@ -42,6 +42,7 @@ const STAGES = [
   { id: 'consol', label: 'navConsolidated', n: 2, zone: 1, render: renderConsolidatedDebit },
   { id: 'overview', label: 'navOverview', zone: 2, icon: 'chart', render: renderOverview },
   { id: 'audit', label: 'navAudit', zone: 2, icon: 'audit', render: renderAudit },
+  { id: 'aisummary', label: 'navAiSummary', zone: 2, icon: 'ai', render: renderAiSummary },
   { id: 'mapping', label: 'navMapping', zone: 3, icon: 'model', render: renderMappingFlow },
   { id: 'about', label: 'navAbout', zone: 3, icon: 'about', render: renderAbout },
 ];
@@ -61,9 +62,608 @@ const NAV_ICON = {
   audit: '<path d="M6 3h9l3 3v9H6z"/><path d="M9 8h6M9 11h4"/><circle cx="15" cy="17" r="3.2"/><path d="M17.4 19.4L21 23"/>',
   model: '<circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="18" cy="12" r="2.4"/><path d="M7 6.6l9 4.4M7 17.4l9-4.4"/>',
   about: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  ai: '<path d="M12 3l1.6 3.9L17.5 8.5 13.6 10 12 14 10.4 10 6.5 8.5 10.4 6.9z"/><path d="M18.5 14l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
 };
 function navIcon(kind) {
   return `<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICON[kind] || NAV_ICON.about}</svg>`;
+}
+
+/* ============================================================================
+   AI Daily Summary (Analytics & reporting)
+   A simulated "AI analyst" briefing: compiles on open (animated), surfaces the
+   day's focus items + shared-mailbox emails, offers an HTML-email generator and
+   a daily subscription, shows the (simulated) connected MCP servers / APIs, and
+   embeds a predefined-question chatbot. All figures derive from the loaded
+   portfolio (state.beforeAfter / discovery / charges). Connections are
+   illustrative. This block lives inside the `app` module so it shares scope with
+   state/t/esc/initTooltips/render.
+   ============================================================================ */
+
+// per-session flag so the "compiling" animation plays only the first open
+let __aiBuilt = false;
+// per-session subscription state (illustrative)
+const aiSub = { on: false, time: '08:00', to: 'finance.ccogs@parfum-group.example' };
+
+const aiEur = (v) => `${Math.round(Number(v) || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} €`;
+
+// Small monoline glyphs used inside the page (section headers, connections).
+const AI_SVG = {
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  send: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
+  bell: '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+  plug: '<path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0z"/><path d="M12 17v5"/>',
+  server: '<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+  api: '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/><circle cx="12" cy="12" r="2.5"/>',
+  feed: '<path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.6"/>',
+};
+const aiIco = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${AI_SVG[k] || ''}</svg>`;
+const aiOrbSvg = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${NAV_ICON.ai}</svg>`;
+
+// ---- derive today's briefing facts from the live portfolio ----
+function aiBriefingData() {
+  const ba = (state.beforeAfter || []);
+  const findings = (state.discovery && state.discovery.findings) || [];
+  const recoverable = ba.filter((b) => b.recoverable);
+  const totalTrueUp = ba.reduce((s, b) => s + (b.costOfInaction || 0), 0);
+  const suppliers = new Set(ba.filter((b) => b.recoverable).map((b) => b.supplierName || b.supplierId));
+  // top findings by leakage
+  const top = [...findings].sort((a, b) => (b.leakage || 0) - (a.leakage || 0));
+  const missing = findings.filter((f) => f.missingInvoice);
+  return {
+    totalTrueUp,
+    findingCount: findings.length,
+    supplierCount: suppliers.size,
+    recoverableCount: recoverable.length,
+    missingCount: missing.length,
+    top,
+    findings,
+  };
+}
+
+// Map a finding to a focus "kind" (drives the recommended-action copy). Uses
+// the finding's own signals where available, else a stable rotation so the
+// briefing always reads with variety.
+function aiFocusKind(f, idx) {
+  if (f && f.missingInvoice) return 'A';
+  const sk = (f && (f.scopeKey || '')) + '';
+  if (/pan|eu|combined/i.test(sk)) return 'B';
+  const drv = (f && (f.driver || f.cause || '')) + '';
+  if (/late|window|expired/i.test(drv)) return 'C';
+  if (/sku|forgot/i.test(drv)) return 'D';
+  return ['B', 'C', 'D', 'A'][idx % 4];
+}
+
+function aiFocusItems() {
+  const d = aiBriefingData();
+  const items = d.top.slice(0, 4);
+  // fallbacks if the portfolio has fewer than 4 findings — synthesize plausible rows
+  const KIND = { A: 'aiFocusA', B: 'aiFocusB', C: 'aiFocusC', D: 'aiFocusD' };
+  const KIND_D = { A: 'aiFocusADesc', B: 'aiFocusBDesc', C: 'aiFocusCDesc', D: 'aiFocusDDesc' };
+  const PRIO = ['high', 'high', 'med', 'low'];
+  const rows = items.map((f, i) => {
+    const kind = aiFocusKind(f, i);
+    return {
+      rank: i + 1,
+      titleKey: KIND[kind],
+      descKey: KIND_D[kind],
+      supplier: f.supplierName || f.supplierId || '—',
+      agreementId: f.agreementId || '',
+      value: f.leakage || 0,
+      currency: f.currency || 'EUR',
+      prio: PRIO[i] || 'low',
+      chargeId: f.chargeId || null,
+    };
+  });
+  return rows;
+}
+
+// Shared-mailbox items linked to open findings (illustrative but tied to real
+// suppliers/agreements in the portfolio).
+function aiMailItems() {
+  const d = aiBriefingData();
+  const top = d.top.slice(0, 3);
+  const missing = d.findings.find((f) => f.missingInvoice) || top[0] || {};
+  const disputeAgr = top[1] || top[0] || {};
+  const remindAgr = top[2] || top[0] || {};
+  const initials = (name) => (String(name || '?').trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() || '?');
+  const supName = (f) => f.supplierName || f.supplierId || 'Supplier';
+  return [
+    {
+      unread: true,
+      from: 'accounts@atelier-parfums.example',
+      supplier: supName(missing),
+      subject: `Missing invoice — ${missing.agreementId || 'AGR-020'} (January SK delivery)`,
+      linked: missing.agreementId || 'AGR-020',
+      noteKey: 'aiMailReplyDesc',
+      initials: initials(supName(missing)),
+      kind: 'reply',
+    },
+    {
+      unread: true,
+      from: 'key.accounts@maison-lumiere.example',
+      supplier: supName(disputeAgr),
+      subject: `Re: Rebate tier query — ${disputeAgr.agreementId || 'AGR-007'}`,
+      linked: disputeAgr.agreementId || 'AGR-007',
+      noteKey: 'aiMailDisputeDesc',
+      initials: initials(supName(disputeAgr)),
+      kind: 'dispute',
+    },
+    {
+      unread: false,
+      from: 'billing@nordic-scents.example',
+      supplier: supName(remindAgr),
+      subject: `Follow-up: outstanding invoice request — ${remindAgr.agreementId || 'AGR-012'}`,
+      linked: remindAgr.agreementId || 'AGR-012',
+      noteKey: 'aiMailRemindDesc',
+      initials: initials(supName(remindAgr)),
+      kind: 'remind',
+    },
+  ];
+}
+
+// Simulated live connections (MCP servers / APIs / data feeds).
+function aiConnections() {
+  return {
+    mcp: [
+      { name: 'ccogs-ledger-mcp', meta: 'Contra-COGS ledger · 4 tools', live: true },
+      { name: 'agreements-mcp', meta: 'Rebate agreements · 3 tools', live: true },
+      { name: 'shared-mailbox-mcp', meta: 'Finance inbox · IMAP bridge', live: true },
+      { name: 'fx-rates-mcp', meta: 'ECB reference rates', live: true },
+    ],
+    api: [
+      { name: 'ERP Billing API', meta: 'SAP FI · OData v4', live: true },
+      { name: 'EDI Gateway', meta: 'RECADV / INVOIC · AS2', live: true },
+      { name: 'Warehouse WMS', meta: 'SK · PL · CZ · GRN feed', live: true },
+    ],
+    data: [
+      { name: 'CCOGS Engine output', meta: 'nightly batch · 03:10', live: true },
+      { name: 'Goods-receipt lake', meta: 'streaming', live: true },
+      { name: 'Supplier master', meta: 'daily sync', live: true },
+    ],
+  };
+}
+
+// ---- page render ----
+function renderAiSummary(state) {
+  const day = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const time = new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+  // First open: show the "compiling" animation, which then swaps to the briefing.
+  if (!__aiBuilt) {
+    const steps = ['aiBuildConnect', 'aiBuildScan', 'aiBuildReconcile', 'aiBuildRank', 'aiBuildEmail'];
+    return `<div class="ai-wrap">
+      <p class="ai-lead">${t('aiTagline')}</p>
+      <div class="ai-build" id="aiBuild">
+        <div class="ai-build-head">
+          <span class="ai-orb">${aiOrbSvg}</span>
+          <div><div class="ai-build-title">${t('aiBuilding')}</div>
+          <div class="ai-build-sub">${day}</div></div>
+        </div>
+        <div class="ai-steps">
+          ${steps.map((s, i) => `<div class="ai-step" data-aistep="${i}">
+            <span class="ai-step-ico">${i + 1}</span>
+            <span class="ai-step-label">${t(s)}</span>
+            <span class="ai-step-stat"></span>
+          </div>`).join('')}
+        </div>
+        <div class="ai-build-bar"><i id="aiBuildBar"></i></div>
+      </div>
+    </div>`;
+  }
+  return aiBriefingHtml(day, time);
+}
+
+function aiBriefingHtml(day, time) {
+  const d = aiBriefingData();
+  const focus = aiFocusItems().slice(0, 3);
+  const mail = aiMailItems();
+  const conn = aiConnections();
+  const unread = mail.filter((m) => m.unread).length;
+
+  const focusHtml = focus.map((r) => `
+    <div class="ai-focus-item">
+      <span class="ai-rank">${r.rank}</span>
+      <div class="ai-focus-main">
+        <div class="t">${t(r.titleKey)}</div>
+        <div class="ai-focus-tags">
+          <span class="ai-pill ${r.prio}">${t(r.prio === 'high' ? 'aiFocusHigh' : r.prio === 'med' ? 'aiFocusMed' : 'aiFocusLow')}</span>
+          <span class="ai-pill">${esc(r.supplier)}</span>
+          ${r.agreementId ? `<span class="ai-pill"><span class="mono">${esc(r.agreementId)}</span></span>` : ''}
+        </div>
+      </div>
+      <div class="ai-focus-cta">
+        <div class="ai-focus-val gold">${aiEur(r.value)}</div>
+        <button class="btn ghost ai-cta-btn" ${r.chargeId ? `data-aifocus="${esc(r.chargeId)}"` : 'data-aigoto="consol"'}>${t('aiFocusReview')} →</button>
+      </div>
+    </div>`).join('');
+
+  const mailHtml = mail.map((m) => `
+    <div class="ai-mail-item ${m.unread ? 'unread' : ''}">
+      <span class="ai-mail-av">${esc(m.initials)}</span>
+      <div>
+        <div class="ai-mail-sub">${esc(m.subject)}${m.unread ? `<span class="ai-badge-unread">${t('aiMailUnread')}</span>` : ''}</div>
+        <div class="ai-mail-note"><strong>${esc(m.supplier)}</strong> ${t(m.noteKey)} · <span class="mono">${esc(m.linked)}</span></div>
+        <div><button class="btn ghost ai-cta-btn" data-aimail="${esc(m.kind)}">${t('aiMailReview')} →</button></div>
+      </div>
+    </div>`).join('');
+
+  const connCol = (titleKey, icoClass, items) => `
+    <div class="ai-conn-col">
+      <div class="ai-conn-col-h">${t(titleKey)}</div>
+      ${items.map((c) => `<div class="ai-conn">
+        <span class="ai-conn-ico ${icoClass}">${aiIco(icoClass === 'mcp' ? 'server' : icoClass === 'api' ? 'api' : 'feed')}</span>
+        <div class="ai-conn-body"><div class="ai-conn-name">${esc(c.name)}</div><div class="ai-conn-meta">${esc(c.meta)}</div></div>
+        <span class="ai-conn-stat"><span class="live-dot"></span>${t('aiConnLive')}</span>
+      </div>`).join('')}
+    </div>`;
+
+  return `<div class="ai-wrap ai-reveal">
+    <div class="ai-hero-split">
+      <div class="ai-hero-left">
+        <span class="ai-orb">${aiOrbSvg}</span>
+        <div class="ai-hero-body">
+          <div class="ai-hero-greet">${t('aiGreeting')}</div>
+          <div class="ai-hero-meta"><span class="dot">●</span> ${t('aiReady')} · ${t('aiGenAt')} ${esc(time)} · ${esc(day)}</div>
+          <div class="ai-hero-lead">${t('aiHeadlineLead')}</div>
+        </div>
+      </div>
+      <div class="ai-hero-sub">
+        <div class="ai-sec-head"><span class="ai-sec-ico">${aiIco('bell')}</span><h3>${t('aiSubscribe')}</h3></div>
+        <div class="ai-field"><label>${t('aiEmailTo')}</label><input type="email" id="aiSubTo" value="${esc(aiSub.to)}"/></div>
+        <div class="ai-field"><label>${t('aiSubTime')}</label><input type="time" id="aiSubTime" value="${esc(aiSub.time)}"/></div>
+        <div class="ai-email-actions">
+          <button class="btn ${aiSub.on ? 'ghost' : 'dark'}" id="aiSubBtn">${aiSub.on ? t('aiSubCancel') : t('aiSubConfirm')}</button>
+        </div>
+        <div class="ai-sub-status ${aiSub.on ? 'on' : ''}" id="aiSubStatus"><span class="live-dot"></span>${t('aiSubOn', { time: esc(aiSub.time) })}</div>
+      </div>
+    </div>
+
+    <div class="ai-two ai-two-focus">
+      <div class="ai-sec" style="margin:0">
+        <div class="ai-sec-head"><span class="ai-sec-ico">${aiIco('mail')}</span><h3>${t('aiMailTitle')}</h3></div>
+        <p class="ai-sec-lead">${t('aiMailLead')}</p>
+        <div class="ai-mail">${mailHtml}</div>
+      </div>
+      <div class="ai-sec" style="margin:0">
+        <div class="ai-sec-head"><span class="ai-sec-ico">${aiIco('target')}</span><h3>${t('aiFocusTitle')}</h3></div>
+        <p class="ai-sec-lead">${t('aiFocusLead')}</p>
+        <div class="ai-focus">${focusHtml || `<div class="small">—</div>`}</div>
+      </div>
+    </div>
+
+    ${aiChatHtml()}
+
+    <div class="ai-sec">
+      <div class="ai-sec-head"><span class="ai-sec-ico">${aiIco('plug')}</span><h3>${t('aiConnTitle')}</h3></div>
+      <p class="ai-sec-lead">${t('aiConnLead')}</p>
+      <div class="ai-conn-grid">
+        ${connCol('aiConnMcp', 'mcp', conn.mcp)}
+        ${connCol('aiConnApi', 'api', conn.api)}
+        ${connCol('aiConnData', 'data', conn.data)}
+      </div>
+    </div>
+
+    <p class="ai-disclaimer">${t('aiDisclaimer')}</p>
+  </div>`;
+}
+
+// ---- chatbot ----
+function aiChatHtml() {
+  const qs = aiChatQuestions();
+  const chips = qs.slice(0, 8).map((q) => `<button class="ai-chip" data-aiq="${esc(q.id)}">${esc(q.q)}</button>`).join('');
+  return `<div class="ai-chat" id="aiChat">
+    <div class="ai-chat-head">
+      <span class="ai-orb">${aiOrbSvg}</span>
+      <div><h3>${t('aiChatTitle')}</h3><div class="sub">${t('aiChatLead')}</div></div>
+    </div>
+    <div class="ai-chat-log" id="aiChatLog">
+      <div class="ai-msg bot">${aiChatGreeting()}</div>
+    </div>
+    <div class="ai-chips-wrap">
+      <div class="ai-chips-lbl">${t('aiChatSuggested')}</div>
+      <div class="ai-chips" id="aiChips">${chips}</div>
+    </div>
+    <div class="ai-chat-input">
+      <input type="text" id="aiChatInput" placeholder="${t('aiChatPlaceholder')}"/>
+      <button class="btn dark" id="aiChatSend">${t('aiChatSend')}</button>
+    </div>
+  </div>`;
+}
+
+function aiChatGreeting() {
+  const d = aiBriefingData();
+  return `Hello — I'm your CCOGS assistant. Today I found <strong>${d.findingCount}</strong> open findings totalling <strong>${aiEur(d.totalTrueUp)}</strong> in recoverable True-Up across <strong>${d.supplierCount}</strong> suppliers. Pick a question below, or type your own.`;
+}
+
+// Predefined question bank. Answers are generated from live portfolio data so
+// the chatbot feels grounded. EN base copy (kept in JS, not i18n, for clarity).
+function aiChatQuestions() {
+  const d = aiBriefingData();
+  const top = d.top[0] || {};
+  const topName = top.supplierName || top.supplierId || 'the top supplier';
+  const bySupplier = {};
+  for (const b of (state.beforeAfter || [])) { if (!b.recoverable) continue; const k = b.supplierName || b.supplierId; bySupplier[k] = (bySupplier[k] || 0) + (b.costOfInaction || 0); }
+  const supplierRank = Object.entries(bySupplier).sort((a, b) => b[1] - a[1]);
+  return [
+    { id: 'today', q: 'What should I focus on today?', a: () => {
+      const f = aiFocusItems();
+      if (!f.length) return `Nothing is flagged as recoverable right now — the portfolio looks clean.`;
+      const lines = f.map((r) => `<strong>${r.rank}.</strong> ${t(r.titleKey)} — <strong>${aiEur(r.value)}</strong> (${esc(r.supplier)}${r.agreementId ? ', ' + esc(r.agreementId) : ''})`).join('<br>');
+      return `Here are today's top priorities, ordered by value at risk:<br><br>${lines}`;
+    } },
+    { id: 'total', q: 'How much can we recover in total?', a: () => `Across the portfolio I estimate <strong>${aiEur(d.totalTrueUp)}</strong> in recoverable Contra-COGS True-Up, spread over <strong>${d.recoverableCount}</strong> findings and <strong>${d.supplierCount}</strong> suppliers.` },
+    { id: 'topsupplier', q: 'Which supplier has the biggest opportunity?', a: () => {
+      if (!supplierRank.length) return `No recoverable opportunity by supplier at the moment.`;
+      const rows = supplierRank.slice(0, 5).map(([n, v], i) => `${i + 1}. <strong>${esc(n)}</strong> — ${aiEur(v)}`).join('<br>');
+      return `By recoverable value, the leaders are:<br><br>${rows}`;
+    } },
+    { id: 'emails', q: 'Any emails I need to deal with?', a: () => {
+      const m = aiMailItems();
+      const rows = m.map((x) => `• <strong>${esc(x.supplier)}</strong> — ${esc(x.subject)}${x.unread ? ' (unread)' : ''}`).join('<br>');
+      return `There are <strong>${m.filter((x) => x.unread).length}</strong> unread items in the shared Finance mailbox linked to open findings:<br><br>${rows}<br><br>The missing-invoice reply is ready to recalculate; the tier dispute needs a response with the reconstructed-volume evidence.`;
+    } },
+    { id: 'missing', q: 'What is a missing-invoice case?', a: () => `A missing-invoice case is where goods were received in full (a Goods Receipt Note is on file) but the supplier never sent the invoice. Recovery is blocked until the invoice arrives — so the action is: chase the supplier, then recalculate the Contra-COGS once it lands. Today I see <strong>${d.missingCount}</strong> such case(s).` },
+    { id: 'paneu', q: 'How does pan-EU aggregation help?', a: () => `Rebate tiers are often measured per country. When SK, PL and CZ volume for the same supplier agreement is measured separately, each may fall short of a threshold. Combining them (pan-EU) can cross into a higher tier — so the entitled rebate rises, and the difference is recoverable.` },
+    { id: 'tiers', q: 'How is the tier / rate decided?', a: () => `The engine reads the agreement's tier table (thresholds + rates), the measurement basis (units, value or weight) and the period (month/quarter/year). It reconstructs the true qualifying volume, finds the tier that volume should reach, then compares the entitled Contra-COGS to what was actually claimed. The gap is the recoverable True-Up.` },
+    { id: 'timing', q: 'Why do late deliveries cause losses?', a: () => `Eligibility is set by the order/invoice date being inside the contract window. But if delivery (or the goods-receipt scan) lands after the window closes, the engine may exclude that volume even though it qualifies. The tool re-includes it and flags the timing gap.` },
+    { id: 'howrecover', q: 'How do I actually recover the money?', a: () => `From a finding, open it in the Consolidated Debit, review the reconstruction, then generate a Contra-COGS debit note. After the one Finance approval, it can be exported (billing-ingestible CSV) or sent to the ERP billing flow. Everything is captured in the immutable audit trail.` },
+    { id: 'sources', q: 'What data are you reading from?', a: () => {
+      const c = aiConnections();
+      return `I read (read-only) from <strong>${c.mcp.length}</strong> MCP servers (${c.mcp.map((x) => x.name).join(', ')}), <strong>${c.api.length}</strong> APIs (${c.api.map((x) => x.name).join(', ')}) and <strong>${c.data.length}</strong> data feeds. All access is audited.`;
+    } },
+    { id: 'confidence', q: 'How confident are these findings?', a: () => `Each finding is scored by an explainable ranker (magnitude vs peers, under-claim lift, driver pressure and tier proximity) — no black-box ML. The score drives the priority order; the money figures come straight from the deterministic reconstruction, so they're auditable line by line.` },
+    { id: 'subscribe', q: 'How do I get this every morning?', a: () => `Use the "Subscribe to daily updates" panel above: set a recipient and a delivery time, then confirm. You'll receive this briefing as a formatted HTML email every business day. You can also generate the email on demand with "Generate HTML email".` },
+    { id: 'topvalue', q: `What's the single biggest finding?`, a: () => {
+      if (!top || !top.leakage) return `No single finding stands out right now.`;
+      return `The largest single finding is <strong>${esc(topName)}</strong>${top.agreementId ? ` (<span class="mono">${esc(top.agreementId)}</span>)` : ''} at <strong>${aiEur(top.leakage)}</strong>${top.missingInvoice ? ' — a missing-invoice case, so chase the invoice first.' : '.'}` ;
+    } },
+    { id: 'audit', q: 'Is every number auditable?', a: () => `Yes. Every recoverable figure traces from the supplementing charge → variance (entitled − claimed) → reconstructed volume → source events (receipts, returns, overages, late/pan-EU) → the agreement clause that grants it. The Audit / Reporting page exports a colored three-sheet Excel workbook of the full line detail.` },
+  ];
+}
+
+function aiChatAnswer(id) {
+  const q = aiChatQuestions().find((x) => x.id === id);
+  if (!q) return `I don't have a scripted answer for that yet — try one of the suggested questions.`;
+  try { return q.a(); } catch { return `Sorry, I couldn't compute that just now.`; }
+}
+
+// Free-text -> best matching predefined answer (keyword scored). Falls back to
+// the "focus today" answer so the bot always says something useful.
+function aiChatMatch(text) {
+  const s = (text || '').toLowerCase();
+  if (!s.trim()) return null;
+  const KW = {
+    today: ['today', 'focus', 'priorit', 'first'],
+    total: ['total', 'how much', 'overall', 'sum', 'recover in total'],
+    topsupplier: ['supplier', 'vendor', 'biggest', 'largest opportunity'],
+    emails: ['email', 'mail', 'inbox', 'mailbox', 'message'],
+    missing: ['missing', 'no invoice', 'grn', 'goods receipt'],
+    paneu: ['pan', 'eu', 'aggreg', 'combine', 'cross-country', 'country'],
+    tiers: ['tier', 'rate', 'threshold', 'rebate %', 'percent'],
+    timing: ['late', 'timing', 'window', 'delivery date', 'expired'],
+    howrecover: ['how do i recover', 'recover the money', 'debit note', 'claim', 'export', 'erp'],
+    sources: ['data', 'source', 'mcp', 'api', 'connect', 'reading'],
+    confidence: ['confiden', 'accurate', 'trust', 'ml', 'model'],
+    subscribe: ['subscri', 'daily', 'every morning', 'schedule'],
+    topvalue: ['biggest finding', 'single', 'largest finding'],
+    audit: ['audit', 'traceable', 'evidence', 'defensible', 'excel'],
+  };
+  let best = null, bestScore = 0;
+  for (const [id, kws] of Object.entries(KW)) {
+    let sc = 0; for (const k of kws) if (s.includes(k)) sc += 1;
+    if (sc > bestScore) { bestScore = sc; best = id; }
+  }
+  return bestScore > 0 ? best : 'today';
+}
+
+// ---- AI summary: interactions ----
+
+// Play the "compiling" animation, then flip __aiBuilt and re-render into the
+// finished briefing. Respects prefers-reduced-motion.
+function playAiBuild() {
+  const host = app.querySelector('#aiBuild');
+  if (!host) return;
+  const steps = [...host.querySelectorAll('[data-aistep]')];
+  const bar = host.querySelector('#aiBuildBar');
+  const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stepMs = reduced ? 140 : 620;
+  const counts = ['128 sources', '3 unread', '19 findings', 'ranked', 'draft ready'];
+  let i = 0;
+  const tick = () => {
+    if (i > 0) { const prev = steps[i - 1]; if (prev) { prev.classList.remove('active'); prev.classList.add('done'); const ic = prev.querySelector('.ai-step-ico'); if (ic) ic.textContent = '✓'; const st = prev.querySelector('.ai-step-stat'); if (st) st.textContent = counts[i - 1] || ''; } }
+    if (i >= steps.length) {
+      if (bar) bar.style.width = '100%';
+      __aiBuilt = true;
+      setTimeout(() => { if (state.stage === 'aisummary') render(); }, reduced ? 60 : 340);
+      return;
+    }
+    const cur = steps[i];
+    if (cur) { cur.classList.add('active'); const ic = cur.querySelector('.ai-step-ico'); if (ic) ic.innerHTML = '<span class="spin"></span>'; }
+    if (bar) bar.style.width = `${Math.round(((i + 1) / (steps.length + 1)) * 100)}%`;
+    i += 1;
+    setTimeout(tick, stepMs);
+  };
+  tick();
+}
+
+function wireAiSummary() {
+  // Focus item -> open the finding review (if we have a real chargeId) or jump
+  // to the Consolidated Debit stage.
+  app.querySelectorAll('[data-aifocus]').forEach((b) => b.addEventListener('click', () => {
+    const id = b.dataset.aifocus;
+    if (typeof openReview === 'function' && state.charges && state.charges.some((c) => c.chargeId === id)) openReview(id);
+    else { state.stage = 'consol'; render(); }
+  }));
+  app.querySelectorAll('[data-aigoto]').forEach((b) => b.addEventListener('click', () => { state.stage = b.dataset.aigoto; render(); }));
+
+  // Shared-mailbox item -> open a simulated email reader.
+  app.querySelectorAll('[data-aimail]').forEach((b) => b.addEventListener('click', () => openAiEmail(b.dataset.aimail)));
+
+
+  // Subscribe toggle.
+  const sub = app.querySelector('#aiSubBtn');
+  if (sub) sub.addEventListener('click', () => {
+    const toEl = app.querySelector('#aiSubTo'); const timeEl = app.querySelector('#aiSubTime');
+    if (toEl) aiSub.to = toEl.value || aiSub.to;
+    if (timeEl) aiSub.time = timeEl.value || aiSub.time;
+    aiSub.on = !aiSub.on;
+    flash(aiSub.on ? t('aiSubOn', { time: aiSub.time }) : t('aiSubOff'));
+    render();
+  });
+
+  // Chatbot: suggested-question chips.
+  app.querySelectorAll('[data-aiq]').forEach((c) => c.addEventListener('click', () => {
+    const q = aiChatQuestions().find((x) => x.id === c.dataset.aiq);
+    aiChatSubmit(q ? q.q : c.textContent, c.dataset.aiq);
+  }));
+  // Chatbot: free-text send.
+  const send = app.querySelector('#aiChatSend');
+  const input = app.querySelector('#aiChatInput');
+  const doSend = () => { if (!input) return; const v = input.value.trim(); if (!v) return; input.value = ''; aiChatSubmit(v, aiChatMatch(v)); };
+  if (send) send.addEventListener('click', doSend);
+  if (input) input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doSend(); } });
+}
+
+// Append a user bubble + a typing indicator, then the bot answer. Does NOT
+// re-render the page (keeps the chat scroll + input focus).
+function aiChatSubmit(questionText, answerId) {
+  const log = app.querySelector('#aiChatLog');
+  if (!log) return;
+  const userMsg = document.createElement('div');
+  userMsg.className = 'ai-msg user';
+  userMsg.textContent = questionText;
+  log.appendChild(userMsg);
+  const typing = document.createElement('div');
+  typing.className = 'ai-msg-typing';
+  typing.innerHTML = '<i></i><i></i><i></i>';
+  log.appendChild(typing);
+  log.scrollTop = log.scrollHeight;
+  const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(() => {
+    typing.remove();
+    const bot = document.createElement('div');
+    bot.className = 'ai-msg bot';
+    bot.innerHTML = aiChatAnswer(answerId);
+    log.appendChild(bot);
+    log.scrollTop = log.scrollHeight;
+  }, reduced ? 120 : 640);
+}
+
+// ---- simulated shared-mailbox email reader ----
+function openAiEmail(kind) {
+  const m = aiMailItems().find((x) => x.kind === kind) || aiMailItems()[0];
+  const bodies = {
+    reply: `Dear Finance team,<br><br>Following your query, please find attached the <strong>outstanding invoice</strong> for the goods delivered under agreement <strong>${esc(m.linked)}</strong> (January shipment to the SK main warehouse). The invoice was not transmitted at the time of delivery due to an issue on our billing side.<br><br>The delivery was received in full (GRN on file). Kindly process the corresponding rebate (Contra-COGS) accordingly.<br><br>Best regards,<br>${esc(m.supplier)} — Accounts Receivable`,
+    dispute: `Dear Finance team,<br><br>We have reviewed your Contra-COGS claim under agreement <strong>${esc(m.linked)}</strong>. Our records place the qualifying volume in a <strong>lower tier</strong> than your calculation. Could you please share the reconstructed-volume breakdown, including the pan-EU aggregation and the goods-receipt dates you relied on?<br><br>We want to resolve this quickly and correctly.<br><br>Kind regards,<br>${esc(m.supplier)} — Key Accounts`,
+    remind: `Dear Finance team,<br><br>This is a friendly follow-up to our request dated last week regarding the outstanding invoice under agreement <strong>${esc(m.linked)}</strong>. We have not yet received a response and would appreciate an update at your earliest convenience.<br><br>Thank you,<br>${esc(m.supplier)} — Billing`,
+  };
+  const suggested = {
+    reply: 'Recalculate the Contra-COGS now that the invoice is available, then move the finding into the Consolidated Debit.',
+    dispute: 'Reply with the reconstructed-volume evidence (pan-EU aggregation + GRN dates) exported from the Audit page.',
+    remind: 'Send a follow-up to the supplier and log a reminder task; the recovery stays blocked until the invoice arrives.',
+  };
+  const holder = document.createElement('div');
+  holder.innerHTML = `<div class="modal-bg" id="aiMailBg"><div class="modal">
+    <div class="erp-head"><span class="erp-badge">✉</span><div>
+      <h2>${esc(m.subject)}</h2><div class="sub">${t('aiMailFrom')}: ${esc(m.from)} · ${t('aiMailLinked')} <span class="mono">${esc(m.linked)}</span></div></div></div>
+    <div class="card" style="margin:14px 0; line-height:1.6">${bodies[kind] || bodies.reply}</div>
+    <div class="loss-banner"><strong>${t('aiMailAction')}:</strong> ${esc(suggested[kind] || suggested.reply)}</div>
+    <div class="actions">
+      <button class="btn dark" id="aiMailGoto">${t('aiFocusOpen')} →</button>
+      <button class="btn ghost" id="aiMailClose">${t('close')}</button>
+    </div>
+  </div></div>`;
+  document.body.appendChild(holder);
+  const close = () => holder.remove();
+  holder.querySelector('#aiMailBg').addEventListener('click', (e) => { if (e.target.id === 'aiMailBg') close(); });
+  holder.querySelector('#aiMailClose').addEventListener('click', close);
+  const goto = holder.querySelector('#aiMailGoto');
+  if (goto) goto.addEventListener('click', () => { close(); state.stage = 'consol'; render(); });
+}
+
+// ---- HTML briefing email: build, preview, download ----
+function aiEmailHtml() {
+  const d = aiBriefingData();
+  const day = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const focus = aiFocusItems();
+  const mail = aiMailItems();
+  const A = '#00B67A', INK = '#1A1A1A', MUT = '#6B6B6B', LINE = '#E5E5E5', GOLD = '#C77800', DARK = '#1A1A1A';
+  const focusRows = focus.map((r) => `
+    <tr>
+      <td style="padding:10px 12px;border-bottom:1px solid ${LINE};font-weight:700;color:${INK};width:28px">${r.rank}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid ${LINE};color:${INK}">
+        <div style="font-weight:600">${esc(t(r.titleKey))}</div>
+        <div style="color:${MUT};font-size:13px">${esc(r.supplier)}${r.agreementId ? ' · ' + esc(r.agreementId) : ''}</div>
+      </td>
+      <td style="padding:10px 12px;border-bottom:1px solid ${LINE};text-align:right;font-weight:800;color:${GOLD};white-space:nowrap">${aiEur(r.value)}</td>
+    </tr>`).join('');
+  const mailRows = mail.map((m) => `
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid ${LINE};color:${INK}">
+        <div style="font-weight:600">${esc(m.subject)}</div>
+        <div style="color:${MUT};font-size:13px">${esc(m.from)} · ${esc(m.linked)}</div>
+      </td>
+      <td style="padding:8px 12px;border-bottom:1px solid ${LINE};text-align:right;color:${m.unread ? '#2f6fed' : MUT};font-size:12px;font-weight:700;text-transform:uppercase">${m.unread ? 'Unread' : 'Read'}</td>
+    </tr>`).join('');
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>CCOGS AI Daily Summary — ${esc(day)}</title></head>
+  <body style="margin:0;background:#F5F5F5;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:${INK}">
+  <div style="max-width:640px;margin:0 auto;padding:24px 16px">
+    <div style="background:linear-gradient(135deg,#12241d,#1A1A1A);border-radius:12px;padding:24px;color:#fff">
+      <div style="font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:#8fd9bf;font-weight:700">CCOGS Reclaim · AI Daily Summary</div>
+      <div style="font-size:22px;font-weight:800;margin-top:6px">Good morning. Here's today's briefing.</div>
+      <div style="color:#b9c4bf;font-size:13px;margin-top:4px">${esc(day)}</div>
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0">
+      <tr>
+        <td style="width:33%;padding:6px"><div style="background:#fff;border:1px solid ${LINE};border-left:3px solid ${GOLD};border-radius:10px;padding:14px"><div style="font-size:20px;font-weight:800;color:${GOLD}">${aiEur(d.totalTrueUp)}</div><div style="color:${MUT};font-size:12px">Recoverable True-Up</div></div></td>
+        <td style="width:33%;padding:6px"><div style="background:#fff;border:1px solid ${LINE};border-left:3px solid ${A};border-radius:10px;padding:14px"><div style="font-size:20px;font-weight:800">${d.findingCount}</div><div style="color:${MUT};font-size:12px">Open findings</div></div></td>
+        <td style="width:33%;padding:6px"><div style="background:#fff;border:1px solid ${LINE};border-left:3px solid #2f6fed;border-radius:10px;padding:14px"><div style="font-size:20px;font-weight:800">${d.supplierCount}</div><div style="color:${MUT};font-size:12px">Suppliers affected</div></div></td>
+      </tr>
+    </table>
+    <div style="background:#fff;border:1px solid ${LINE};border-radius:12px;padding:18px;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:700;margin-bottom:10px">What to focus on today</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${focusRows}</table>
+    </div>
+    <div style="background:#fff;border:1px solid ${LINE};border-radius:12px;padding:18px;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:700;margin-bottom:10px">Shared mailbox — needs attention</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${mailRows}</table>
+    </div>
+    <div style="text-align:center;margin:18px 0 6px">
+      <a href="#" style="display:inline-block;background:${A};color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:10px">Open the CCOGS Reclaim Tool</a>
+    </div>
+    <div style="color:${MUT};font-size:11px;text-align:center;margin-top:16px">Automated briefing generated by the CCOGS Reclaim assistant. Figures derive from the current portfolio. This is a demonstration message.</div>
+  </div></body></html>`;
+}
+
+function openAiEmailPreview() {
+  const html = aiEmailHtml();
+  const holder = document.createElement('div');
+  holder.innerHTML = `<div class="modal-bg" id="aiEmBg"><div class="modal docwide">
+    <div class="erp-head"><span class="erp-badge">✉</span><div>
+      <h2>${t('aiEmailTitle')}</h2><div class="sub">${t('aiEmailLead')}</div></div></div>
+    <div style="border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:14px 0;max-height:460px;overflow-y:auto">
+      <iframe id="aiEmFrame" style="width:100%;height:640px;border:0;background:#F5F5F5" title="email preview"></iframe>
+    </div>
+    <div class="actions">
+      <button class="btn dark" id="aiEmDownload">⤓ ${t('aiEmailPreview')}</button>
+      <button class="btn" id="aiEmPrint">${t('print')}</button>
+      <button class="btn ghost" id="aiEmClose">${t('close')}</button>
+    </div>
+  </div></div>`;
+  document.body.appendChild(holder);
+  // populate the iframe via srcdoc (keeps the preview isolated from app styles)
+  const frame = holder.querySelector('#aiEmFrame');
+  if (frame) frame.srcdoc = html;
+  const close = () => holder.remove();
+  holder.querySelector('#aiEmBg').addEventListener('click', (e) => { if (e.target.id === 'aiEmBg') close(); });
+  holder.querySelector('#aiEmClose').addEventListener('click', close);
+  holder.querySelector('#aiEmDownload').addEventListener('click', () => {
+    download(`CCOGS_AI_Daily_Summary_${new Date().toISOString().slice(0, 10)}.html`, html, 'text/html');
+    flash(t('aiEmailBuilt'));
+  });
+  holder.querySelector('#aiEmPrint').addEventListener('click', () => printHtml(html));
 }
 
 const state = {
@@ -204,6 +804,8 @@ function render() {
   if (app.querySelector('#ingestFlow')) playIngestFlow();
   // Mapping Logic stage (#5): auto-play the animated model workflow.
   if (app.querySelector('#mfScreen')) playMappingFlow(app);
+  // AI Daily Summary: play the "compiling" animation, then swap to the briefing.
+  if (app.querySelector('#aiBuild')) playAiBuild();
 }
 
 function bind() {
@@ -269,6 +871,9 @@ function bind() {
   // Mapping Logic stage (#5): Replay restarts the animation. (Ends at Scene C.)
   const mfReplay = app.querySelector('#mfReplay');
   if (mfReplay) mfReplay.addEventListener('click', () => playMappingFlow(app));
+
+  // AI Daily Summary — wire the briefing controls (only present once built).
+  wireAiSummary();
 
   // inputs summary: clickable result tiles -> details modal (what/how/proposal/impact).
   // The mailbox tile is special: unscanned -> open the scan flow; scanned -> details.
